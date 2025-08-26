@@ -1,17 +1,14 @@
-import {
-  WebSocketGateway,
-  SubscribeMessage,
-  WebSocketServer,
-  MessageBody,
-} from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { SubscribeMessage, MessageBody } from '@nestjs/websockets';
 import { DirectMessageService } from './direct-message.service';
+import { Injectable } from '@nestjs/common';
+import { AppGateway } from 'src/gateway/app.gateway';
 
-@WebSocketGateway(5002, { cors: { origin: '*' } })
+@Injectable()
 export class DirectMessageGateway {
-  @WebSocketServer() server: Server;
-
-  constructor(private readonly service: DirectMessageService) {}
+  constructor(
+    private readonly service: DirectMessageService,
+    private gateway: AppGateway,
+  ) {}
 
   @SubscribeMessage('dm:send')
   async handleSendDM(
@@ -30,7 +27,7 @@ export class DirectMessageGateway {
     );
 
     // Notify both sender and receiver
-    this.server.to(data.senderId).emit('dm:new', msg);
-    this.server.to(data.receiverId).emit('dm:new', msg);
+    this.gateway.server.to(data.senderId).emit('dm:new', msg);
+    this.gateway.server.to(data.receiverId).emit('dm:new', msg);
   }
 }

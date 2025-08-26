@@ -1,30 +1,164 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { FriendshipRepository } from './friendship.repository';
 import { FriendStatus } from '../../generated/prisma';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { UserRepository } from 'src/user/user.repository';
+import { AppGateway } from 'src/gateway/app.gateway';
 
 @Injectable()
 export class FriendshipService {
-  constructor(private readonly friendshipRepository: FriendshipRepository) {}
+  private readonly logger = new Logger(FriendshipService.name);
+  constructor(
+    private readonly friendshipRepository: FriendshipRepository,
+    private prisma: PrismaService,
+    private userRepository: UserRepository,
+    private gateway: AppGateway,
+  ) {}
 
   async addFriend(requesterId: string, receiverId: string) {
-    return this.friendshipRepository.sendFriendRequest(requesterId, receiverId);
+    let existing = await this.friendshipRepository.existing(
+      requesterId,
+      receiverId,
+    );
+    if (existing) {
+      throw new BadRequestException('Friendship already exists');
+    }
+
+    const [friend, user] = await Promise.all([
+      this.friendshipRepository.sendFriendRequest(requesterId, receiverId),
+      this.userRepository.getUserById(requesterId),
+    ]);
+
+    const notification = await this.prisma.notification.create({
+      data: {
+        userId: receiverId,
+        type: 'FRIEND_REQUEST',
+        message: `You have a new friend request from ${user.username}`,
+        metadata: {
+          requesterId,
+          requesterName: user.username,
+          requesterAvatar: user.avatar,
+        },
+      },
+    });
+
+    this.gateway.server
+      // .to(receiverId)
+      .emit('notification:friend', notification);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Friend request sent successfully',
+      data: friend,
+    };
   }
 
-  async acceptFriendship(friendshipId: string) {
-    return this.friendshipRepository.respondToRequest(
-      friendshipId,
-      FriendStatus.ACCEPTED,
-    );
-  }
+  async updateFriendshipStatus(
+    friendshipId: string,
+    requesterId: string,
+    receiverId: string,
+    status: FriendStatus,
+  ) {
+    try {
+      const [friendship, user] = await Promise.all([
+        this.friendshipRepository.respondToRequest(friendshipId, status),
+        this.userRepository.getUserById(requesterId),
+      ]);
 
-  async blockFriendship(friendshipId: string) {
-    return this.friendshipRepository.respondToRequest(
-      friendshipId,
-      FriendStatus.BLOCKED,
-    );
+      // Map friend status -> notification & message
+      const statusMap = {
+        [FriendStatus.ACCEPTED]: {
+          type: 'FRIEND_ACCEPTED',
+          message: `You accepted the request from ${user.username}`,
+          successMsg: 'Friend request accepted successfully',
+        },
+        [FriendStatus.DECLINED]: {
+          type: 'FRIEND_DECLINED',
+          message: `You declined the request from ${user.username}`,
+          successMsg: 'Friend request declined successfully',
+        },
+        [FriendStatus.BLOCKED]: {
+          type: 'FRIEND_BLOCKED',
+          message: `You blocked ${user.username}`,
+          successMsg: 'Friend blocked successfully',
+        },
+      };
+
+      const config = statusMap[status];
+
+      const notification = await this.prisma.notification.create({
+        data: {
+          userId: receiverId,
+          type: config.type,
+          message: config.message,
+          metadata: {
+            requesterId,
+            requesterName: user.username,
+            requesterAvatar: user.avatar,
+          },
+        },
+      });
+
+      this.gateway.server
+        // .to(receiverId)
+        .emit('notification:friend', notification);
+
+      return {
+        statusCode: HttpStatus.OK,
+        success: true,
+        message: config.successMsg,
+        data: friendship,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Failed to update friendship (${status}): ${error.message}`,
+        error.stack,
+      );
+      throw new BadRequestException('Failed to update friendship');
+    }
   }
 
   async listFriends(userId: string) {
-    return this.friendshipRepository.getFriends(userId);
+    let list = await this.friendshipRepository.getFriendshipsByStatus(
+      userId,
+      FriendStatus.ACCEPTED,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'List of friends retrieved successfully',
+      data: list,
+    };
+  }
+  async listRequests(userId: string) {
+    let list = await this.friendshipRepository.getFriendshipsByStatus(
+      userId,
+      FriendStatus.PENDING,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'List of friend requests retrieved successfully',
+      data: list,
+    };
+  }
+
+  async listBlocked(userId: string) {
+    let list = await this.friendshipRepository.getFriendshipsByStatus(
+      userId,
+      FriendStatus.BLOCKED,
+    );
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'List of blocked friend retrieved successfully',
+      data: list,
+    };
   }
 }

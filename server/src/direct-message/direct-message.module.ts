@@ -3,6 +3,7 @@ import { DirectMessageService } from './direct-message.service';
 import { DirectMessageGateway } from './direct-message.gateway';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { DirectMessageRepository } from './direct-message-repository';
+import { GatewayModule } from 'src/gateway/gateway.module';
 
 @Module({
   providers: [
@@ -10,6 +11,6 @@ import { DirectMessageRepository } from './direct-message-repository';
     DirectMessageService,
     DirectMessageRepository,
   ],
-  imports: [PrismaModule],
+  imports: [PrismaModule, GatewayModule],
 })
 export class DirectMessageModule {}

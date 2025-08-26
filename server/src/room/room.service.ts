@@ -12,9 +12,9 @@ import {
   GetRoomDto,
   RoomConnectionDto,
 } from './validation';
-import { RoomGateway } from './room.gateway';
 import { RoomMessageService } from 'src/room-message/room-message.service';
 import { UserRepository } from 'src/user/user.repository';
+import { AppGateway } from 'src/gateway/app.gateway';
 
 @Injectable()
 export class RoomService {
@@ -22,7 +22,7 @@ export class RoomService {
   constructor(
     private roomRepository: RoomRepository,
     private userRepository: UserRepository,
-    private gateway: RoomGateway,
+    private gateway: AppGateway,
     private roomMessageService: RoomMessageService,
   ) {}
 

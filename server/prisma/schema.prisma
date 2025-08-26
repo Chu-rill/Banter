@@ -31,6 +31,7 @@ model User {
   receivedMessages       DirectMessage[] @relation("ReceivedMessages")
   sentFriendRequests     Friendship[]    @relation("Requester")
   receivedFriendRequests Friendship[]    @relation("Receiver")
+  notifications          Notification[]
   credits                Int             @default(0)
 }
 
@@ -42,6 +43,8 @@ model Friendship {
   receiver    User         @relation("Receiver", fields: [receiverId], references: [id])
   status      FriendStatus @default(PENDING)
   createdAt   DateTime     @default(now())
+
+  @@unique([requesterId, receiverId])
 }
 
 enum FriendStatus {
@@ -49,6 +52,30 @@ enum FriendStatus {
   ACCEPTED
   BLOCKED
   DECLINED
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String // who receives this notification
+  user   User   @relation(fields: [userId], references: [id])
+
+  type     NotificationType
+  message  String
+  metadata Json? // flexible field for extra data (e.g. roomId, friendId)
+
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum NotificationType {
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  FRIEND_DECLINED
+  FRIEND_BLOCKED
+  ROOM_INVITE
+  ROOM_JOINED
+  MESSAGE
+  SYSTEM
 }
 
 model DirectMessage {
