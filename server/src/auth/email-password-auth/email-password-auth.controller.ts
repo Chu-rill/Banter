@@ -26,11 +26,13 @@ import {
   EmailValidationDto,
   ForgotPasswordSchema,
   ForgotPasswordDto,
+  VerifyEmailDtoSwagger,
 } from './validation';
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -79,6 +81,12 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UsePipes(new ZodPipe(VerifyEmailSchema))
   @ApiOperation({ summary: 'Verify user' })
+  @ApiParam({
+    name: 'token',
+    type: String,
+    description: 'Email verification token',
+    example: 'abc123def456...',
+  })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   @ApiResponse({ status: 404, description: 'Token not found' })

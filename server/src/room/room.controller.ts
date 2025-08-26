@@ -10,43 +10,102 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  UsePipes,
+  Delete,
 } from '@nestjs/common';
 import { RoomService } from './room.service';
 import { JwtAuthGuard } from '../guards/auth.guard';
-import { GetRoomsQueryDto, Room } from './validation';
+import {
+  CreateRoomDto,
+  CreateRoomDtoSwagger,
+  CreateRoomSchema,
+  GetAllRoomsQueryDto,
+  GetAllRoomsQueryDtoSwagger,
+  GetAllRoomsQuerySchema,
+  GetRoomDto,
+  GetRoomSchema,
+  RoomConnectionSchema,
+} from './validation';
+import { ZodPipe } from 'src/utils/schema-validation/validation.pipe';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Rooms')
+@ApiBearerAuth('JWT-auth')
 @Controller('rooms')
 @UseGuards(JwtAuthGuard)
 export class RoomController {
   constructor(private roomService: RoomService) {}
 
   @Post()
+  @UsePipes(new ZodPipe(CreateRoomSchema))
   @HttpCode(HttpStatus.CREATED)
-  async createRoom(@Body() createRoomDto: Room, @Request() req) {
+  @ApiOperation({ summary: 'Create a new Room' })
+  @ApiBody({ type: CreateRoomDtoSwagger })
+  @ApiResponse({ status: 201, description: 'Room created successfully' })
+  async createRoom(@Body() createRoomDto: CreateRoomDto, @Request() req) {
     return this.roomService.createRoom(createRoomDto, req.user.id);
   }
 
   @Get()
+  @UsePipes(new ZodPipe(GetAllRoomsQuerySchema))
   @HttpCode(HttpStatus.OK)
-  async getAllRooms(@Query() query: GetRoomsQueryDto) {
-    return this.roomService.getAllRooms(query.page, query.limit);
+  @ApiOperation({ summary: 'Get all rooms using a query' })
+  @ApiQuery({ type: GetAllRoomsQueryDtoSwagger })
+  async getAllRooms(@Query() query: GetAllRoomsQueryDto) {
+    return this.roomService.getAllRooms(query);
   }
 
   @Get(':id')
+  @UsePipes(new ZodPipe(GetRoomSchema))
   @HttpCode(HttpStatus.OK)
-  async getRoomById(@Param('id') id: string) {
-    return this.roomService.getRoomById(id);
+  @ApiOperation({ summary: 'Get a room by the roomId' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Room CUID',
+    example: 'cl9v1z5t30000qzrmn1g6v6y',
+  })
+  async getRoomById(@Param() dto: GetRoomDto) {
+    return this.roomService.getRoomById(dto);
   }
 
-  @Put(':id/join')
+  @Post(':id/join')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Join a room' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Room CUID',
+    example: 'cl9v1z5t30000qzrmn1g6v6y',
+  })
   async joinRoom(@Param('id') id: string, @Request() req) {
-    return this.roomService.joinRoom(id, req.user.id);
+    const dto = { roomId: id, userId: req.user.id };
+
+    const parsed = RoomConnectionSchema.parse(dto);
+    return this.roomService.joinRoom(parsed);
   }
 
-  @Put(':id/leave')
+  @Delete(':id/leave')
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Leave a room' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Room CUID',
+    example: 'cl9v1z5t30000qzrmn1g6v6y',
+  })
   async leaveRoom(@Param('id') id: string, @Request() req) {
-    return this.roomService.leaveRoom(id, req.user.id);
+    const dto = { roomId: id, userId: req.user.id };
+
+    const parsed = RoomConnectionSchema.parse(dto);
+    return this.roomService.leaveRoom(parsed);
   }
 }

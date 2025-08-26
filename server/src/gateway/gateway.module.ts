@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { VideoChatGateway } from './video-chat.gateway';
+import { AppGateway } from './app.gateway';
 
 @Module({
-  providers: [VideoChatGateway],
+  providers: [AppGateway],
+  exports: [AppGateway],
 })
 export class GatewayModule {}

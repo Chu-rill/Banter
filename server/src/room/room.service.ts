@@ -3,27 +3,39 @@ import {
   NotFoundException,
   BadRequestException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { RoomRepository } from './room.repository';
-import { Room } from './validation';
-import { RoomGateway } from './room.gateway';
+import {
+  CreateRoomDto,
+  GetAllRoomsQueryDto,
+  GetRoomDto,
+  RoomConnectionDto,
+} from './validation';
+import { RoomMessageService } from 'src/room-message/room-message.service';
+import { UserRepository } from 'src/user/user.repository';
+import { AppGateway } from 'src/gateway/app.gateway';
 
 @Injectable()
 export class RoomService {
+  private readonly logger = new Logger(RoomService.name);
   constructor(
     private roomRepository: RoomRepository,
-    private gateway: RoomGateway,
+    private userRepository: UserRepository,
+    private gateway: AppGateway,
+    private roomMessageService: RoomMessageService,
   ) {}
 
-  async createRoom(createRoomDto: Room, creatorId: string) {
-    const { name, description, type, maxParticipants } = createRoomDto;
+  async createRoom(createRoomDto: CreateRoomDto, creatorId: string) {
+    const { name, description, type, maxParticipants, mode } = createRoomDto;
 
     const room = await this.roomRepository.createRoom(
       name,
-      description!,
-      type!,
-      maxParticipants!,
+      description,
+      type,
+      maxParticipants,
       creatorId,
+      mode,
     );
 
     return {
@@ -34,7 +46,8 @@ export class RoomService {
     };
   }
 
-  async getAllRooms(page: number = 1, limit: number = 10) {
+  async getAllRooms(dto: GetAllRoomsQueryDto) {
+    let { page, limit } = dto;
     const { rooms, total } = await this.roomRepository.getAllRooms(page, limit);
 
     return {
@@ -53,7 +66,8 @@ export class RoomService {
     };
   }
 
-  async getRoomById(id: string) {
+  async getRoomById(dto: GetRoomDto) {
+    const { id } = dto;
     const room = await this.roomRepository.getRoomById(id);
 
     if (!room) {
@@ -68,7 +82,9 @@ export class RoomService {
     };
   }
 
-  async joinRoom(roomId: string, userId: string) {
+  async joinRoom(dto: RoomConnectionDto) {
+    const { roomId, userId } = dto;
+
     const room = await this.roomRepository.getRoomById(roomId);
 
     if (!room) {
@@ -79,12 +95,19 @@ export class RoomService {
       throw new BadRequestException('Room is full');
     }
 
-    const newMember = await this.roomRepository.joinRoom(roomId, userId);
+    const [newMember, user] = await Promise.all([
+      this.roomRepository.joinRoom(roomId, userId),
+      this.userRepository.getUserById(userId),
+    ]);
 
-    this.gateway.server.to(roomId).emit('room:userJoined', {
-      userId,
+    const systemMessage = await this.roomMessageService.sendSystemMessage(
       roomId,
-    });
+      `User ${user.username} joined the room`,
+      userId,
+    );
+
+    // this.gateway.server.to(roomId).emit('room:userJoined', systemMessage);
+    this.gateway.server.emit('room:userJoined', systemMessage);
 
     return {
       statusCode: HttpStatus.OK,
@@ -94,7 +117,8 @@ export class RoomService {
     };
   }
 
-  async leaveRoom(roomId: string, userId: string) {
+  async leaveRoom(dto: RoomConnectionDto) {
+    const { roomId, userId } = dto;
     const room = await this.roomRepository.getRoomById(roomId);
 
     if (!room) {
@@ -109,12 +133,20 @@ export class RoomService {
       throw new BadRequestException('You are not a participant of this room');
     }
 
-    const oldMember = await this.roomRepository.leaveRoom(roomId, userId);
+    const [oldMember, user] = await Promise.all([
+      this.roomRepository.leaveRoom(roomId, userId),
+      this.userRepository.getUserById(userId),
+    ]);
 
-    this.gateway.server.to(roomId).emit('room:userLeft', {
-      userId,
+    const systemMessage = await this.roomMessageService.sendSystemMessage(
       roomId,
-    });
+      `User ${user.username} left the room`,
+      userId,
+    );
+
+    // this.gateway.server.to(roomId).emit('room:userLeft', systemMessage);
+    this.gateway.server.emit('room:userLeft', systemMessage);
+
     return {
       statusCode: HttpStatus.OK,
       success: true,

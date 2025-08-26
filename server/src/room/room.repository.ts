@@ -12,7 +12,7 @@ export class RoomRepository {
     type: RoomType,
     maxParticipants: number,
     creatorId: string,
-    mode: RoomMode = RoomMode.CHAT,
+    mode: RoomMode,
     price?: number,
     isPaid?: boolean,
   ) {
@@ -41,7 +41,7 @@ export class RoomRepository {
     });
   }
 
-  async getAllRooms(page: number = 1, limit: number = 10) {
+  async getAllRooms(page: number, limit: number) {
     const skip = (page - 1) * limit;
 
     const [rooms, total] = await Promise.all([
