@@ -91,6 +91,7 @@ model DirectMessage {
   mediaUrl  String?
   mediaType MediaType?
   createdAt DateTime    @default(now())
+  isRead    Boolean     @default(false)
 }
 
 model Room {
@@ -136,6 +137,7 @@ model Message {
   mediaUrl  String? // file/image/audio/video URL
   mediaType MediaType? // what kind of media was uploaded
   createdAt DateTime    @default(now())
+  isRead    Boolean     @default(false)
 }
 
 enum MessageType {
