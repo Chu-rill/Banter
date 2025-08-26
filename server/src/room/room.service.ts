@@ -106,8 +106,8 @@ export class RoomService {
       userId,
     );
 
-    // this.gateway.server.to(roomId).emit('room:userJoined', systemMessage);
-    this.gateway.server.emit('room:userJoined', systemMessage);
+    this.gateway.server.to(roomId).emit('room:userJoined', systemMessage);
+    // this.gateway.server.emit('room:userJoined', systemMessage);
 
     return {
       statusCode: HttpStatus.OK,

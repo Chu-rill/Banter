@@ -12,6 +12,7 @@ import { RoomMessageModule } from './room-message/room-message.module';
 import { CallModule } from './call/call.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { DirectMessageModule } from './direct-message/direct-message.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { DirectMessageModule } from './direct-message/direct-message.module';
     CallModule,
     FriendshipModule,
     DirectMessageModule,
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
