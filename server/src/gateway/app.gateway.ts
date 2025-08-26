@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -6,7 +7,10 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-
+import { UserRedisService } from 'src/redis/user.redis';
+interface AuthenticatedSocket extends Socket {
+  userId?: string;
+}
 @WebSocketGateway(5002, {
   cors: {
     origin: '*',
@@ -20,19 +24,73 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
 
-  handleConnection(client: any, ...args: any[]) {
+  constructor(
+    private readonly userRedis: UserRedisService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async handleConnection(client: AuthenticatedSocket) {
     this.logger.log(`User connected: ${client.id}`);
 
-    this.server
-      .to('user-joined')
-      // .to(client.id)
-      .emit('connection', 'Successfully connected to the server');
+    const userId = await this.authenticateUser(client);
+    if (!userId) {
+      this.logger.warn(`Authentication failed for client ${client.id}`);
+      client.disconnect();
+      return;
+    }
+
+    await this.userRedis.setUserSocket(userId, client.id);
+
+    // Attach userId to socket for later use
+    (client as any).userId = userId;
+
+    // Join user to their personal room (using userId as room name)
+    client.join(userId);
+
+    this.server.to(client.id).emit('connection', {
+      message: 'Successfully connected to the server',
+      userId,
+    });
   }
 
-  handleDisconnect(client: any) {
-    this.logger.log(`User disconnected: ${client.id}`);
-    this.server
-      .to('user-left')
-      .emit('disconnection', 'A user has disconnected');
+  async handleDisconnect(client: any) {
+    const userId =
+      client.userId || (await this.userRedis.getUserBySocket(client.id));
+    if (userId) {
+      await this.userRedis.removeUserSocket(userId, client.id);
+      this.logger.log(`User ${userId} (${client.id}) disconnected`);
+    } else {
+      this.logger.log(`Unknown user ${client.id} disconnected`);
+    }
+
+    this.server.to(client.id).emit('disconnection', {
+      message: 'A user has disconnected',
+      userId,
+    });
+  }
+
+  private async authenticateUser(client: Socket): Promise<string | null> {
+    try {
+      const token =
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization?.replace('Bearer ', '');
+
+      if (token) {
+        // Verify JWT and extract user ID
+        const decoded = await this.jwtService.verifyAsync(token);
+        return decoded.userId; // Adjust based on your JWT payload
+      }
+
+      const userId = client.handshake.query?.userId as string;
+      if (userId) {
+        // Optionally validate user exists in DB
+        return userId;
+      }
+
+      return null;
+    } catch (error) {
+      this.logger.error('Authentication error:', error);
+      return null;
+    }
   }
 }

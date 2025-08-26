@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { RedisService } from './redis.service';
 import { createClient } from 'redis';
+import { RoomRedisService } from './room.redis';
+import { UserRedisService } from './user.redis';
 const redisProvider = {
   provide: 'REDIS_CLIENT',
   useFactory: async () => {
@@ -19,7 +21,7 @@ const redisProvider = {
 };
 
 @Module({
-  exports: [RedisService, redisProvider],
-  providers: [RedisService, redisProvider],
+  exports: [RedisService, redisProvider, RoomRedisService, UserRedisService],
+  providers: [RedisService, redisProvider, RoomRedisService, UserRedisService],
 })
 export class RedisModule {}

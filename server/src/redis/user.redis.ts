@@ -1,14 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { RedisService } from 'src/redis/redis.service';
+import { RedisService } from './redis.service';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
 
 @Injectable()
-export class WebSocketService {
-  private readonly logger = new Logger(WebSocketService.name);
+export class UserRedisService {
+  private readonly logger = new Logger(UserRedisService.name);
 
   constructor(private readonly redisService: RedisService) {}
 
@@ -115,64 +115,6 @@ export class WebSocketService {
         error,
       );
       return [];
-    }
-  }
-
-  // Store user-room mapping (user can be in multiple rooms)
-  async addUserToRoom(
-    userId: string,
-    roomId: string,
-    socketId: string,
-  ): Promise<void> {
-    try {
-      // Add room to user's room set
-      await this.redisService.sadd(`ws:user_rooms:${userId}`, [roomId]);
-
-      // Add user to room's participant set
-      await this.redisService.sadd(`ws:room_participants:${roomId}`, [userId]);
-
-      // Store user's socket in the room
-      await this.redisService.hset(
-        `ws:room_sockets:${roomId}`,
-        userId,
-        socketId,
-      );
-
-      // Set TTL for cleanup (24 hours)
-      await Promise.all([
-        this.redisService.expire(`ws:user_rooms:${userId}`, 24 * 60 * 60),
-        this.redisService.expire(
-          `ws:room_participants:${roomId}`,
-          24 * 60 * 60,
-        ),
-        this.redisService.expire(`ws:room_sockets:${roomId}`, 24 * 60 * 60),
-      ]);
-
-      this.logger.log(
-        `User ${userId} joined room ${roomId} with socket ${socketId}`,
-      );
-    } catch (error) {
-      this.logger.error(`Error adding user to room:`, error);
-      throw error;
-    }
-  }
-
-  // Remove user from room
-  async removeUserFromRoom(userId: string, roomId: string): Promise<void> {
-    try {
-      // Remove room from user's room set
-      await this.redisService.srem(`ws:user_rooms:${userId}`, [roomId]);
-
-      // Remove user from room's participant set
-      await this.redisService.srem(`ws:room_participants:${roomId}`, [userId]);
-
-      // Remove user's socket from the room
-      await this.redisService.hdel(`ws:room_sockets:${roomId}`, [userId]);
-
-      this.logger.log(`User ${userId} left room ${roomId}`);
-    } catch (error) {
-      this.logger.error(`Error removing user from room:`, error);
-      throw error;
     }
   }
 
