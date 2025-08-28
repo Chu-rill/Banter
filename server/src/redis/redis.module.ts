@@ -8,7 +8,13 @@ const redisProvider = {
   useFactory: async () => {
     const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
     const client = createClient({
-      url: redisUrl,
+      username: process.env.REDIS_USERNAME,
+      password: process.env.REDIS_PASSWORD,
+      socket: {
+        host: process.env.REDIS_HOST,
+        port: parseInt(process.env.REDIS_PORT!),
+      },
+      // url: redisUrl,
     });
 
     client.on('error', (err) => {

@@ -37,6 +37,16 @@ export class UserRedisService {
     }
   }
 
+  // Get all socket IDs for a user (for multiple sessions)
+  async getAllUserSockets(userId: string): Promise<string[]> {
+    try {
+      return await this.redisService.smembers(`ws:user:${userId}:sockets`);
+    } catch (error) {
+      this.logger.error(`Error getting all sockets for user ${userId}:`, error);
+      return [];
+    }
+  }
+
   // Remove user-socket mapping
   async removeUserSocket(userId: string, socketId: string): Promise<void> {
     try {
@@ -125,6 +135,30 @@ export class UserRedisService {
     } catch (error) {
       this.logger.error(`Error getting user rooms:`, error);
       return [];
+    }
+  }
+
+  // Send message to all user sessions
+  async sendToAllUserSockets(
+    server: Server,
+    userId: string,
+    event: string,
+    data: any,
+  ): Promise<boolean> {
+    try {
+      const socketIds = await this.getAllUserSockets(userId);
+
+      if (socketIds.length > 0) {
+        socketIds.forEach((socketId) => {
+          server.to(socketId).emit(event, data);
+        });
+        return true;
+      }
+
+      return false; // User is offline
+    } catch (error) {
+      this.logger.error(`Error sending to all user sockets:`, error);
+      return false;
     }
   }
 }

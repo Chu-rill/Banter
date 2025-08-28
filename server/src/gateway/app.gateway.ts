@@ -11,6 +11,7 @@ import { UserRedisService } from 'src/redis/user.redis';
 interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
+
 @WebSocketGateway(5002, {
   cors: {
     origin: '*',
@@ -38,11 +39,12 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
       client.disconnect();
       return;
     }
+    this.logger.log(`User ID: ${userId}`);
 
     await this.userRedis.setUserSocket(userId, client.id);
 
     // Attach userId to socket for later use
-    (client as any).userId = userId;
+    client.data.userId = userId;
 
     // Join user to their personal room (using userId as room name)
     client.join(userId);
@@ -62,11 +64,6 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } else {
       this.logger.log(`Unknown user ${client.id} disconnected`);
     }
-
-    this.server.to(client.id).emit('disconnection', {
-      message: 'A user has disconnected',
-      userId,
-    });
   }
 
   private async authenticateUser(client: Socket): Promise<string | null> {
