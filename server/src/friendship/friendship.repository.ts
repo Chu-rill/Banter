@@ -178,21 +178,6 @@ export class FriendshipRepository {
     return user1Friends.filter((friend) => mutualFriendIds.includes(friend.id));
   }
 
-  // Check if user can send message to another user (are friends or friendship exists)
-  async canSendMessage(senderId: string, receiverId: string): Promise<boolean> {
-    // Check if they are friends
-    const areFriends = await this.areFriends(senderId, receiverId);
-
-    if (areFriends) {
-      return true;
-    }
-
-    // Optional: Allow messaging if there's any friendship record (even pending)
-    // You might want to remove this based on your business logic
-    const friendship = await this.existing(senderId, receiverId);
-    return !!friendship;
-  }
-
   // Remove/delete friendship
   async removeFriendship(userId1: string, userId2: string) {
     const friendship = await this.getFriendship(userId1, userId2);

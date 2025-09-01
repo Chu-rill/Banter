@@ -6,8 +6,8 @@ export const MediaTypeEnum = z.nativeEnum(MediaType);
 
 // Zod Schemas
 
-export const SendDirectMessageSchema = z.object({
-  receiverId: z.string().cuid(),
+export const SendRoomMessageSchema = z.object({
+  roomId: z.string().cuid(),
   content: z.string().optional(),
   mediaUrl: z.string().url().optional(),
   type: MessageTypeEnum.default(MessageType.TEXT),
@@ -20,7 +20,7 @@ export const GetDirectMessagesWithUserSchema = z.object({
 
 // DTO Types
 
-export type SendDirectMessageDto = z.infer<typeof SendDirectMessageSchema>;
+export type SendRoomMessageDto = z.infer<typeof SendRoomMessageSchema>;
 export type GetDirectMessagesWithUserDto = z.infer<
   typeof GetDirectMessagesWithUserSchema
 >;

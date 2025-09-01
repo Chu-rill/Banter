@@ -154,4 +154,8 @@ export class RoomService {
       data: oldMember,
     };
   }
+
+  async canMessage(roomId: string, userId: string): Promise<boolean> {
+    return this.roomRepository.isRoomMember(roomId, userId);
+  }
 }

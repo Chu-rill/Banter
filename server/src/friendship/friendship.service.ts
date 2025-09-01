@@ -161,4 +161,8 @@ export class FriendshipService {
       data: list,
     };
   }
+
+  async canSendMessage(senderId: string, receiverId: string): Promise<boolean> {
+    return this.friendshipRepository.areFriends(senderId, receiverId);
+  }
 }

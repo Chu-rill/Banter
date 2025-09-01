@@ -11,9 +11,9 @@ export class RoomMessageService {
     roomId: string,
     userId: string,
     content?: string,
-    type: MessageType = MessageType.TEXT,
-    mediaUrl?: string,
-    mediaType?: MediaType,
+    type?,
+    mediaUrl?,
+    mediaType?,
   ) {
     // Business rules example: prevent empty messages unless media
     if (!content && !mediaUrl) {
