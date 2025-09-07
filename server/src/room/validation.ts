@@ -28,7 +28,7 @@ export const GetAllRoomsQuerySchema = z.object({
 
 export const RoomConnectionSchema = z.object({
   roomId: z.string().cuid(),
-  userId: z.string().cuid(),
+  // userId: z.string().cuid(),
 });
 
 //Type inference from Zod schemas

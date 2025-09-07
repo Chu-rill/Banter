@@ -65,6 +65,31 @@ export class RoomRedisService {
     }
   }
 
+  // Get a single room that a user belongs to, filtered by a specific roomId (returns socketId if user is in the room, else null)
+  async getUsersocketByRoomId(
+    userId: string,
+    roomId: string,
+  ): Promise<string | null> {
+    try {
+      const isMember = await this.redisService.sismember(
+        `ws:user_rooms:${userId}`,
+        roomId,
+      );
+      if (isMember === 1) {
+        // Return the socketId for this user in this room
+        const socketId = await this.redisService.hget(
+          `ws:room_sockets:${roomId}`,
+          userId,
+        );
+        return socketId;
+      }
+      return null;
+    } catch (error) {
+      this.logger.error(`Error getting user room by id:`, error);
+      return null;
+    }
+  }
+
   // Get all rooms a user is in
   async getUserRooms(userId: string): Promise<string[]> {
     try {
@@ -109,6 +134,17 @@ export class RoomRedisService {
     } catch (error) {
       this.logger.error(`Error checking if user is in room:`, error);
       return false;
+    }
+  }
+
+  // Get a single room that a user belongs to (returns the first room found or null)
+  async getSingleUserRoom(userId: string): Promise<string | null> {
+    try {
+      const rooms = await this.redisService.smembers(`ws:user_rooms:${userId}`);
+      return rooms.length > 0 ? rooms[0] : null;
+    } catch (error) {
+      this.logger.error(`Error getting single user room:`, error);
+      return null;
     }
   }
 }

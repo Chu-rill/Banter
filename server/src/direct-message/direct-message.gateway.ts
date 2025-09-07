@@ -63,7 +63,7 @@ export class DirectMessageGateway
     client.join(userId);
 
     this.server.to(client.id).emit('connection', {
-      message: 'Successfully connected to the server',
+      message: 'Successfully connected to the direct message gateway',
       userId,
     });
 
@@ -175,8 +175,7 @@ export class DirectMessageGateway
       client.emit('dm:sent', savedMessage);
 
       if (receiverSocketId) {
-        // Receiver is online - send to both sender and receiver
-        client.emit('dm:new', savedMessage);
+        // Receiver is online - send to and receiver
         this.server.to(receiverSocketId).emit('dm:new', savedMessage);
         this.logger.log(`Message delivered to online user ${receiverId}`);
       } else {

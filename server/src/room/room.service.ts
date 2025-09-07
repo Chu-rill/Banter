@@ -15,6 +15,7 @@ import {
 import { RoomMessageService } from 'src/room-message/room-message.service';
 import { UserRepository } from 'src/user/user.repository';
 import { AppGateway } from 'src/gateway/app.gateway';
+import { RoomRedisService } from 'src/redis/room.redis';
 
 @Injectable()
 export class RoomService {
@@ -24,6 +25,7 @@ export class RoomService {
     private userRepository: UserRepository,
     private gateway: AppGateway,
     private roomMessageService: RoomMessageService,
+    private roomRedis: RoomRedisService, // Inject RoomRedisService
   ) {}
 
   async createRoom(createRoomDto: CreateRoomDto, creatorId: string) {
@@ -82,9 +84,7 @@ export class RoomService {
     };
   }
 
-  async joinRoom(dto: RoomConnectionDto) {
-    const { roomId, userId } = dto;
-
+  async joinRoom(roomId: string, userId: string) {
     const room = await this.roomRepository.getRoomById(roomId);
 
     if (!room) {
@@ -106,19 +106,15 @@ export class RoomService {
       userId,
     );
 
-    this.gateway.server.to(roomId).emit('room:userJoined', systemMessage);
-    // this.gateway.server.emit('room:userJoined', systemMessage);
-
     return {
       statusCode: HttpStatus.OK,
       success: true,
-      message: 'Joined room successfully',
+      message: systemMessage,
       data: newMember,
     };
   }
 
-  async leaveRoom(dto: RoomConnectionDto) {
-    const { roomId, userId } = dto;
+  async leaveRoom(roomId: string, userId: string) {
     const room = await this.roomRepository.getRoomById(roomId);
 
     if (!room) {
@@ -144,18 +140,23 @@ export class RoomService {
       userId,
     );
 
-    // this.gateway.server.to(roomId).emit('room:userLeft', systemMessage);
-    this.gateway.server.emit('room:userLeft', systemMessage);
-
     return {
       statusCode: HttpStatus.OK,
       success: true,
-      message: 'Left room successfully',
+      message: systemMessage,
       data: oldMember,
     };
   }
 
   async canMessage(roomId: string, userId: string): Promise<boolean> {
     return this.roomRepository.isRoomMember(roomId, userId);
+  }
+
+  async findById(id: string) {
+    const room = await this.roomRepository.getRoomById(id);
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+    return room;
   }
 }

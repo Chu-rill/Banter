@@ -90,7 +90,7 @@ export class RoomController {
     const dto = { roomId: id, userId: req.user.id };
 
     const parsed = RoomConnectionSchema.parse(dto);
-    return this.roomService.joinRoom(parsed);
+    // return this.roomService.joinRoom(parsed);
   }
 
   @Delete(':id/leave')
@@ -106,6 +106,6 @@ export class RoomController {
     const dto = { roomId: id, userId: req.user.id };
 
     const parsed = RoomConnectionSchema.parse(dto);
-    return this.roomService.leaveRoom(parsed);
+    // return this.roomService.leaveRoom(parsed);
   }
 }

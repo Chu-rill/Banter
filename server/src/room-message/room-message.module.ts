@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { RoomMessageService } from './room-message.service';
 import { RoomMessageGateway } from './room-message.gateway';
 import { PrismaModule } from 'src/prisma/prisma.module';
@@ -14,7 +14,7 @@ import { RoomModule } from 'src/room/room.module';
     PrismaModule,
     GatewayModule,
     RedisModule,
-    RoomModule,
+    forwardRef(() => RoomModule),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
