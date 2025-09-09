@@ -7,7 +7,7 @@ export enum CallType {
   SCREEN_SHARE = 'screen',
 }
 
-export class CreateCallDto {
+export class StartCallDto {
   @ApiProperty({ description: 'Room ID where the call takes place' })
   @IsString()
   roomId: string;

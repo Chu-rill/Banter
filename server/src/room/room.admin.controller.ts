@@ -22,12 +22,12 @@ export class RoomAdminController {
     @Request() req,
   ) {
     // Only room creator can kick members
-    return this.roomService.kickMember(roomId, req.user.id, userId);
+    // return this.roomService.kickMember(roomId, req.user.id, userId);
   }
 
   @Delete(':id')
   async deleteRoom(@Param('id') roomId: string, @Request() req) {
     // Only room creator can delete the room
-    return this.roomService.deleteRoom(roomId, req.user.id);
+    // return this.roomService.deleteRoom(roomId, req.user.id);
   }
 }

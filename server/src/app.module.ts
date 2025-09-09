@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
 import { EmailAndPasswordAuthModule } from './auth/email-password-auth/email-password-auth.module';
@@ -13,9 +14,14 @@ import { CallModule } from './call/call.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { DirectMessageModule } from './direct-message/direct-message.module';
 import { RedisModule } from './redis/redis.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
     ThrottlerModule.forRoot([
       {
         name: 'default',
@@ -44,6 +50,7 @@ import { RedisModule } from './redis/redis.module';
     FriendshipModule,
     DirectMessageModule,
     RedisModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
