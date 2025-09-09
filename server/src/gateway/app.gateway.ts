@@ -5,6 +5,9 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { UserRedisService } from 'src/redis/user.redis';
@@ -12,7 +15,7 @@ interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
 
-@WebSocketGateway(5002, {
+@WebSocketGateway(5001, {
   cors: {
     origin: '*',
     // origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -89,5 +92,35 @@ export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.error('Authentication error:', error);
       return null;
     }
+  }
+
+  @SubscribeMessage('offer')
+  handleOffer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { target: string; offer: any; caller: string },
+  ) {
+    const { target, offer, caller } = data;
+    this.server.to(target).emit('offer', { offer, caller });
+  }
+
+  @SubscribeMessage('answer')
+  handleAnswer(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { target: string; answer: any },
+  ) {
+    const { target, answer } = data;
+    this.server.to(target).emit('answer', { answer, answerer: client.id });
+  }
+
+  @SubscribeMessage('ice-candidate')
+  handleIceCandidate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { target: string; candidate: any },
+  ) {
+    const { target, candidate } = data;
+    this.server.to(target).emit('ice-candidate', {
+      candidate,
+      sender: client.id,
+    });
   }
 }

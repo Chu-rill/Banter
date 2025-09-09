@@ -15,17 +15,19 @@ import { RoomService } from './room.service';
 export class RoomAdminController {
   constructor(private readonly roomService: RoomService) {}
 
-  //   @Post(':id/kick/:userId')
-  //   async kickMember(
-  //     @Param('id') roomId: string,
-  //     @Param('userId') userId: string,
-  //     @Request() req,
-  //   ) {
-  //     return this.roomService.kickMember(roomId, req.user.id, userId);
-  //   }
+  @Post(':id/kick/:userId')
+  async kickMember(
+    @Param('id') roomId: string,
+    @Param('userId') userId: string,
+    @Request() req,
+  ) {
+    // Only room creator can kick members
+    return this.roomService.kickMember(roomId, req.user.id, userId);
+  }
 
-  //   @Delete(':id')
-  //   async deleteRoom(@Param('id') roomId: string, @Request() req) {
-  //     return this.roomService.deleteRoom(roomId, req.user.id);
-  //   }
+  @Delete(':id')
+  async deleteRoom(@Param('id') roomId: string, @Request() req) {
+    // Only room creator can delete the room
+    return this.roomService.deleteRoom(roomId, req.user.id);
+  }
 }
