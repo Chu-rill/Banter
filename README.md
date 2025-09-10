@@ -12,6 +12,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 ## ✨ Features
 
 ### 🗨️ Real-time Messaging
+
 - **Instant messaging** with typing indicators and read receipts
 - **Emoji support** with emoji picker
 - **File sharing** (images, videos, documents)
@@ -19,6 +20,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 - **Private and group chats**
 
 ### 📹 Video & Voice Calls
+
 - **HD video calling** with WebRTC
 - **Screen sharing** capabilities
 - **Audio-only calls** option
@@ -26,6 +28,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 - **Multi-participant support**
 
 ### 🔐 Authentication & Security
+
 - **Email/Password authentication**
 - **Google OAuth integration**
 - **JWT-based security**
@@ -33,6 +36,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 - **Email verification system**
 
 ### 🏠 Room Management
+
 - **Public and private rooms**
 - **Room creation and joining**
 - **Participant management**
@@ -40,6 +44,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 - **Video/chat/hybrid room modes**
 
 ### 🎨 User Experience
+
 - **Dark/Light theme support**
 - **Responsive design** (mobile-first)
 - **Real-time online status**
@@ -50,6 +55,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 ## 🏗️ Architecture
 
 ### Frontend (Client)
+
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
@@ -60,6 +66,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 - **HTTP Client**: Axios
 
 ### Backend (Server)
+
 - **Framework**: NestJS
 - **Language**: TypeScript
 - **Database**: PostgreSQL with Prisma ORM
@@ -71,6 +78,7 @@ A modern, full-stack real-time communication platform featuring instant messagin
 - **API Documentation**: Swagger
 
 ### Infrastructure
+
 - **Database**: PostgreSQL
 - **Cache**: Redis
 - **File Storage**: Local/Cloud storage
@@ -118,7 +126,7 @@ npm run dev
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
-- **API Documentation**: http://localhost:5000/api-docs
+- **API Documentation**: http://localhost:5000/api
 
 ## 📁 Project Structure
 
@@ -156,11 +164,13 @@ banter/
 ### Environment Variables
 
 #### Client (.env.local)
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1
 ```
 
 #### Server (.env)
+
 ```env
 # Database
 DATABASE_URL=postgresql://username:password@localhost:5432/banter_db
@@ -185,6 +195,7 @@ See `.env.example` files in each directory for complete configuration options.
 ## 🧪 Testing
 
 ### Backend Testing
+
 ```bash
 cd server
 npm run test          # Unit tests
@@ -193,6 +204,7 @@ npm run test:cov      # Coverage report
 ```
 
 ### Frontend Testing
+
 ```bash
 cd client
 npm run test          # Jest tests
@@ -203,8 +215,8 @@ npm run test:watch    # Watch mode
 
 The backend provides comprehensive API documentation through Swagger:
 
-- **Local**: http://localhost:5000/api-docs
-- **Production**: https://your-domain.com/api-docs
+- **Local**: http://localhost:5000/api
+- **Production**: https://your-domain.com/api
 
 ### Key API Endpoints
 
@@ -230,6 +242,7 @@ The backend provides comprehensive API documentation through Swagger:
 ## 🚢 Deployment
 
 ### Frontend (Vercel/Netlify)
+
 ```bash
 cd client
 npm run build
@@ -237,6 +250,7 @@ npm run start
 ```
 
 ### Backend (Railway/Heroku/VPS)
+
 ```bash
 cd server
 npm run build
@@ -244,6 +258,7 @@ npm run start:prod
 ```
 
 ### Database Migration
+
 ```bash
 cd server
 npm run db:migrate
