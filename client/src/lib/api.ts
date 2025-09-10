@@ -1,21 +1,22 @@
-import axios from 'axios';
-import Cookies from 'js-cookie';
+import axios from "axios";
+import Cookies from "js-cookie";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = Cookies.get('authToken');
+    const token = Cookies.get("authToken");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,8 +33,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Token expired or invalid
-      Cookies.remove('authToken');
-      window.location.href = '/login';
+      Cookies.remove("authToken");
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
@@ -53,8 +54,8 @@ export interface Room {
   id: string;
   name: string;
   description?: string;
-  type: 'PUBLIC' | 'PRIVATE';
-  mode: 'CHAT' | 'VIDEO' | 'BOTH';
+  type: "PUBLIC" | "PRIVATE";
+  mode: "CHAT" | "VIDEO" | "BOTH";
   creatorId: string;
   participants: User[];
   maxParticipants: number;
@@ -67,10 +68,10 @@ export interface Message {
   roomId: string;
   userId: string;
   user: User;
-  type: 'TEXT' | 'MEDIA' | 'VOICE' | 'SYSTEM';
+  type: "TEXT" | "MEDIA" | "VOICE" | "SYSTEM";
   content?: string;
   mediaUrl?: string;
-  mediaType?: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE';
+  mediaType?: "IMAGE" | "VIDEO" | "AUDIO" | "FILE";
   createdAt: string;
   isRead: boolean;
 }
@@ -81,42 +82,46 @@ export interface Friend {
   receiverId: string;
   requester: User;
   receiver: User;
-  status: 'PENDING' | 'ACCEPTED' | 'BLOCKED' | 'DECLINED';
+  status: "PENDING" | "ACCEPTED" | "BLOCKED" | "DECLINED";
   createdAt: string;
 }
 
 // Auth API
 export const authApi = {
   login: async (email: string, password: string) => {
-    const { data } = await api.post('/auth/login', { email, password });
+    const { data } = await api.post("/auth/login", { email, password });
     if (data.accessToken) {
-      Cookies.set('authToken', data.accessToken, { expires: 7 });
+      Cookies.set("authToken", data.accessToken, { expires: 7 });
     }
     return data;
   },
 
   register: async (username: string, email: string, password: string) => {
-    const { data } = await api.post('/auth/register', { username, email, password });
+    const { data } = await api.post("/auth/register", {
+      username,
+      email,
+      password,
+    });
     return data;
   },
 
   logout: async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post("/auth/logout");
     } finally {
-      Cookies.remove('authToken');
+      Cookies.remove("authToken");
     }
   },
 
   getCurrentUser: async (): Promise<User> => {
-    const { data } = await api.get('/auth/me');
+    const { data } = await api.get("/auth/me");
     return data;
   },
 
   refreshToken: async () => {
-    const { data } = await api.post('/auth/refresh');
+    const { data } = await api.post("/auth/refresh");
     if (data.accessToken) {
-      Cookies.set('authToken', data.accessToken, { expires: 7 });
+      Cookies.set("authToken", data.accessToken, { expires: 7 });
     }
     return data;
   },
@@ -125,7 +130,7 @@ export const authApi = {
 // Room API
 export const roomApi = {
   getRooms: async (): Promise<Room[]> => {
-    const { data } = await api.get('/rooms');
+    const { data } = await api.get("/rooms");
     return data;
   },
 
@@ -137,11 +142,11 @@ export const roomApi = {
   createRoom: async (roomData: {
     name: string;
     description?: string;
-    type: 'PUBLIC' | 'PRIVATE';
-    mode: 'CHAT' | 'VIDEO' | 'BOTH';
+    type: "PUBLIC" | "PRIVATE";
+    mode: "CHAT" | "VIDEO" | "BOTH";
     maxParticipants?: number;
   }): Promise<Room> => {
-    const { data } = await api.post('/rooms', roomData);
+    const { data } = await api.post("/rooms", roomData);
     return data;
   },
 
@@ -171,8 +176,8 @@ export const messageApi = {
     cursor?: string
   ): Promise<Message[]> => {
     const params = new URLSearchParams({ limit: limit.toString() });
-    if (cursor) params.append('cursor', cursor);
-    
+    if (cursor) params.append("cursor", cursor);
+
     const { data } = await api.get(`/messages/room/${roomId}?${params}`);
     return data;
   },
@@ -180,34 +185,37 @@ export const messageApi = {
   sendMessage: async (messageData: {
     roomId: string;
     content?: string;
-    type?: 'TEXT' | 'MEDIA' | 'VOICE';
+    type?: "TEXT" | "MEDIA" | "VOICE";
     mediaUrl?: string;
-    mediaType?: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'FILE';
+    mediaType?: "IMAGE" | "VIDEO" | "AUDIO" | "FILE";
   }): Promise<Message> => {
-    const { data } = await api.post('/messages', messageData);
+    const { data } = await api.post("/messages", messageData);
     return data;
   },
 
-  markMessagesRead: async (roomId: string, lastMessageId: string): Promise<void> => {
-    await api.patch('/messages/read', { roomId, lastMessageId });
+  markMessagesRead: async (
+    roomId: string,
+    lastMessageId: string
+  ): Promise<void> => {
+    await api.patch("/messages/read", { roomId, lastMessageId });
   },
 };
 
 // Friend API
 export const friendApi = {
   getFriends: async (): Promise<Friend[]> => {
-    const { data } = await api.get('/friends');
+    const { data } = await api.get("/friends");
     return data;
   },
 
   sendFriendRequest: async (receiverId: string): Promise<Friend> => {
-    const { data } = await api.post('/friends/request', { receiverId });
+    const { data } = await api.post("/friends/request", { receiverId });
     return data;
   },
 
   respondToFriendRequest: async (
     friendshipId: string,
-    action: 'accept' | 'decline'
+    action: "accept" | "decline"
   ): Promise<Friend> => {
     const { data } = await api.patch(`/friends/${friendshipId}/${action}`);
     return data;
@@ -218,20 +226,22 @@ export const friendApi = {
   },
 
   searchUsers: async (query: string): Promise<User[]> => {
-    const { data } = await api.get(`/users/search?q=${encodeURIComponent(query)}`);
+    const { data } = await api.get(
+      `/users/search?q=${encodeURIComponent(query)}`
+    );
     return data;
   },
 };
 
 // Call API
 export const callApi = {
-  startCall: async (roomId: string, type: 'video' | 'audio' = 'video') => {
-    const { data } = await api.post('/call/start', { roomId, type });
+  startCall: async (roomId: string, type: "video" | "audio" = "video") => {
+    const { data } = await api.post("/call/start", { roomId, type });
     return data;
   },
 
   endCall: async (callSessionId: string, duration: number) => {
-    const { data } = await api.post('/call/end', { callSessionId, duration });
+    const { data } = await api.post("/call/end", { callSessionId, duration });
     return data;
   },
 
@@ -241,7 +251,7 @@ export const callApi = {
   },
 
   getCallStats: async () => {
-    const { data } = await api.get('/call/stats');
+    const { data } = await api.get("/call/stats");
     return data;
   },
 };
@@ -250,27 +260,29 @@ export const callApi = {
 export const uploadApi = {
   uploadFile: async (file: File, roomId?: string) => {
     const formData = new FormData();
-    formData.append('file', file);
-    if (roomId) formData.append('roomId', roomId);
+    formData.append("file", file);
+    if (roomId) formData.append("roomId", roomId);
 
-    const { data } = await api.post('/upload/file', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const { data } = await api.post("/upload/file", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
   },
 
   uploadAvatar: async (file: File) => {
     const formData = new FormData();
-    formData.append('avatar', file);
+    formData.append("avatar", file);
 
-    const { data } = await api.post('/upload/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const { data } = await api.post("/upload/avatar", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return data;
   },
 
   getMyUploads: async (page = 1, limit = 20) => {
-    const { data } = await api.get(`/upload/my-uploads?page=${page}&limit=${limit}`);
+    const { data } = await api.get(
+      `/upload/my-uploads?page=${page}&limit=${limit}`
+    );
     return data;
   },
 

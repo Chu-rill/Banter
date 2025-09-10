@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   LoadingSpinner,
   LoadingDots,
@@ -11,9 +11,9 @@ import {
   RoomListSkeleton,
   UserProfileSkeleton,
   Button,
-} from '@/components/ui';
-import { useLoadingContext } from '@/contexts/LoadingContext';
-import { useLoading } from '@/hooks/useLoading';
+} from "@/components/ui";
+import { useLoadingContext } from "@/contexts/LoadingContext";
+import { useLoading } from "../../hooks/useLoading";
 
 export default function LoadingExamples() {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -21,18 +21,23 @@ export default function LoadingExamples() {
   const { withLoading, isLoading, startLoading, stopLoading } = useLoading();
 
   const handleAsyncOperation = withLoading(async () => {
-    await new Promise(resolve => setTimeout(resolve, 3000));
-  }, 'asyncOp');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }, "asyncOp");
 
   const handleGlobalLoading = () => {
-    showGlobalLoading('Processing...', 'Please wait while we process your request.');
+    showGlobalLoading(
+      "Processing...",
+      "Please wait while we process your request."
+    );
     setTimeout(() => hideGlobalLoading(), 3000);
   };
 
   return (
     <div className="p-8 space-y-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-center">Loading Components Demo</h1>
-      
+      <h1 className="text-3xl font-bold text-center">
+        Loading Components Demo
+      </h1>
+
       {/* Spinners */}
       <section className="space-y-4">
         <h2 className="text-xl font-semibold">Loading Spinners</h2>
@@ -80,7 +85,7 @@ export default function LoadingExamples() {
             Save
           </LoadingButton>
           <LoadingButton
-            loading={isLoading('asyncOp')}
+            loading={isLoading("asyncOp")}
             onClick={handleAsyncOperation}
             variant="secondary"
           >
@@ -105,7 +110,10 @@ export default function LoadingExamples() {
             <LoadingSkeleton className="h-4 w-full" variant="shimmer" />
             <LoadingSkeleton className="h-4 w-3/4" variant="shimmer" />
             <LoadingSkeleton className="h-10 w-32" variant="shimmer" />
-            <LoadingSkeleton className="h-24 w-24 rounded-full" variant="shimmer" />
+            <LoadingSkeleton
+              className="h-24 w-24 rounded-full"
+              variant="shimmer"
+            />
           </div>
         </div>
       </section>

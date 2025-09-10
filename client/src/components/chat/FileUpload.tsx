@@ -193,7 +193,7 @@ export default function FileUpload({
     const fileColor = getFileColor(file.type);
     
     return (
-      <div key={file.id} className=\"relative bg-card border border-border rounded-lg p-4\">
+      <div key={file.id} className="relative bg-card border border-border rounded-lg p-4">
         <div className="flex items-start space-x-3">
           <div className={cn("p-2 bg-muted rounded-lg", fileColor)}>
             <FileIcon className="w-5 h-5" />

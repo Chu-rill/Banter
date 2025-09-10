@@ -68,8 +68,6 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);

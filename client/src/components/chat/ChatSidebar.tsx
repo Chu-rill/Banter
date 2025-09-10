@@ -155,7 +155,7 @@ export default function ChatSidebar({
 
   return (
     <div className={cn(
-      "bg-card border-r border-border flex flex-col transition-transform duration-300 ease-in-out",
+      "bg-secondary/30 border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out backdrop-blur-sm",
       "w-80 md:w-80",
       collapsed ? "w-16" : "w-80",
       "md:relative md:translate-x-0",
@@ -163,19 +163,23 @@ export default function ChatSidebar({
       collapsed && "sm:-translate-x-full"
     )}>
       {/* Header */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border/50">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-white" />
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+              <MessageCircle className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold gradient-text">Banter</span>
+            <div>
+              <h1 className="text-xl font-bold gradient-text">Banter</h1>
+              <p className="text-xs text-muted-foreground -mt-1">Chat & Video</p>
+            </div>
           </div>
           
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggleCollapse}
+            className="hover:bg-accent/50"
           >
             <MoreVertical className="w-4 h-4" />
           </Button>
@@ -184,38 +188,44 @@ export default function ChatSidebar({
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search rooms..."
+          <input
+            placeholder="Search conversations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-9"
+            className="w-full h-10 pl-10 pr-4 bg-secondary/50 border border-border/30 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all"
           />
         </div>
       </div>
       
       {/* Tabs */}
-      <div className="flex border-b border-border">
+      <div className="flex bg-secondary/20 border-b border-border/50">
         <button
           onClick={() => setActiveTab('rooms')}
           className={cn(
-            "flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors",
+            "flex-1 py-3 px-4 text-sm font-medium transition-all relative overflow-hidden",
             activeTab === 'rooms' 
-              ? "border-purple-600 text-purple-600" 
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "text-purple-600 bg-background/50" 
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
           )}
         >
+          {activeTab === 'rooms' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
+          )}
           <Hash className="w-4 h-4 inline-block mr-2" />
           Rooms
         </button>
         <button
           onClick={() => setActiveTab('friends')}
           className={cn(
-            "flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors",
+            "flex-1 py-3 px-4 text-sm font-medium transition-all relative overflow-hidden",
             activeTab === 'friends' 
-              ? "border-purple-600 text-purple-600" 
-              : "border-transparent text-muted-foreground hover:text-foreground"
+              ? "text-purple-600 bg-background/50" 
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
           )}
         >
+          {activeTab === 'friends' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
+          )}
           <Users className="w-4 h-4 inline-block mr-2" />
           Friends
         </button>
@@ -224,16 +234,15 @@ export default function ChatSidebar({
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {activeTab === 'rooms' && (
-          <div className="p-2">
+          <div className="p-3">
             {/* Create Room Button */}
-            <Button
-              variant="ghost"
+            <button
               onClick={handleCreateRoom}
-              className="w-full justify-start mb-2 h-12"
+              className="w-full flex items-center justify-start px-4 py-3 mb-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
-              <Plus className="w-4 h-4 mr-3" />
+              <Plus className="w-5 h-5 mr-3" />
               Create Room
-            </Button>
+            </button>
             
             {loading ? (
               <div className="flex items-center justify-center py-8">
@@ -247,51 +256,77 @@ export default function ChatSidebar({
                 </p>
               </div>
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {filteredRooms.map((room) => (
                   <div
                     key={room.id}
                     onClick={() => onSelectRoom(room)}
                     className={cn(
-                      "flex items-center p-3 rounded-lg cursor-pointer hover:bg-accent transition-colors",
-                      selectedRoom?.id === room.id && "bg-accent"
+                      "flex items-center p-3 rounded-xl cursor-pointer transition-all duration-200 group",
+                      selectedRoom?.id === room.id 
+                        ? "bg-purple-600/10 border border-purple-500/20 shadow-lg" 
+                        : "hover:bg-secondary/50 hover:shadow-md"
                     )}
                   >
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
                       <div className="relative">
                         <div className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center",
+                          "w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:scale-105",
                           room.mode === 'VIDEO' 
-                            ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
-                            : "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+                            ? "bg-gradient-to-br from-emerald-500 to-green-600 text-white" 
+                            : "bg-gradient-to-br from-blue-500 to-indigo-600 text-white",
+                          selectedRoom?.id === room.id && "ring-2 ring-purple-500/30"
                         )}>
                           {room.mode === 'VIDEO' ? (
-                            <Video className="w-5 h-5" />
+                            <Video className="w-6 h-6" />
                           ) : (
-                            <Hash className="w-5 h-5" />
+                            <Hash className="w-6 h-6" />
                           )}
                         </div>
                         {room.isActive && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
+                          <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
                         )}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-foreground truncate">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className={cn(
+                            "text-sm font-semibold truncate transition-colors",
+                            selectedRoom?.id === room.id ? "text-purple-600" : "text-foreground group-hover:text-purple-600"
+                          )}>
                             {room.name}
-                          </p>
-                          <span className="text-xs text-muted-foreground">
-                            {formatTimeAgo(room.updatedAt)}
-                          </span>
+                          </h3>
+                          <div className="flex items-center space-x-1">
+                            {room.type === 'PRIVATE' && (
+                              <div className="w-2 h-2 bg-amber-500 rounded-full" title="Private room" />
+                            )}
+                            <span className="text-xs text-muted-foreground">
+                              {formatTimeAgo(room.createdAt)}
+                            </span>
+                          </div>
                         </div>
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-muted-foreground truncate">
-                            {room.description || `${room.participants.length} members`}
+                            {room.description || `${room.participants.length} ${room.participants.length === 1 ? 'member' : 'members'}`}
                           </p>
-                          {room.type === 'PRIVATE' && (
-                            <div className="w-2 h-2 bg-orange-500 rounded-full" />
-                          )}
+                          <div className="flex items-center space-x-1">
+                            <div className="flex -space-x-1">
+                              {room.participants.slice(0, 3).map((participant, index) => (
+                                <div
+                                  key={participant.id}
+                                  className="w-5 h-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full border border-background flex items-center justify-center text-xs text-white font-medium"
+                                  title={participant.username}
+                                >
+                                  {participant.username.charAt(0).toUpperCase()}
+                                </div>
+                              ))}
+                              {room.participants.length > 3 && (
+                                <div className="w-5 h-5 bg-muted border border-background rounded-full flex items-center justify-center text-xs font-medium">
+                                  +{room.participants.length - 3}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -313,33 +348,36 @@ export default function ChatSidebar({
       </div>
       
       {/* User Section */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border/50 bg-secondary/20">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
             <div className="relative">
               {user?.avatar ? (
                 <img
                   src={user.avatar}
                   alt={user.username}
-                  className="w-10 h-10 rounded-full"
+                  className="w-11 h-11 rounded-xl object-cover shadow-md"
                 />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-sm">
+                <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-md">
                   {user?.username.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className={cn(
-                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card",
+                "absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-background shadow-sm",
                 user?.isOnline ? "bg-green-500" : "bg-gray-400"
               )} />
             </div>
             
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">
+              <p className="text-sm font-semibold text-foreground truncate">
                 {user?.username}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {user?.isOnline ? 'Online' : 'Offline'}
+              <p className={cn(
+                "text-xs font-medium truncate",
+                user?.isOnline ? "text-green-600" : "text-muted-foreground"
+              )}>
+                {user?.isOnline ? '🟢 Online' : '⚫ Offline'}
               </p>
             </div>
           </div>
@@ -349,7 +387,8 @@ export default function ChatSidebar({
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="w-8 h-8"
+              className="w-9 h-9 hover:bg-accent/50 rounded-lg"
+              title="Toggle theme"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
@@ -358,7 +397,8 @@ export default function ChatSidebar({
               variant="ghost"
               size="icon"
               onClick={onShowProfile}
-              className="w-8 h-8"
+              className="w-9 h-9 hover:bg-accent/50 rounded-lg"
+              title="Settings"
             >
               <Settings className="w-4 h-4" />
             </Button>
@@ -367,7 +407,8 @@ export default function ChatSidebar({
               variant="ghost"
               size="icon"
               onClick={logout}
-              className="w-8 h-8 text-destructive hover:text-destructive"
+              className="w-9 h-9 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"
+              title="Sign out"
             >
               <LogOut className="w-4 h-4" />
             </Button>

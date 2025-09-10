@@ -19,6 +19,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toast": "^1.2.15",
+    "@tailwindcss/postcss": "^4.1.13",
     "@types/js-cookie": "^3.0.6",
     "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.0.0",
@@ -27,11 +28,12 @@
     "clsx": "^2.1.1",
     "emoji-picker-react": "^4.13.3",
     "js-cookie": "^3.0.5",
-    "lucide-react": "^0.542.0",
+    "lucide-react": "^0.543.0",
     "mime-types": "^3.0.1",
     "multer": "^2.0.2",
     "next": "15.5.2",
     "next-themes": "^0.4.6",
+    "postcss": "^8.5.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-dropzone": "^14.3.8",
@@ -39,17 +41,16 @@
     "react-webcam": "^7.2.0",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.13",
     "zod": "^4.1.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
-    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useLoading, UseLoadingReturn } from '@/hooks/useLoading';
-import { LoadingOverlay } from '@/components/ui/LoadingOverlay';
+import React, { createContext, useContext, ReactNode } from "react";
+import { useLoading, UseLoadingReturn } from "@/hooks/useLoading";
+import { LoadingOverlay } from "@/components/ui/LoadingOverlay";
 
 interface LoadingContextType extends UseLoadingReturn {
   showGlobalLoading: (message?: string, description?: string) => void;
@@ -23,9 +23,12 @@ export function LoadingProvider({ children }: LoadingProviderProps) {
     description?: string;
   }>({ show: false });
 
-  const showGlobalLoading = React.useCallback((message?: string, description?: string) => {
-    setGlobalLoading({ show: true, message, description });
-  }, []);
+  const showGlobalLoading = React.useCallback(
+    (message?: string, description?: string) => {
+      setGlobalLoading({ show: true, message, description });
+    },
+    []
+  );
 
   const hideGlobalLoading = React.useCallback(() => {
     setGlobalLoading({ show: false });
@@ -53,13 +56,15 @@ export function LoadingProvider({ children }: LoadingProviderProps) {
 export function useLoadingContext(): LoadingContextType {
   const context = useContext(LoadingContext);
   if (context === undefined) {
-    throw new Error('useLoadingContext must be used within a LoadingProvider');
+    throw new Error("useLoadingContext must be used within a LoadingProvider");
   }
   return context;
 }
 
 // HOC for components that need loading context
-export function withLoading<P extends object>(Component: React.ComponentType<P>) {
+export function withLoading<P extends object>(
+  Component: React.ComponentType<P>
+) {
   return function WithLoadingComponent(props: P) {
     return (
       <LoadingProvider>
