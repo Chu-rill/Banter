@@ -25,6 +25,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
+  handleOAuthCallback: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -152,6 +153,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const handleOAuthCallback = async (token: string) => {
+    try {
+      setIsLoading(true);
+      // Store the token
+      Cookies.set("authToken", token, { expires: 7 });
+      
+      // Get user data
+      const userData = await authApi.getCurrentUser();
+      setUser(userData);
+      
+      // Redirect to chat
+      router.push("/chat");
+    } catch (error) {
+      console.error("OAuth callback failed:", error);
+      // Clear invalid token
+      Cookies.remove("authToken");
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -161,6 +184,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     updateUser,
     refreshUser,
+    handleOAuthCallback,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

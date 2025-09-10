@@ -125,6 +125,11 @@ export const authApi = {
     }
     return data;
   },
+
+  googleAuth: () => {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    window.location.href = `${backendUrl}/oauth/google`;
+  },
 };
 
 // Room API

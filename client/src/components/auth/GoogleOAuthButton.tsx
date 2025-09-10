@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { authApi } from "@/lib/api";
 
 interface GoogleOAuthButtonProps {
   mode: "login" | "register";
@@ -13,10 +14,7 @@ export function GoogleOAuthButton({ mode, disabled }: GoogleOAuthButtonProps) {
 
   const handleGoogleAuth = () => {
     setIsLoading(true);
-    
-    // Redirect to backend Google OAuth endpoint
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-    window.location.href = `${backendUrl}/oauth/google`;
+    authApi.googleAuth();
   };
 
   return (

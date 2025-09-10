@@ -10,7 +10,7 @@ export default function AuthCallback() {
   const [message, setMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { refreshUser } = useAuth();
+  const { handleOAuthCallback } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -28,19 +28,10 @@ export default function AuthCallback() {
 
       if (token) {
         try {
-          // Store the token
-          Cookies.set("authToken", token, { expires: 7 });
-          
-          // Refresh user data
-          await refreshUser();
+          await handleOAuthCallback(token);
           
           setStatus("success");
           setMessage("Authentication successful! Redirecting...");
-          
-          // Redirect to chat after a short delay
-          setTimeout(() => {
-            router.push("/chat");
-          }, 1500);
         } catch (error) {
           console.error("Failed to process auth callback:", error);
           setStatus("error");
@@ -59,7 +50,7 @@ export default function AuthCallback() {
     };
 
     handleCallback();
-  }, [searchParams, router, refreshUser]);
+  }, [searchParams, router, handleOAuthCallback]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
