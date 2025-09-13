@@ -201,7 +201,7 @@ export default function Home() {
                     <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-2xl"></div>
                     <div className="relative z-10">
                       <Video className="w-20 h-20 text-purple-600 mx-auto mb-4" />
-                      <div className="text-center">
+                      <div className="text-center mb-[30px]">
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full mx-auto mb-3 flex items-center justify-center shadow-lg">
                           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                             <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>

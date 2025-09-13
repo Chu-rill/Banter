@@ -7,6 +7,7 @@ import { PassportModule } from '@nestjs/passport';
 import { EmailModule } from 'src/email/email.module';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { EmailAndPasswordAuthModule } from '../email-password-auth/email-password-auth.module';
+import { RoomMessageModule } from 'src/room-message/room-message.module';
 
 @Module({
   controllers: [OauthController],
@@ -14,6 +15,7 @@ import { EmailAndPasswordAuthModule } from '../email-password-auth/email-passwor
   imports: [
     UserModule,
     EmailAndPasswordAuthModule,
+    RoomMessageModule,
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,

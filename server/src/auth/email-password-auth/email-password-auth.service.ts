@@ -24,6 +24,7 @@ import {
 } from 'src/utils/helper-functions/encryption';
 import { UserService } from 'src/user/user.service';
 import { EmailService } from 'src/email/email.service';
+import { RoomMessageGateway } from 'src/room-message/room-message.gateway';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly mailService: EmailService,
+    private readonly messageGateway: RoomMessageGateway,
   ) {}
 
   // AUTHENTICATION METHODS
@@ -158,6 +160,7 @@ export class AuthService {
       );
       const [, token] = await Promise.all([
         this.userService.updateOnlineStatus(user.id, true),
+        this.messageGateway.broadcastUserStatus(user.id, true),
         this.generateAuthToken(user.id),
       ]);
 
@@ -189,7 +192,10 @@ export class AuthService {
     this.logger.log(`Logout request for user: ${userId}`);
 
     try {
-      await this.userService.updateOnlineStatus(userId, false);
+      await Promise.all([
+        this.userService.updateOnlineStatus(userId, false),
+        this.messageGateway.broadcastUserStatus(userId, true),
+      ]);
       this.logger.log(`User logged out successfully: ${userId}`);
 
       return {

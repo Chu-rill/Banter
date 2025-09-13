@@ -3,6 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { EmailService } from 'src/email/email.service';
 import { UserRepository } from 'src/user/user.repository';
 import { AuthService } from '../email-password-auth/email-password-auth.service';
+import { UserService } from 'src/user/user.service';
+import { RoomMessageGateway } from 'src/room-message/room-message.gateway';
 
 @Injectable()
 export class OauthService {
@@ -11,6 +13,8 @@ export class OauthService {
     private userRepository: UserRepository,
     private mailService: EmailService,
     private authService: AuthService,
+    private readonly userService: UserService,
+    private readonly messageGateway: RoomMessageGateway,
   ) {}
 
   async validateOAuthGoogleLogin(req): Promise<any> {
@@ -46,7 +50,11 @@ export class OauthService {
     }
 
     const payload = { id: user.id, username: user.username, email: user.email };
-    const token = await this.jwt.signAsync(payload);
+    const [, token] = await Promise.all([
+      this.userService.updateOnlineStatus(user.id, true),
+      this.messageGateway.broadcastUserStatus(user.id, true),
+      this.jwt.signAsync(payload),
+    ]);
 
     return {
       statusCode: HttpStatus.OK,

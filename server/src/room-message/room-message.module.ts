@@ -7,6 +7,8 @@ import { GatewayModule } from 'src/gateway/gateway.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { JwtModule } from '@nestjs/jwt';
 import { RoomModule } from 'src/room/room.module';
+import { FriendshipModule } from 'src/friendship/friendship.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   providers: [RoomMessageGateway, RoomMessageService, RoomMessageRepository],
@@ -14,6 +16,8 @@ import { RoomModule } from 'src/room/room.module';
     PrismaModule,
     GatewayModule,
     RedisModule,
+    FriendshipModule,
+    UserModule,
     forwardRef(() => RoomModule),
     JwtModule.register({
       global: true,

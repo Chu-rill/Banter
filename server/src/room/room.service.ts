@@ -110,7 +110,7 @@ export class RoomService {
       statusCode: HttpStatus.OK,
       success: true,
       message: systemMessage,
-      data: newMember,
+      data: { ...newMember, timestamp: new Date() },
     };
   }
 
@@ -144,7 +144,7 @@ export class RoomService {
       statusCode: HttpStatus.OK,
       success: true,
       message: systemMessage,
-      data: oldMember,
+      data: { ...oldMember, timestamp: new Date() },
     };
   }
 

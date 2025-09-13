@@ -49,4 +49,16 @@ export class RoomMessageService {
       timestamp: data.createdAt,
     };
   }
+
+  async markMessagesRead(
+    roomId: string,
+    userId: string,
+    lastMessageId: string,
+  ) {
+    return this.roomMessageRepository.markMessagesRead(
+      roomId,
+      userId,
+      lastMessageId,
+    );
+  }
 }
