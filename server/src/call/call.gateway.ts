@@ -7,34 +7,29 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseGuards } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { CallService } from './call.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { CallType } from './dto/start-call.dto';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
+  currentRoom?: string;
+}
+
+interface MediaState {
+  video: boolean;
+  audio: boolean;
+  screen: boolean;
 }
 
 interface CallParticipant {
   userId: string;
   socketId: string;
-  peerId?: string;
-  isHost: boolean;
-  mediaState: {
-    video: boolean;
-    audio: boolean;
-    screen: boolean;
-  };
-}
-
-interface CallRoom {
-  roomId: string;
-  participants: Map<string, CallParticipant>;
-  isActive: boolean;
-  createdAt: Date;
-  type: 'video' | 'audio' | 'screen';
+  mediaState: MediaState;
+  joinedAt: Date;
 }
 
 @WebSocketGateway(5002, {
@@ -46,7 +41,9 @@ interface CallRoom {
 })
 export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(CallGateway.name);
-  private callRooms = new Map<string, CallRoom>();
+
+  // Simplified: Just track who's in which room
+  private rooms = new Map<string, Map<string, CallParticipant>>();
 
   @WebSocketServer()
   server: Server;
@@ -57,22 +54,21 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
   ) {}
 
+  // ===== CONNECTION HANDLERS =====
   async handleConnection(client: AuthenticatedSocket) {
     try {
       const userId = await this.authenticateUser(client);
       if (!userId) {
-        this.logger.warn(`Authentication failed for client ${client.id}`);
+        client.emit('error', {
+          code: 'AUTH_FAILED',
+          message: 'Authentication failed',
+        });
         client.disconnect();
         return;
       }
 
       client.userId = userId;
-      this.logger.log(`User ${userId} connected to call namespace`);
-      
-      client.emit('connected', { 
-        message: 'Connected to call server',
-        userId 
-      });
+      client.emit('connected', { userId });
     } catch (error) {
       this.logger.error('Connection error:', error);
       client.disconnect();
@@ -80,49 +76,219 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   async handleDisconnect(client: AuthenticatedSocket) {
-    const userId = client.userId;
-    if (userId) {
-      // Leave all call rooms the user was in
-      for (const [roomId, callRoom] of this.callRooms.entries()) {
-        if (callRoom.participants.has(userId)) {
-          await this.leaveCallRoom(client, { roomId });
-        }
-      }
-      this.logger.log(`User ${userId} disconnected from call namespace`);
+    if (client.currentRoom && client.userId) {
+      await this.handleLeaveCall(client, { roomId: client.currentRoom });
     }
   }
 
   private async authenticateUser(client: Socket): Promise<string | null> {
     try {
-      const token = 
+      const token =
         client.handshake.auth?.token ||
         client.handshake.headers?.authorization?.replace('Bearer ', '');
 
-      if (token) {
-        const decoded = await this.jwtService.verifyAsync(token);
-        return decoded.userId;
-      }
+      if (!token) return null;
 
-      return null;
+      const decoded = await this.jwtService.verifyAsync(token);
+      return decoded.userId || decoded.sub;
     } catch (error) {
-      this.logger.error('Authentication error:', error);
       return null;
     }
   }
 
+  // ===== CALL MANAGEMENT =====
   @SubscribeMessage('join-call')
   async handleJoinCall(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { 
-      roomId: string; 
-      mediaState: { video: boolean; audio: boolean; screen: boolean } 
+    @MessageBody() data: { roomId: string; mediaState?: MediaState },
+  ) {
+    const {
+      roomId,
+      mediaState = { video: false, audio: true, screen: false },
+    } = data;
+    const userId = client.userId!;
+
+    try {
+      // Check room access
+      const hasAccess = await this.verifyRoomAccess(roomId, userId);
+      if (!hasAccess) {
+        client.emit('error', {
+          code: 'ACCESS_DENIED',
+          message: 'No access to this room',
+        });
+        return;
+      }
+
+      // Leave current room if in one
+      if (client.currentRoom && client.currentRoom !== roomId) {
+        await this.handleLeaveCall(client, { roomId: client.currentRoom });
+      }
+
+      // Get or create room
+      if (!this.rooms.has(roomId)) {
+        this.rooms.set(roomId, new Map());
+      }
+
+      const room = this.rooms.get(roomId)!;
+
+      // Check if already in room
+      if (room.has(userId)) {
+        client.emit('error', {
+          code: 'ALREADY_IN_CALL',
+          message: 'Already in this call',
+        });
+        return;
+      }
+
+      // Add participant
+      const participant: CallParticipant = {
+        userId,
+        socketId: client.id,
+        mediaState,
+        joinedAt: new Date(),
+      };
+
+      room.set(userId, participant);
+      client.currentRoom = roomId;
+      client.join(roomId);
+
+      // Get other participants
+      const otherParticipants = Array.from(room.values())
+        .filter((p) => p.userId !== userId)
+        .map((p) => ({
+          userId: p.userId,
+          mediaState: p.mediaState,
+        }));
+
+      // Send response to joiner
+      client.emit('call-joined', {
+        roomId,
+        participants: otherParticipants,
+      });
+
+      // Notify others
+      client.to(roomId).emit('participant-joined', {
+        userId,
+        mediaState,
+      });
+
+      // Create call session record
+      await this.callService.startCall(userId, {
+        roomId,
+        type: CallType.VIDEO,
+      });
+    } catch (error) {
+      this.logger.error('Error joining call:', error);
+      client.emit('error', {
+        code: 'JOIN_FAILED',
+        message: 'Failed to join call',
+      });
+    }
+  }
+
+  @SubscribeMessage('leave-call')
+  async handleLeaveCall(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { roomId: string },
+  ) {
+    const { roomId } = data;
+    const userId = client.userId!;
+
+    const room = this.rooms.get(roomId);
+    if (!room || !room.has(userId)) return;
+
+    const participant = room.get(userId)!;
+    const callDuration = Math.floor(
+      (Date.now() - participant.joinedAt.getTime()) / 1000,
+    );
+
+    // Remove participant
+    room.delete(userId);
+    client.leave(roomId);
+    client.currentRoom = undefined;
+
+    // Notify others
+    client.to(roomId).emit('participant-left', { userId });
+
+    // Clean up empty room
+    if (room.size === 0) {
+      this.rooms.delete(roomId);
+    }
+
+    client.emit('call-left', { roomId });
+
+    // Record call end
+    try {
+      await this.callService.endCall(userId, roomId, callDuration);
+    } catch (error) {
+      this.logger.error('Error recording call end:', error);
+    }
+  }
+
+  // ===== SIGNALING (SIMPLIFIED) =====
+  @SubscribeMessage('signal')
+  handleSignal(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody()
+    data: {
+      roomId: string;
+      targetUserId: string;
+      type: 'offer' | 'answer' | 'ice-candidate';
+      payload: any;
     },
+  ) {
+    const { roomId, targetUserId, type, payload } = data;
+    const senderId = client.userId!;
+
+    // Verify both users are in the same room
+    const room = this.rooms.get(roomId);
+    if (!room || !room.has(senderId) || !room.has(targetUserId)) {
+      client.emit('error', {
+        code: 'SIGNAL_FAILED',
+        message: 'Invalid signal target',
+      });
+      return;
+    }
+
+    const targetParticipant = room.get(targetUserId)!;
+
+    // Forward signal to target
+    this.server.to(targetParticipant.socketId).emit('signal', {
+      fromUserId: senderId,
+      type,
+      payload,
+    });
+  }
+
+  // ===== MEDIA CONTROLS =====
+  @SubscribeMessage('update-media')
+  handleUpdateMedia(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { roomId: string; mediaState: Partial<MediaState> },
   ) {
     const { roomId, mediaState } = data;
     const userId = client.userId!;
 
+    const room = this.rooms.get(roomId);
+    if (!room || !room.has(userId)) return;
+
+    // Update participant's media state
+    const participant = room.get(userId)!;
+    participant.mediaState = { ...participant.mediaState, ...mediaState };
+
+    // Notify others
+    client.to(roomId).emit('media-updated', {
+      userId,
+      mediaState: participant.mediaState,
+    });
+  }
+
+  // ===== UTILITY METHODS =====
+  private async verifyRoomAccess(
+    roomId: string,
+    userId: string,
+  ): Promise<boolean> {
     try {
-      // Verify user has access to the room
       const room = await this.prisma.room.findFirst({
         where: {
           id: roomId,
@@ -132,267 +298,23 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
           ],
         },
       });
-
-      if (!room) {
-        client.emit('error', { message: 'Room not found or access denied' });
-        return;
-      }
-
-      // Create call room if it doesn't exist
-      if (!this.callRooms.has(roomId)) {
-        this.callRooms.set(roomId, {
-          roomId,
-          participants: new Map(),
-          isActive: true,
-          createdAt: new Date(),
-          type: 'video',
-        });
-      }
-
-      const callRoom = this.callRooms.get(roomId)!;
-      
-      // Add participant to call room
-      const participant: CallParticipant = {
-        userId,
-        socketId: client.id,
-        isHost: callRoom.participants.size === 0,
-        mediaState,
-      };
-
-      callRoom.participants.set(userId, participant);
-      client.join(roomId);
-
-      // Notify other participants
-      client.to(roomId).emit('user-joined', {
-        userId,
-        mediaState,
-        isHost: participant.isHost,
-        participantCount: callRoom.participants.size,
-      });
-
-      // Send current participants to the new user
-      const currentParticipants = Array.from(callRoom.participants.values())
-        .filter(p => p.userId !== userId)
-        .map(p => ({
-          userId: p.userId,
-          mediaState: p.mediaState,
-          isHost: p.isHost,
-        }));
-
-      client.emit('call-joined', {
-        roomId,
-        participants: currentParticipants,
-        isHost: participant.isHost,
-      });
-
-      this.logger.log(`User ${userId} joined call room ${roomId}`);
+      return !!room;
     } catch (error) {
-      this.logger.error('Error joining call:', error);
-      client.emit('error', { message: 'Failed to join call' });
+      this.logger.error('Error verifying room access:', error);
+      return false;
     }
   }
 
-  @SubscribeMessage('leave-call')
-  async leaveCallRoom(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { roomId: string },
-  ) {
-    const { roomId } = data;
-    const userId = client.userId!;
-
-    const callRoom = this.callRooms.get(roomId);
-    if (!callRoom || !callRoom.participants.has(userId)) {
-      return;
-    }
-
-    // Remove participant
-    callRoom.participants.delete(userId);
-    client.leave(roomId);
-
-    // Notify other participants
-    client.to(roomId).emit('user-left', {
-      userId,
-      participantCount: callRoom.participants.size,
-    });
-
-    // Clean up empty call room
-    if (callRoom.participants.size === 0) {
-      this.callRooms.delete(roomId);
-      this.logger.log(`Call room ${roomId} cleaned up`);
-    }
-
-    client.emit('call-left', { roomId });
-    this.logger.log(`User ${userId} left call room ${roomId}`);
-  }
-
-  @SubscribeMessage('webrtc-offer')
-  handleWebRTCOffer(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { 
-      roomId: string; 
-      targetUserId: string; 
-      offer: RTCSessionDescriptionInit;
-    },
-  ) {
-    const { roomId, targetUserId, offer } = data;
-    const callerId = client.userId!;
-
-    const callRoom = this.callRooms.get(roomId);
-    if (!callRoom) return;
-
-    const targetParticipant = callRoom.participants.get(targetUserId);
-    if (!targetParticipant) return;
-
-    // Forward offer to target user
-    this.server.to(targetParticipant.socketId).emit('webrtc-offer', {
+  // ===== ADMIN/MONITORING =====
+  getActiveRooms() {
+    return Array.from(this.rooms.entries()).map(([roomId, participants]) => ({
       roomId,
-      callerId,
-      offer,
-    });
-
-    this.logger.log(`WebRTC offer sent from ${callerId} to ${targetUserId} in room ${roomId}`);
-  }
-
-  @SubscribeMessage('webrtc-answer')
-  handleWebRTCAnswer(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { 
-      roomId: string; 
-      callerId: string; 
-      answer: RTCSessionDescriptionInit;
-    },
-  ) {
-    const { roomId, callerId, answer } = data;
-    const answererId = client.userId!;
-
-    const callRoom = this.callRooms.get(roomId);
-    if (!callRoom) return;
-
-    const callerParticipant = callRoom.participants.get(callerId);
-    if (!callerParticipant) return;
-
-    // Forward answer to caller
-    this.server.to(callerParticipant.socketId).emit('webrtc-answer', {
-      roomId,
-      answererId,
-      answer,
-    });
-
-    this.logger.log(`WebRTC answer sent from ${answererId} to ${callerId} in room ${roomId}`);
-  }
-
-  @SubscribeMessage('webrtc-ice-candidate')
-  handleWebRTCIceCandidate(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { 
-      roomId: string; 
-      targetUserId: string; 
-      candidate: RTCIceCandidateInit;
-    },
-  ) {
-    const { roomId, targetUserId, candidate } = data;
-    const senderId = client.userId!;
-
-    const callRoom = this.callRooms.get(roomId);
-    if (!callRoom) return;
-
-    const targetParticipant = callRoom.participants.get(targetUserId);
-    if (!targetParticipant) return;
-
-    // Forward ICE candidate to target user
-    this.server.to(targetParticipant.socketId).emit('webrtc-ice-candidate', {
-      roomId,
-      senderId,
-      candidate,
-    });
-  }
-
-  @SubscribeMessage('media-state-change')
-  handleMediaStateChange(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { 
-      roomId: string; 
-      mediaState: { video: boolean; audio: boolean; screen: boolean };
-    },
-  ) {
-    const { roomId, mediaState } = data;
-    const userId = client.userId!;
-
-    const callRoom = this.callRooms.get(roomId);
-    if (!callRoom || !callRoom.participants.has(userId)) return;
-
-    // Update participant's media state
-    const participant = callRoom.participants.get(userId)!;
-    participant.mediaState = mediaState;
-
-    // Notify other participants
-    client.to(roomId).emit('media-state-changed', {
-      userId,
-      mediaState,
-    });
-
-    this.logger.log(`Media state changed for user ${userId} in room ${roomId}`);
-  }
-
-  @SubscribeMessage('start-screen-share')
-  handleStartScreenShare(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { roomId: string },
-  ) {
-    const { roomId } = data;
-    const userId = client.userId!;
-
-    client.to(roomId).emit('screen-share-started', { userId });
-    this.logger.log(`Screen share started by user ${userId} in room ${roomId}`);
-  }
-
-  @SubscribeMessage('stop-screen-share')
-  handleStopScreenShare(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { roomId: string },
-  ) {
-    const { roomId } = data;
-    const userId = client.userId!;
-
-    client.to(roomId).emit('screen-share-stopped', { userId });
-    this.logger.log(`Screen share stopped by user ${userId} in room ${roomId}`);
-  }
-
-  @SubscribeMessage('call-end')
-  handleCallEnd(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { roomId: string },
-  ) {
-    const { roomId } = data;
-    const userId = client.userId!;
-
-    const callRoom = this.callRooms.get(roomId);
-    if (!callRoom || !callRoom.participants.has(userId)) return;
-
-    const participant = callRoom.participants.get(userId)!;
-    
-    // Only host can end the call for everyone
-    if (participant.isHost) {
-      // Notify all participants that call is ending
-      this.server.to(roomId).emit('call-ended', { 
-        endedBy: userId,
-        reason: 'ended_by_host' 
-      });
-
-      // Clean up the call room
-      this.callRooms.delete(roomId);
-      this.logger.log(`Call ended by host ${userId} in room ${roomId}`);
-    }
-  }
-
-  // Get active call rooms (for admin/monitoring)
-  getActiveCallRooms() {
-    return Array.from(this.callRooms.entries()).map(([roomId, callRoom]) => ({
-      roomId,
-      participantCount: callRoom.participants.size,
-      isActive: callRoom.isActive,
-      createdAt: callRoom.createdAt,
-      type: callRoom.type,
+      participantCount: participants.size,
+      participants: Array.from(participants.values()).map((p) => ({
+        userId: p.userId,
+        mediaState: p.mediaState,
+        joinedAt: p.joinedAt,
+      })),
     }));
   }
 }

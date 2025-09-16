@@ -22,6 +22,7 @@ interface AuthenticatedSocket extends Socket {
 }
 
 @WebSocketGateway(5001, {
+  namespace: '/direct-messages',
   cors: {
     origin: '*',
     // origin: process.env.FRONTEND_URL || 'http://localhost:3000',

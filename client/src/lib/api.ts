@@ -7,7 +7,7 @@ const API_BASE_URL =
 // Create axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  // timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -97,12 +97,23 @@ export const authApi = {
   },
 
   register: async (username: string, email: string, password: string) => {
-    const { data } = await api.post("/auth/register", {
-      username,
-      email,
-      password,
-    });
-    return data;
+    try {
+      const response = await api.post("/auth/register", {
+        username,
+        password,
+        email,
+      });
+      console.log("response", response);
+      return response.data;
+    } catch (error: any) {
+      console.error("API Error Response:", {
+        data: error.response.data, // The actual error from backend
+        status: error.response.status,
+        headers: error.response.headers,
+      });
+
+      throw error;
+    }
   },
 
   logout: async () => {
@@ -127,7 +138,8 @@ export const authApi = {
   },
 
   googleAuth: () => {
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
     window.location.href = `${backendUrl}/oauth/google`;
   },
 };

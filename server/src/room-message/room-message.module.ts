@@ -25,6 +25,6 @@ import { UserModule } from 'src/user/user.module';
       signOptions: { expiresIn: '2h' },
     }),
   ],
-  exports: [RoomMessageService],
+  exports: [RoomMessageService, RoomMessageGateway],
 })
 export class RoomMessageModule {}

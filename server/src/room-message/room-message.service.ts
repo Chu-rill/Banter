@@ -20,7 +20,7 @@ export class RoomMessageService {
       throw new Error('Message must have content or media');
     }
 
-    return this.roomMessageRepository.createMessage(
+    return await this.roomMessageRepository.createMessage(
       roomId,
       userId,
       content,
@@ -30,8 +30,18 @@ export class RoomMessageService {
     );
   }
 
-  async getRoomMessages(roomId: string, limit = 50, cursor?: string) {
-    return this.roomMessageRepository.getMessages(roomId, limit, cursor);
+  async getRoomMessages(
+    roomId: string,
+    userId: string,
+    limit = 50,
+    cursor?: string,
+  ) {
+    return await this.roomMessageRepository.getMessages(
+      roomId,
+      userId,
+      limit,
+      cursor,
+    );
   }
 
   async sendSystemMessage(roomId: string, content: string, userId: string) {
@@ -55,10 +65,11 @@ export class RoomMessageService {
     userId: string,
     lastMessageId: string,
   ) {
-    return this.roomMessageRepository.markMessagesRead(
+    const data = await this.roomMessageRepository.markMessagesAsRead(
       roomId,
       userId,
       lastMessageId,
     );
+    return data;
   }
 }

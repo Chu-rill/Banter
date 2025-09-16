@@ -7,10 +7,13 @@ export const SignupSchema = z.object({
   password: z
     .string()
     .min(6, { message: 'Password must be at least 6 characters long' })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/, {
-      message:
-        'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
-    }),
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/,
+      {
+        message:
+          'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+      },
+    ),
   email: z.string().email({ message: 'Invalid email format' }),
 });
 

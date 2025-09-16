@@ -14,7 +14,6 @@ import { CallModule } from './call/call.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { DirectMessageModule } from './direct-message/direct-message.module';
 import { RedisModule } from './redis/redis.module';
-import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -50,7 +49,6 @@ import { UploadModule } from './upload/upload.module';
     FriendshipModule,
     DirectMessageModule,
     RedisModule,
-    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -35,7 +35,7 @@ interface RoomTypingState {
 }
 
 @WebSocketGateway(5001, {
-  namespace: '/messages',
+  namespace: '/room-messages',
   cors: {
     origin: process.env.FRONTEND_URL?.split(',') || ['http://localhost:3000'],
     credentials: true,
@@ -71,8 +71,6 @@ export class RoomMessageGateway
       return;
     }
 
-    this.logger.log(`User connected: ${userId} (${client.id})`);
-
     // Store userId in both places for consistency
     client.data.userId = userId;
     client.userId = userId;
@@ -95,7 +93,6 @@ export class RoomMessageGateway
 
     if (userId) {
       await this.userRedis.removeUserSocket(userId, client.id);
-      this.logger.log(`User ${userId} disconnected`);
     }
   }
 
@@ -135,7 +132,7 @@ export class RoomMessageGateway
       client.emit('dm:error', { message: 'Not authenticated' });
       return;
     }
-    this.logger.log(`Room ID: ${roomId}`);
+
     const room = await this.roomService.findById(roomId);
     if (!room) {
       client.emit('error', { message: 'Room not found' });
@@ -146,14 +143,10 @@ export class RoomMessageGateway
       // Remove user from typing state when sending message
       // this.removeUserFromTypingState(roomId, userId);
 
-      this.logger.log(`Checking if ${senderId} can send message to ${roomId}`);
-
       const canSendMessage = await this.roomService.canMessage(
         roomId,
         senderId,
       );
-
-      this.logger.log(`Can send message: ${canSendMessage}`);
 
       if (!canSendMessage) {
         this.logger.warn(`User ${senderId} cannot send message to ${roomId}`);
@@ -163,7 +156,6 @@ export class RoomMessageGateway
         return;
       }
 
-      this.logger.log(`Saving message to database...`);
       const savedMessage = await this.messageService.sendMessage(
         roomId,
         senderId,
@@ -190,10 +182,8 @@ export class RoomMessageGateway
       client.emit('message-sent', savedMessage);
 
       this.server.to(roomSocketId).emit('new-message', savedMessage);
-      this.logger.log(`Message delivered to room ${roomId}`);
     } catch (error) {
       this.logger.error('Error handling room message:', error);
-      this.logger.error('Error stack:', error.stack);
       client.emit('dm:error', {
         message: 'Failed to send message',
         receiverId: data.roomId,
@@ -321,6 +311,35 @@ export class RoomMessageGateway
       userId,
       roomId,
     });
+  }
+
+  @SubscribeMessage('mark-messages-read')
+  async handleMarkMessagesRead(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { roomId: string; lastMessageId: string },
+  ) {
+    const { roomId, lastMessageId } = data;
+    const userId = client.userId!;
+
+    try {
+      // Update all messages in the room up to lastMessageId as read
+      await this.messageService.markMessagesRead(roomId, userId, lastMessageId);
+
+      // Notify other users that messages have been read
+      client.to(roomId).emit('messages-read', {
+        userId,
+        roomId,
+        lastMessageId,
+        timestamp: new Date(),
+      });
+
+      client.emit('messages-marked-read', {
+        roomId,
+        lastMessageId,
+      });
+    } catch (error) {
+      this.logger.error('Error marking messages as read:', error);
+    }
   }
 
   // Helper methods

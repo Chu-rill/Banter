@@ -1,52 +1,38 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateCallDto } from './dto/create-call.dto';
-import { UpdateCallDto } from './dto/update-call.dto';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import { CallRepository } from './call.repository';
 import { StartCallDto } from './dto/start-call.dto';
+
+// Define proper ICE server types
+interface RTCIceServer {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+  credentialType?: 'password' | 'oauth';
+}
 
 @Injectable()
 export class CallService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly callRepository: CallRepository) {}
 
   async startCall(userId: string, startCallDto: StartCallDto) {
     const { roomId, type } = startCallDto;
 
     // Verify user has access to the room
-    const room = await this.prisma.room.findFirst({
-      where: {
-        id: roomId,
-        OR: [
-          { participants: { some: { id: userId } } },
-          { creatorId: userId },
-        ],
-      },
-      include: {
-        participants: {
-          select: { id: true, username: true, avatar: true },
-        },
-      },
-    });
+    const room = await this.callRepository.findRoomWithAccess(roomId, userId);
 
     if (!room) {
       throw new NotFoundException('Room not found or access denied');
     }
 
     // Create call session record
-    const callSession = await this.prisma.callSession.create({
-      data: {
-        roomId,
-        userId,
-        duration: 0, // Will be updated when call ends
-      },
-      include: {
-        user: {
-          select: { id: true, username: true, avatar: true },
-        },
-        room: {
-          select: { id: true, name: true, type: true },
-        },
-      },
-    });
+    const callSession = await this.callRepository.createCallSession(
+      roomId,
+      userId,
+    );
 
     return {
       callSession,
@@ -60,39 +46,26 @@ export class CallService {
   }
 
   async endCall(userId: string, callSessionId: string, duration: number) {
-    const callSession = await this.prisma.callSession.findUnique({
-      where: { id: callSessionId },
-    });
+    const callSession =
+      await this.callRepository.findCallSessionById(callSessionId);
 
     if (!callSession || callSession.userId !== userId) {
       throw new NotFoundException('Call session not found');
     }
 
     // Update call session with duration
-    return await this.prisma.callSession.update({
-      where: { id: callSessionId },
-      data: { duration },
-    });
+    return await this.callRepository.updateCallSessionDuration(
+      callSessionId,
+      duration,
+    );
   }
 
   async getCallHistory(userId: string, page = 1, limit = 10) {
     const skip = (page - 1) * limit;
 
     const [calls, total] = await Promise.all([
-      this.prisma.callSession.findMany({
-        where: { userId },
-        include: {
-          room: {
-            select: { id: true, name: true, type: true },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      this.prisma.callSession.count({
-        where: { userId },
-      }),
+      this.callRepository.findUserCallHistory(userId, skip, limit),
+      this.callRepository.countUserCallHistory(userId),
     ]);
 
     return {
@@ -108,38 +81,17 @@ export class CallService {
 
   async getRoomCallHistory(userId: string, roomId: string) {
     // Verify user has access to the room
-    const room = await this.prisma.room.findFirst({
-      where: {
-        id: roomId,
-        OR: [
-          { participants: { some: { id: userId } } },
-          { creatorId: userId },
-        ],
-      },
-    });
+    const room = await this.callRepository.findRoomWithAccess(roomId, userId);
 
     if (!room) {
       throw new ForbiddenException('Access denied to room');
     }
 
-    return await this.prisma.callSession.findMany({
-      where: { roomId },
-      include: {
-        user: {
-          select: { id: true, username: true, avatar: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    return await this.callRepository.findRoomCallHistory(roomId);
   }
 
   async getCallStats(userId: string) {
-    const stats = await this.prisma.callSession.aggregate({
-      where: { userId },
-      _sum: { duration: true },
-      _count: { id: true },
-      _avg: { duration: true },
-    });
+    const stats = await this.callRepository.aggregateUserCallStats(userId);
 
     const totalDuration = stats._sum.duration || 0;
     const totalCalls = stats._count.id || 0;
@@ -149,16 +101,10 @@ export class CallService {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const recentCalls = await this.prisma.callSession.findMany({
-      where: {
-        userId,
-        createdAt: { gte: thirtyDaysAgo },
-      },
-      select: {
-        createdAt: true,
-        duration: true,
-      },
-    });
+    const recentCalls = await this.callRepository.findRecentUserCalls(
+      userId,
+      thirtyDaysAgo,
+    );
 
     return {
       totalDuration,
@@ -168,13 +114,13 @@ export class CallService {
     };
   }
 
-  private getSTUNServers() {
+  private getSTUNServers(): RTCIceServer[] {
     const stunServers = process.env.STUN_SERVERS?.split(',') || [
       'stun:stun.l.google.com:19302',
       'stun:stun1.l.google.com:19302',
     ];
 
-    const servers = stunServers.map(url => ({ urls: url }));
+    const servers: RTCIceServer[] = stunServers.map((url) => ({ urls: url }));
 
     // Add TURN server if configured
     if (process.env.TURN_SERVER_URL) {
@@ -189,9 +135,10 @@ export class CallService {
   }
 
   private groupCallsByDay(calls: { createdAt: Date; duration: number }[]) {
-    const grouped = {};
-    
-    calls.forEach(call => {
+    const grouped: Record<string, { count: number; totalDuration: number }> =
+      {};
+
+    calls.forEach((call) => {
       const date = call.createdAt.toISOString().split('T')[0];
       if (!grouped[date]) {
         grouped[date] = { count: 0, totalDuration: 0 };
@@ -200,7 +147,7 @@ export class CallService {
       grouped[date].totalDuration += call.duration;
     });
 
-    return Object.entries(grouped).map(([date, data]: [string, any]) => ({
+    return Object.entries(grouped).map(([date, data]) => ({
       date,
       count: data.count,
       totalDuration: data.totalDuration,
@@ -215,11 +162,7 @@ export class CallService {
   }
 
   async getAllCallStats() {
-    const stats = await this.prisma.callSession.aggregate({
-      _sum: { duration: true },
-      _count: { id: true },
-      _avg: { duration: true },
-    });
+    const stats = await this.callRepository.aggregateAllCallStats();
 
     return {
       totalCalls: stats._count.id || 0,

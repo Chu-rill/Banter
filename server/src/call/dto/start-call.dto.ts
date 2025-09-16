@@ -12,8 +12,13 @@ export class StartCallDto {
   @IsString()
   roomId: string;
 
-  @ApiProperty({ description: 'Type of call', enum: CallType })
+  @ApiProperty({
+    description: 'Type of call',
+    enum: CallType,
+    default: CallType.VIDEO,
+    required: false,
+  })
   @IsEnum(CallType)
   @IsOptional()
-  type?: CallType = CallType.VIDEO;
+  type?: CallType;
 }

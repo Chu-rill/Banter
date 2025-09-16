@@ -4,6 +4,7 @@ import { CallService } from './call.service';
 import { CallController } from './call.controller';
 import { CallGateway } from './call.gateway';
 import { PrismaModule } from '../prisma/prisma.module';
+import { CallRepository } from './call.repository';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     }),
   ],
   controllers: [CallController],
-  providers: [CallService, CallGateway],
+  providers: [CallService, CallGateway, CallRepository],
   exports: [CallService, CallGateway],
 })
 export class CallModule {}
