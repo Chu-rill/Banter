@@ -61,7 +61,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [isAuthenticated, user]);
 
   const initializeAuth = async () => {
-    const token = Cookies.get("authToken");
+    const token = sessionStorage.getItem("authToken");
 
     if (!token) {
       setIsLoading(false);
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error("Auth initialization failed:", error);
       // Clear invalid token
-      Cookies.remove("authToken");
+      sessionStorage.removeItem("authToken");
     } finally {
       setIsLoading(false);
     }
@@ -84,9 +84,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       const response = await authApi.login(email, password);
-
-      if (response.user) {
-        setUser(response.user);
+      console.log("Context response:", response);
+      if (response.data) {
+        setUser(response.data);
         router.push("/chat");
       }
     } catch (error: any) {
@@ -153,11 +153,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       // Store the token
       Cookies.set("authToken", token, { expires: 7 });
-      
+
       // Get user data
       const userData = await authApi.getCurrentUser();
       setUser(userData);
-      
+
       // Redirect to chat
       router.push("/chat");
     } catch (error) {
@@ -175,7 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       // Store the token (already done in the API call, but ensure it's set)
       Cookies.set("authToken", token, { expires: 7 });
-      
+
       // Get user data
       const userData = await authApi.getCurrentUser();
       setUser(userData);

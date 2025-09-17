@@ -89,11 +89,13 @@ export interface Friend {
 // Auth API
 export const authApi = {
   login: async (email: string, password: string) => {
-    const { data } = await api.post("/auth/login", { email, password });
-    if (data.accessToken) {
-      Cookies.set("authToken", data.accessToken, { expires: 7 });
+    const response = await api.post("/auth/login", { email, password });
+
+    if (response.data.token) {
+      // Cookies.set("authToken", data.accessToken, { expires: 7 });
+      sessionStorage.setItem("authToken", response.data.token);
     }
-    return data;
+    return response.data;
   },
 
   register: async (username: string, email: string, password: string) => {
@@ -103,7 +105,7 @@ export const authApi = {
         password,
         email,
       });
-      console.log("response", response);
+      // console.log("response", response);
       return response.data;
     } catch (error: any) {
       console.error("API Error Response:", {

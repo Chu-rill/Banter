@@ -158,13 +158,14 @@ export class AuthService {
       this.logger.debug(
         `Updating online status and generating token for user: ${user.id}`,
       );
-      const [, token] = await Promise.all([
+      const [, , token] = await Promise.all([
         this.userService.updateOnlineStatus(user.id, true),
         this.messageGateway.broadcastUserStatus(user.id, true),
         this.generateAuthToken(user.id),
       ]);
 
       this.logger.log(`Login successful for user: ${user.id}`);
+
       return {
         statusCode: HttpStatus.OK,
         success: true,
@@ -176,7 +177,7 @@ export class AuthService {
           isVerified: user.isVerified,
           avatar: user.avatar,
         },
-        token,
+        token: token,
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
