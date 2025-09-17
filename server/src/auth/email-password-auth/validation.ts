@@ -21,11 +21,14 @@ export const LoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email format' }),
   password: z
     .string()
-    .min(1, { message: 'Password is required' })
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/, {
-      message:
-        'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
-    }),
+    .min(6, { message: 'Password must be at least 6 characters long' })
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]{6,}$/,
+      {
+        message:
+          'Password must contain at least one uppercase letter, one lowercase letter, and one digit',
+      },
+    ),
 });
 
 export const VerifyEmailSchema = z.object({

@@ -77,7 +77,7 @@ export class AuthService {
       const token = await this.generateActionToken(user.id);
 
       const emailData = {
-        subject: 'Vidora Verification Email',
+        subject: 'Banter Verification Email',
         username: user.username,
         token,
       };
@@ -311,7 +311,7 @@ export class AuthService {
       const token = await this.generateActionToken(user.id);
 
       const emailData = {
-        subject: 'Vidora Verification Email',
+        subject: 'Banter Verification Email',
         username: user.username,
         token,
       };

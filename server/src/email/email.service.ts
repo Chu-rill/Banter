@@ -55,7 +55,7 @@ export class EmailService {
   ): Promise<void> {
     try {
       const verifyUrl = this.configService.get('VERIFY_URL');
-      const verificationUrl = `${verifyUrl}/verify-email?token=${data.token}`;
+      const verificationUrl = `${verifyUrl}?token=${data.token}`;
       const templateSource = await this.readTemplateFile(
         this.welcomeTemplatePath,
       );
@@ -66,7 +66,7 @@ export class EmailService {
         to: email,
         subject: data.subject,
         html: emailTemplate({
-          appName: 'Vidora',
+          appName: 'Banter',
           username: data.username,
           verificationLink: verificationUrl,
           title: 'Verification Email',
@@ -108,7 +108,7 @@ export class EmailService {
         to: email,
         subject: data.subject,
         html: emailTemplate({
-          appName: 'Vidora',
+          appName: 'Banter',
           username: data.username,
           resetPasswordLink: verificationUrl,
           title: 'Forgot Password',

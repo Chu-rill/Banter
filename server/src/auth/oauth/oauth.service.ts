@@ -42,7 +42,7 @@ export class OauthService {
 
       const token = await this.authService.generateActionToken(user.id);
       const data = {
-        subject: 'Vidora welcome email',
+        subject: 'Banter welcome email',
         username: user.username,
         token,
       };

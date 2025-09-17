@@ -31,7 +31,7 @@ export class OauthController {
     const result = await this.oauthService.validateOAuthGoogleLogin(req);
 
     const redirectUrl = `${this.configService.get<string>(
-      'FRONTEND_REDIRECT_URL',
+      'FRONTEND_URL',
     )}?token=${result.token}`;
 
     return res.redirect(redirectUrl);

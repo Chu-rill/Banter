@@ -137,6 +137,21 @@ export const authApi = {
     return data;
   },
 
+  verifyEmail: async (token: string) => {
+    const response = await api.get(`/auth/verify-email?token=${token}`);
+    console.log("verifyEmail response", response);
+    const data = response.data;
+    if (data.token) {
+      Cookies.set("authToken", data.token, { expires: 7 });
+    }
+    return data;
+  },
+
+  resendVerificationEmail: async (email: string) => {
+    const { data } = await api.post("/auth/resend-verification", { email });
+    return data;
+  },
+
   googleAuth: () => {
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";

@@ -9,7 +9,9 @@ import {
   HttpStatus,
   Query,
   UsePipes,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthService } from './email-password-auth.service';
 import { JwtAuthGuard } from '../../guards/auth.guard';
 import {
@@ -26,7 +28,6 @@ import {
   EmailValidationDto,
   ForgotPasswordSchema,
   ForgotPasswordDto,
-  VerifyEmailDtoSwagger,
 } from './validation';
 import {
   ApiBearerAuth,
@@ -37,13 +38,17 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ZodPipe } from 'src/utils/schema-validation/validation.pipe';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
 
 @ApiTags('Authentication')
 @Controller('auth')
 @Throttle({ auth: { limit: 5, ttl: 60 } })
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -53,8 +58,6 @@ export class AuthController {
   @ApiResponse({ status: 201, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'User already exists' })
   async register(@Body() registerDto: SignupDto) {
-    console.log('hello world');
-    console.log('Register DTO:', registerDto);
     return this.authService.register(registerDto);
   }
 
@@ -92,8 +95,14 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   @ApiResponse({ status: 404, description: 'Token not found' })
-  async verifyEmail(@Query() dto: VerifyEmailDto) {
-    return this.authService.confirmEmailAddress(dto);
+  async verifyEmail(@Query() dto: VerifyEmailDto, @Res() res: Response) {
+    const result = await this.authService.confirmEmailAddress(dto);
+
+    const redirectUrl = `${this.configService.get<string>(
+      'VERIFY_URL_CLIENT',
+    )}?token=${result.token}`;
+
+    return res.redirect(redirectUrl);
   }
 
   @Post('resend-verification')

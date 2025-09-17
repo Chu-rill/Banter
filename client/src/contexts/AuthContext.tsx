@@ -26,6 +26,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
   handleOAuthCallback: (token: string) => Promise<void>;
+  handleEmailVerification: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -105,14 +106,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const response = await authApi.register(username, email, password);
 
-      // If registration includes automatic login
-      if (response.user) {
-        setUser(response.user);
-        router.push("/chat");
-      } else {
-        // Redirect to login if registration was successful but no auto-login
-        router.push("/login?message=Registration successful! Please log in.");
-      }
+      // After successful registration, redirect to check-email page
+      router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (error: any) {
       console.error("Registration failed:", error);
       throw new Error(error.response?.data?.message || "Registration failed");
@@ -175,6 +170,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const handleEmailVerification = async (token: string) => {
+    try {
+      setIsLoading(true);
+      // Store the token (already done in the API call, but ensure it's set)
+      Cookies.set("authToken", token, { expires: 7 });
+      
+      // Get user data
+      const userData = await authApi.getCurrentUser();
+      setUser(userData);
+    } catch (error) {
+      console.error("Email verification failed:", error);
+      // Clear invalid token
+      Cookies.remove("authToken");
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
@@ -185,6 +199,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateUser,
     refreshUser,
     handleOAuthCallback,
+    handleEmailVerification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
