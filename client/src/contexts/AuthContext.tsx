@@ -10,7 +10,6 @@ import {
 import { useRouter } from "next/navigation";
 import { authApi, User } from "@/lib/api";
 import socketService from "@/lib/socket";
-import Cookies from "js-cookie";
 
 interface AuthContextType {
   user: User | null;
@@ -34,6 +33,29 @@ const AuthContext = createContext<AuthContextType | null>(null);
 interface AuthProviderProps {
   children: ReactNode;
 }
+
+// Centralized token storage utilities
+const TokenStorage = {
+  getToken: () => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("authToken");
+    }
+    return null;
+  },
+
+  setToken: (token: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("authToken", token);
+    }
+  },
+
+  removeToken: () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userData");
+    }
+  },
+};
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
@@ -61,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [isAuthenticated, user]);
 
   const initializeAuth = async () => {
-    const token = sessionStorage.getItem("authToken");
+    const token = TokenStorage.getToken();
 
     if (!token) {
       setIsLoading(false);
@@ -74,7 +96,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error("Auth initialization failed:", error);
       // Clear invalid token
-      sessionStorage.removeItem("authToken");
+      TokenStorage.removeToken();
     } finally {
       setIsLoading(false);
     }
@@ -85,8 +107,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(true);
       const response = await authApi.login(email, password);
       console.log("Context response:", response);
-      if (response.data) {
+
+      if (response.data && response.token) {
+        // Store token first
+        TokenStorage.setToken(response.token);
+        // Then set user
         setUser(response.data);
+        // Navigate after state is set
         router.push("/chat");
       }
     } catch (error: any) {
@@ -123,6 +150,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error("Logout error:", error);
     } finally {
       // Always clear local state and redirect
+      TokenStorage.removeToken();
       setUser(null);
       socketService.disconnect();
       router.push("/");
@@ -144,7 +172,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error("Failed to refresh user:", error);
       // If refresh fails, user might need to login again
-      logout();
+      await logout();
     }
   };
 
@@ -152,7 +180,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       // Store the token
-      Cookies.set("authToken", token, { expires: 7 });
+      TokenStorage.setToken(token);
 
       // Get user data
       const userData = await authApi.getCurrentUser();
@@ -163,7 +191,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error("OAuth callback failed:", error);
       // Clear invalid token
-      Cookies.remove("authToken");
+      TokenStorage.removeToken();
       throw error;
     } finally {
       setIsLoading(false);
@@ -173,16 +201,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const handleEmailVerification = async (token: string) => {
     try {
       setIsLoading(true);
-      // Store the token (already done in the API call, but ensure it's set)
-      Cookies.set("authToken", token, { expires: 7 });
+      // Store the token
+      TokenStorage.setToken(token);
 
       // Get user data
       const userData = await authApi.getCurrentUser();
       setUser(userData);
+
+      // Navigate to chat after verification
+      router.push("/chat");
     } catch (error) {
       console.error("Email verification failed:", error);
       // Clear invalid token
-      Cookies.remove("authToken");
+      TokenStorage.removeToken();
       throw error;
     } finally {
       setIsLoading(false);
