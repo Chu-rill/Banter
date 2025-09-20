@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
@@ -202,18 +203,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const handleEmailVerification = async (token: string) => {
+  const handleEmailVerification = useCallback(async (token: string) => {
     try {
       setIsLoading(true);
       // Store the token
       TokenStorage.setToken(token);
 
       // Get user data
-      const response = await authApi.getCurrentUser();
-      const userData = response.data as User;
+      const { data } = await authApi.getCurrentUser();
+      const userData = data as User;
       setUser(userData);
 
-      // Navigate to chat after verification
+      // Don't navigate here - let the verify page handle it
       // router.push("/chat");
     } catch (error) {
       console.error("Email verification failed:", error);
@@ -223,7 +224,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const value: AuthContextType = {
     user,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
@@ -14,6 +14,7 @@ export default function VerifyEmailPage() {
     useState<VerificationState>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const hasVerified = useRef(false); // Track if we've already attempted verification
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,6 +22,9 @@ export default function VerifyEmailPage() {
   const token = searchParams.get("token");
 
   useEffect(() => {
+    // Only run once and if we haven't already verified
+    if (hasVerified.current) return;
+
     if (!token) {
       setVerificationState("invalid");
       setErrorMessage(
@@ -29,8 +33,10 @@ export default function VerifyEmailPage() {
       return;
     }
 
+    // Mark as verified to prevent re-runs
+    hasVerified.current = true;
     verifyEmail(token);
-  }, [token, handleEmailVerification]);
+  }, [token]); // Remove handleEmailVerification from dependencies
 
   const verifyEmail = async (token: string) => {
     try {
