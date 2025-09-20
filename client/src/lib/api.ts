@@ -1,3 +1,12 @@
+import {
+  AuthResponse,
+  Friend,
+  Message,
+  Room,
+  RoomResponse,
+  User,
+  UserResponse,
+} from "@/types";
 import axios from "axios";
 
 const API_BASE_URL =
@@ -63,71 +72,32 @@ api.interceptors.response.use(
   }
 );
 
-// Types
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  avatar?: string;
-  isOnline: boolean;
-  lastSeen: string;
-}
-
-export interface Room {
-  id: string;
-  name: string;
-  description?: string;
-  type: "PUBLIC" | "PRIVATE";
-  mode: "CHAT" | "VIDEO" | "BOTH";
-  creatorId: string;
-  participants: User[];
-  maxParticipants: number;
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface Message {
-  id: string;
-  roomId: string;
-  userId: string;
-  user: User;
-  type: "TEXT" | "MEDIA" | "VOICE" | "SYSTEM";
-  content?: string;
-  mediaUrl?: string;
-  mediaType?: "IMAGE" | "VIDEO" | "AUDIO" | "FILE";
-  createdAt: string;
-  isRead: boolean;
-}
-
-export interface Friend {
-  id: string;
-  requesterId: string;
-  receiverId: string;
-  requester: User;
-  receiver: User;
-  status: "PENDING" | "ACCEPTED" | "BLOCKED" | "DECLINED";
-  createdAt: string;
-}
-
 // Auth API
 export const authApi = {
-  login: async (email: string, password: string) => {
-    const response = await api.post("/auth/login", { email, password });
+  login: async (email: string, password: string): Promise<AuthResponse> => {
+    const { data } = await api.post("/auth/login", {
+      email,
+      password,
+    });
 
-    if (response.data.token) {
-      TokenStorage.setToken(response.data.token);
+    if (data.token) {
+      TokenStorage.setToken(data.token);
     }
-    return response.data;
+    return data;
   },
 
-  register: async (username: string, email: string, password: string) => {
+  register: async (
+    username: string,
+    email: string,
+    password: string
+  ): Promise<AuthResponse> => {
     try {
-      const response = await api.post("/auth/register", {
+      const { data } = await api.post("/auth/register", {
         username,
         password,
         email,
       });
-      return response.data;
+      return data;
     } catch (error: any) {
       console.error("API Error Response:", {
         data: error.response?.data,
@@ -146,31 +116,31 @@ export const authApi = {
     }
   },
 
-  getCurrentUser: async (): Promise<User> => {
-    const response = await api.get("/users/me");
+  getCurrentUser: async (): Promise<UserResponse> => {
+    const { data } = await api.get("/users/me");
     if (typeof window !== "undefined") {
-      localStorage.setItem("userData", JSON.stringify(response.data));
+      localStorage.setItem("userData", JSON.stringify(data.data));
     }
-    return response.data;
+    return data;
   },
 
   refreshToken: async () => {
-    const response = await api.post("/auth/refresh");
-    if (response.data.accessToken) {
-      TokenStorage.setToken(response.data.accessToken);
-    }
-    return response.data;
-  },
-
-  verifyEmail: async (token: string) => {
-    const response = await api.get(`/auth/verify-email?token=${token}`);
-    console.log("verifyEmail response", response);
-    const data = response.data;
+    const { data } = await api.post("/auth/refresh");
     if (data.token) {
       TokenStorage.setToken(data.token);
     }
     return data;
   },
+
+  // verifyEmail: async (token: string) => {
+  //   const { data } = await api.get(`/auth/verify-email?token=${token}`);
+  //   console.log("verifyEmail response", data);
+
+  //   if (data.token) {
+  //     TokenStorage.setToken(data.token);
+  //   }
+  //   return data;
+  // },
 
   resendVerificationEmail: async (email: string) => {
     const response = await api.post("/auth/resend-verification", { email });
@@ -186,22 +156,13 @@ export const authApi = {
 
 // Room API
 export const roomApi = {
-  getRooms: async (): Promise<Room[]> => {
-    const response = await api.get("/rooms");
+  getRooms: async (): Promise<RoomResponse> => {
+    const { data } = await api.get("/rooms");
     // Handle different possible response structures
-    if (Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (response.data && Array.isArray(response.data.rooms)) {
-      return response.data.rooms;
-    } else {
-      console.log("Unexpected rooms response structure:", response.data);
-      return [];
-    }
+    return data;
   },
 
-  getRoom: async (roomId: string): Promise<Room> => {
+  getRoom: async (roomId: string): Promise<RoomResponse> => {
     const { data } = await api.get(`/rooms/${roomId}`);
     return data;
   },
@@ -212,7 +173,7 @@ export const roomApi = {
     type: "PUBLIC" | "PRIVATE";
     mode: "CHAT" | "VIDEO" | "BOTH";
     maxParticipants?: number;
-  }): Promise<Room> => {
+  }): Promise<RoomResponse> => {
     const { data } = await api.post("/rooms", roomData);
     return data;
   },
@@ -225,7 +186,10 @@ export const roomApi = {
     await api.post(`/rooms/${roomId}/leave`);
   },
 
-  updateRoom: async (roomId: string, updates: Partial<Room>): Promise<Room> => {
+  updateRoom: async (
+    roomId: string,
+    updates: Partial<Room>
+  ): Promise<RoomResponse> => {
     const { data } = await api.patch(`/rooms/${roomId}`, updates);
     return data;
   },

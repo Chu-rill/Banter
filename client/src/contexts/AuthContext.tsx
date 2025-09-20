@@ -8,8 +8,9 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { authApi, User } from "@/lib/api";
+import { authApi } from "@/lib/api";
 import socketService from "@/lib/socket";
+import { AuthResponse, User } from "@/types/index";
 
 interface AuthContextType {
   user: User | null;
@@ -91,7 +92,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      const userData = await authApi.getCurrentUser();
+      const response = await authApi.getCurrentUser();
+      const userData = response.data as User;
       setUser(userData);
     } catch (error) {
       console.error("Auth initialization failed:", error);
@@ -106,12 +108,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setIsLoading(true);
       const response = await authApi.login(email, password);
-      console.log("Context response:", response);
 
       if (response.data && response.token) {
         // Store token first
         TokenStorage.setToken(response.token);
         // Then set user
+        console.log("Login response data:", response.data);
         setUser(response.data);
         // Navigate after state is set
         router.push("/chat");
@@ -167,7 +169,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (!isAuthenticated) return;
 
     try {
-      const userData = await authApi.getCurrentUser();
+      const response = await authApi.getCurrentUser();
+      const userData = response.data as User;
       setUser(userData);
     } catch (error) {
       console.error("Failed to refresh user:", error);
@@ -183,7 +186,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       TokenStorage.setToken(token);
 
       // Get user data
-      const userData = await authApi.getCurrentUser();
+      const response = await authApi.getCurrentUser();
+      const userData = response.data as User;
       setUser(userData);
 
       // Redirect to chat
@@ -205,11 +209,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       TokenStorage.setToken(token);
 
       // Get user data
-      const userData = await authApi.getCurrentUser();
+      const response = await authApi.getCurrentUser();
+      const userData = response.data as User;
       setUser(userData);
 
       // Navigate to chat after verification
-      router.push("/chat");
+      // router.push("/chat");
     } catch (error) {
       console.error("Email verification failed:", error);
       // Clear invalid token

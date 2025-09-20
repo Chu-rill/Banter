@@ -1,9 +1,9 @@
 import { io, Socket } from "socket.io-client";
 import Cookies from "js-cookie";
-import { Message, User } from "./api";
+import { Message } from "@/types";
 
 const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5001";
 
 class SocketService {
   private socket: Socket | null = null;

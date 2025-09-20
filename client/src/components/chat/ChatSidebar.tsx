@@ -12,16 +12,18 @@ import {
   Users,
   Hash,
   Video,
-  MoreVertical,
+  Expand,
   LogOut,
+  Minimize2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Room, roomApi } from "@/lib/api";
+import { roomApi } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import CreateRoomModal from "./CreateRoomModal";
 import FriendsPanel from "./FriendsPanel";
+import { Room } from "@/types";
 
 interface ChatSidebarProps {
   selectedRoom: Room | null;
@@ -76,7 +78,7 @@ export default function ChatSidebar({
         // Handle another possible wrapper
         setRooms((roomsData as { rooms: Room[] }).rooms);
       } else {
-        console.error("Unexpected rooms data structure:", roomsData);
+        console.log("Unexpected rooms data structure:", roomsData);
         setRooms([]);
       }
     } catch (error) {
@@ -122,7 +124,7 @@ export default function ChatSidebar({
             onClick={onToggleCollapse}
             className="w-10 h-10"
           >
-            <MessageCircle className="w-5 h-5" />
+            <Expand className="w-5 h-5" />
           </Button>
         </div>
 
@@ -226,7 +228,7 @@ export default function ChatSidebar({
             onClick={onToggleCollapse}
             className="hover:bg-accent/50"
           >
-            <MoreVertical className="w-4 h-4" />
+            <Minimize2 className="w-4 h-4" />
           </Button>
         </div>
 

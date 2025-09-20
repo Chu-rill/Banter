@@ -175,6 +175,7 @@ export class AuthService {
           username: user.username,
           email: user.email,
           isVerified: user.isVerified,
+          isOnline: user.isOnline,
           avatar: user.avatar,
         },
         token: token,
@@ -327,6 +328,7 @@ export class AuthService {
         statusCode: HttpStatus.OK,
         success: true,
         message: 'Confirmation email sent successfully',
+        data: null,
       };
     } catch (error) {
       if (
@@ -391,6 +393,7 @@ export class AuthService {
       statusCode: HttpStatus.OK,
       success: true,
       message: 'Password reset link sent successfully',
+      data: null,
     };
   }
 
@@ -431,6 +434,7 @@ export class AuthService {
         statusCode: HttpStatus.OK,
         success: true,
         message: 'Password has been reset successfully',
+        data: null,
       };
     } catch (error) {
       this.logger.error('Reset password error:', error);

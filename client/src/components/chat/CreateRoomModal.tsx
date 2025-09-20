@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   X,
   Hash,
@@ -12,29 +12,33 @@ import {
   Globe,
   Users,
   AlertCircle,
-  Check
-} from 'lucide-react';
-import { roomApi, Room } from '@/lib/api';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { cn } from '@/lib/utils';
+  Check,
+} from "lucide-react";
+import { roomApi } from "@/lib/api";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { cn } from "@/lib/utils";
+import { Room } from "@/types";
 
 const createRoomSchema = z.object({
   name: z
     .string()
-    .min(3, 'Room name must be at least 3 characters')
-    .max(50, 'Room name must be less than 50 characters')
-    .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Room name can only contain letters, numbers, spaces, hyphens, and underscores'),
+    .min(3, "Room name must be at least 3 characters")
+    .max(50, "Room name must be less than 50 characters")
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      "Room name can only contain letters, numbers, spaces, hyphens, and underscores"
+    ),
   description: z
     .string()
-    .max(200, 'Description must be less than 200 characters')
+    .max(200, "Description must be less than 200 characters")
     .optional(),
-  type: z.enum(['PUBLIC', 'PRIVATE']),
-  mode: z.enum(['CHAT', 'VIDEO', 'BOTH']),
+  type: z.enum(["PUBLIC", "PRIVATE"]),
+  mode: z.enum(["CHAT", "VIDEO", "BOTH"]),
   maxParticipants: z
     .number()
-    .min(2, 'Must allow at least 2 participants')
-    .max(100, 'Maximum 100 participants allowed'),
+    .min(2, "Must allow at least 2 participants")
+    .max(100, "Maximum 100 participants allowed"),
 });
 
 type CreateRoomFormData = z.infer<typeof createRoomSchema>;
@@ -45,8 +49,12 @@ interface CreateRoomModalProps {
   onRoomCreated: (room: Room) => void;
 }
 
-export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: CreateRoomModalProps) {
-  const [error, setError] = useState('');
+export default function CreateRoomModal({
+  isOpen,
+  onClose,
+  onRoomCreated,
+}: CreateRoomModalProps) {
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -59,20 +67,20 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
   } = useForm<CreateRoomFormData>({
     resolver: zodResolver(createRoomSchema),
     defaultValues: {
-      type: 'PUBLIC',
-      mode: 'BOTH',
+      type: "PUBLIC",
+      mode: "BOTH",
       maxParticipants: 10,
     },
   });
 
-  const watchType = watch('type');
-  const watchMode = watch('mode');
+  const watchType = watch("type");
+  const watchMode = watch("mode");
 
   const onSubmit = async (data: CreateRoomFormData) => {
     try {
-      setError('');
+      setError("");
       setIsSubmitting(true);
-      
+
       const room = await roomApi.createRoom({
         name: data.name,
         description: data.description,
@@ -80,12 +88,20 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
         mode: data.mode,
         maxParticipants: data.maxParticipants,
       });
-      
-      onRoomCreated(room);
+
+      // Ensure only a single Room object is passed
+      if (Array.isArray(room.data)) {
+        onRoomCreated(room.data[0]);
+      } else if ("rooms" in room.data && Array.isArray(room.data.rooms)) {
+        onRoomCreated(room.data.rooms[0]);
+      }
       reset();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create room. Please try again.');
+      setError(
+        err.response?.data?.message ||
+          "Failed to create room. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -93,7 +109,7 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
 
   const handleClose = () => {
     reset();
-    setError('');
+    setError("");
     onClose();
   };
 
@@ -102,16 +118,18 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
       />
-      
+
       {/* Modal */}
       <div className="relative w-full max-w-md mx-4 bg-card border border-border rounded-xl shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">Create New Room</h2>
+          <h2 className="text-xl font-semibold text-foreground">
+            Create New Room
+          </h2>
           <Button
             variant="ghost"
             size="icon"
@@ -134,7 +152,7 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
           {/* Room Name */}
           <div className="space-y-2">
             <Input
-              {...register('name')}
+              {...register("name")}
               label="Room Name"
               placeholder="Enter room name"
               error={errors.name?.message}
@@ -145,7 +163,7 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
           {/* Description */}
           <div className="space-y-2">
             <Input
-              {...register('description')}
+              {...register("description")}
               label="Description (Optional)"
               placeholder="What's this room about?"
               error={errors.description?.message}
@@ -155,32 +173,38 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
 
           {/* Room Type */}
           <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">Room Type</label>
+            <label className="text-sm font-medium text-foreground">
+              Room Type
+            </label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setValue('type', 'PUBLIC')}
+                onClick={() => setValue("type", "PUBLIC")}
                 className={cn(
                   "p-4 border rounded-lg text-left transition-all",
-                  watchType === 'PUBLIC'
+                  watchType === "PUBLIC"
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-muted-foreground"
                 )}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                    watchType === 'PUBLIC'
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      watchType === "PUBLIC"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
                     <Globe className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="font-medium text-sm">Public</p>
-                    <p className="text-xs text-muted-foreground">Anyone can join</p>
+                    <p className="text-xs text-muted-foreground">
+                      Anyone can join
+                    </p>
                   </div>
-                  {watchType === 'PUBLIC' && (
+                  {watchType === "PUBLIC" && (
                     <Check className="w-4 h-4 text-primary ml-auto" />
                   )}
                 </div>
@@ -188,28 +212,30 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
 
               <button
                 type="button"
-                onClick={() => setValue('type', 'PRIVATE')}
+                onClick={() => setValue("type", "PRIVATE")}
                 className={cn(
                   "p-4 border rounded-lg text-left transition-all",
-                  watchType === 'PRIVATE'
+                  watchType === "PRIVATE"
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-muted-foreground"
                 )}
               >
                 <div className="flex items-center space-x-3">
-                  <div className={cn(
-                    "w-10 h-10 rounded-lg flex items-center justify-center",
-                    watchType === 'PRIVATE'
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      watchType === "PRIVATE"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
                     <Lock className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="font-medium text-sm">Private</p>
                     <p className="text-xs text-muted-foreground">Invite only</p>
                   </div>
-                  {watchType === 'PRIVATE' && (
+                  {watchType === "PRIVATE" && (
                     <Check className="w-4 h-4 text-primary ml-auto" />
                   )}
                 </div>
@@ -219,56 +245,70 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
 
           {/* Room Mode */}
           <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">Room Mode</label>
+            <label className="text-sm font-medium text-foreground">
+              Room Mode
+            </label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => setValue('mode', 'CHAT')}
+                onClick={() => setValue("mode", "CHAT")}
                 className={cn(
                   "p-3 border rounded-lg text-center transition-all",
-                  watchMode === 'CHAT'
+                  watchMode === "CHAT"
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-muted-foreground"
                 )}
               >
-                <Hash className={cn(
-                  "w-5 h-5 mx-auto mb-1",
-                  watchMode === 'CHAT' ? "text-primary" : "text-muted-foreground"
-                )} />
+                <Hash
+                  className={cn(
+                    "w-5 h-5 mx-auto mb-1",
+                    watchMode === "CHAT"
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  )}
+                />
                 <p className="text-xs font-medium">Chat Only</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => setValue('mode', 'VIDEO')}
+                onClick={() => setValue("mode", "VIDEO")}
                 className={cn(
                   "p-3 border rounded-lg text-center transition-all",
-                  watchMode === 'VIDEO'
+                  watchMode === "VIDEO"
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-muted-foreground"
                 )}
               >
-                <Video className={cn(
-                  "w-5 h-5 mx-auto mb-1",
-                  watchMode === 'VIDEO' ? "text-primary" : "text-muted-foreground"
-                )} />
+                <Video
+                  className={cn(
+                    "w-5 h-5 mx-auto mb-1",
+                    watchMode === "VIDEO"
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  )}
+                />
                 <p className="text-xs font-medium">Video Only</p>
               </button>
 
               <button
                 type="button"
-                onClick={() => setValue('mode', 'BOTH')}
+                onClick={() => setValue("mode", "BOTH")}
                 className={cn(
                   "p-3 border rounded-lg text-center transition-all",
-                  watchMode === 'BOTH'
+                  watchMode === "BOTH"
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-muted-foreground"
                 )}
               >
-                <Users className={cn(
-                  "w-5 h-5 mx-auto mb-1",
-                  watchMode === 'BOTH' ? "text-primary" : "text-muted-foreground"
-                )} />
+                <Users
+                  className={cn(
+                    "w-5 h-5 mx-auto mb-1",
+                    watchMode === "BOTH"
+                      ? "text-primary"
+                      : "text-muted-foreground"
+                  )}
+                />
                 <p className="text-xs font-medium">Both</p>
               </button>
             </div>
@@ -277,7 +317,7 @@ export default function CreateRoomModal({ isOpen, onClose, onRoomCreated }: Crea
           {/* Max Participants */}
           <div className="space-y-2">
             <Input
-              {...register('maxParticipants', { valueAsNumber: true })}
+              {...register("maxParticipants", { valueAsNumber: true })}
               type="number"
               label="Max Participants"
               placeholder="10"

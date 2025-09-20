@@ -7,13 +7,14 @@ import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
-type VerificationState = 'loading' | 'success' | 'error' | 'invalid';
+type VerificationState = "loading" | "success" | "error" | "invalid";
 
 export default function VerifyEmailPage() {
-  const [verificationState, setVerificationState] = useState<VerificationState>('loading');
+  const [verificationState, setVerificationState] =
+    useState<VerificationState>("loading");
   const [errorMessage, setErrorMessage] = useState("");
   const [isRedirecting, setIsRedirecting] = useState(false);
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { handleEmailVerification } = useAuth();
@@ -21,8 +22,10 @@ export default function VerifyEmailPage() {
 
   useEffect(() => {
     if (!token) {
-      setVerificationState('invalid');
-      setErrorMessage("Invalid verification link. Please check your email and try again.");
+      setVerificationState("invalid");
+      setErrorMessage(
+        "Invalid verification link. Please check your email and try again."
+      );
       return;
     }
 
@@ -31,46 +34,45 @@ export default function VerifyEmailPage() {
 
   const verifyEmail = async (token: string) => {
     try {
-      setVerificationState('loading');
-      
-      // Call the verification endpoint
-      const response = await authApi.verifyEmail(token);
-      
+      setVerificationState("loading");
+
       // If verification includes a token (auto-login), handle it
-      if (response.token) {
-        await handleEmailVerification(response.token);
-      }
-      
-      setVerificationState('success');
-      
+      await handleEmailVerification(token);
+
+      setVerificationState("success");
+
       // Auto-redirect after 3 seconds
       setTimeout(() => {
         setIsRedirecting(true);
-        router.push('/chat');
+        router.push("/chat");
       }, 3000);
-      
     } catch (error: any) {
-      console.error('Email verification failed:', error);
-      setVerificationState('error');
-      
+      console.error("Email verification failed:", error);
+      setVerificationState("error");
+
       if (error.response?.status === 400) {
         setErrorMessage("This verification link has expired or is invalid.");
       } else if (error.response?.status === 404) {
-        setErrorMessage("Verification token not found. Please check your email link.");
+        setErrorMessage(
+          "Verification token not found. Please check your email link."
+        );
       } else {
-        setErrorMessage(error.response?.data?.message || "Verification failed. Please try again.");
+        setErrorMessage(
+          error.response?.data?.message ||
+            "Verification failed. Please try again."
+        );
       }
     }
   };
 
   const handleManualRedirect = () => {
     setIsRedirecting(true);
-    router.push('/chat');
+    router.push("/chat");
   };
 
   const renderContent = () => {
     switch (verificationState) {
-      case 'loading':
+      case "loading":
         return (
           <>
             <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -85,7 +87,7 @@ export default function VerifyEmailPage() {
           </>
         );
 
-      case 'success':
+      case "success":
         return (
           <>
             <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -96,16 +98,16 @@ export default function VerifyEmailPage() {
             </h1>
             <div className="text-gray-600 dark:text-gray-300 mb-8 space-y-3">
               <p>
-                Welcome to Banter! Your account has been verified and you're now logged in.
+                Welcome to Banter! Your account has been verified and you're now
+                logged in.
               </p>
               <p className="text-sm">
-                {isRedirecting ? 
-                  "Redirecting you to the chat..." : 
-                  "You'll be redirected to the chat in a few seconds."
-                }
+                {isRedirecting
+                  ? "Redirecting you to the chat..."
+                  : "You'll be redirected to the chat in a few seconds."}
               </p>
             </div>
-            
+
             {!isRedirecting && (
               <button
                 onClick={handleManualRedirect}
@@ -119,7 +121,7 @@ export default function VerifyEmailPage() {
           </>
         );
 
-      case 'error':
+      case "error":
         return (
           <>
             <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -144,7 +146,7 @@ export default function VerifyEmailPage() {
           </>
         );
 
-      case 'invalid':
+      case "invalid":
         return (
           <>
             <div className="w-20 h-20 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -171,7 +173,8 @@ export default function VerifyEmailPage() {
           {renderContent()}
 
           {/* Footer Actions - Show only for error/invalid states */}
-          {(verificationState === 'error' || verificationState === 'invalid') && (
+          {(verificationState === "error" ||
+            verificationState === "invalid") && (
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-3">
               <div className="space-y-2">
                 <Link
@@ -180,7 +183,7 @@ export default function VerifyEmailPage() {
                 >
                   Request new verification email
                 </Link>
-                
+
                 <Link
                   href="/login"
                   className="inline-block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -188,7 +191,7 @@ export default function VerifyEmailPage() {
                   Back to login
                 </Link>
               </div>
-              
+
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 Need help?{" "}
                 <Link
@@ -202,7 +205,7 @@ export default function VerifyEmailPage() {
           )}
 
           {/* Loading state footer */}
-          {verificationState === 'loading' && (
+          {verificationState === "loading" && (
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 This may take a few moments...

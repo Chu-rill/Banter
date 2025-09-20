@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Video,
   VideoOff,
@@ -16,13 +16,14 @@ import {
   Maximize,
   Minimize,
   Copy,
-  Phone
-} from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { Room, callApi } from '@/lib/api';
-import socketService from '@/lib/socket';
-import { Button } from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
+  Phone,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { callApi } from "@/lib/api";
+import socketService from "@/lib/socket";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
+import { Room } from "@/types";
 
 interface VideoCallProps {
   room: Room;
@@ -52,12 +53,17 @@ interface PeerConnection {
 
 const rtcConfig: RTCConfiguration = {
   iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
   ],
 };
 
-export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }: VideoCallProps) {
+export default function VideoCall({
+  room,
+  isOpen,
+  onClose,
+  isVideoCall = true,
+}: VideoCallProps) {
   const { user } = useAuth();
   const [participants, setParticipants] = useState<CallParticipant[]>([]);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -71,7 +77,9 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'failed'>('connecting');
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "connected" | "failed"
+  >("connecting");
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const screenShareRef = useRef<HTMLVideoElement>(null);
@@ -99,7 +107,9 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
   const startDurationTimer = () => {
     callStartTimeRef.current = Date.now();
     durationIntervalRef.current = setInterval(() => {
-      const duration = Math.floor((Date.now() - callStartTimeRef.current) / 1000);
+      const duration = Math.floor(
+        (Date.now() - callStartTimeRef.current) / 1000
+      );
       setCallDuration(duration);
     }, 1000);
   };
@@ -108,17 +118,19 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      return `${hours}:${minutes.toString().padStart(2, "0")}:${secs
+        .toString()
+        .padStart(2, "0")}`;
     }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    return `${minutes}:${secs.toString().padStart(2, "0")}`;
   };
 
   const initializeCall = async () => {
     try {
       setIsConnecting(true);
-      setConnectionStatus('connecting');
+      setConnectionStatus("connecting");
 
       // Get user media
       const stream = await getUserMedia();
@@ -130,10 +142,10 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
 
       // Join call via socket
       socketService.joinCall(room.id, mediaState);
-      setConnectionStatus('connected');
+      setConnectionStatus("connected");
     } catch (error) {
-      console.error('Failed to initialize call:', error);
-      setConnectionStatus('failed');
+      console.error("Failed to initialize call:", error);
+      setConnectionStatus("failed");
     } finally {
       setIsConnecting(false);
     }
@@ -141,45 +153,54 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
 
   const getUserMedia = async (): Promise<MediaStream> => {
     const constraints: MediaStreamConstraints = {
-      video: mediaState.video ? {
-        width: { ideal: 1280, max: 1920 },
-        height: { ideal: 720, max: 1080 },
-        frameRate: { ideal: 30, max: 60 }
-      } : false,
+      video: mediaState.video
+        ? {
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+          }
+        : false,
       audio: {
         echoCancellation: true,
         noiseSuppression: true,
-        sampleRate: 44100
-      }
+        sampleRate: 44100,
+      },
     };
 
     return navigator.mediaDevices.getUserMedia(constraints);
   };
 
   const setupSocketListeners = () => {
-    socketService.on('user-joined-call', handleUserJoined);
-    socketService.on('user-left-call', handleUserLeft);
-    socketService.on('webrtc-offer', handleWebRTCOffer);
-    socketService.on('webrtc-answer', handleWebRTCAnswer);
-    socketService.on('webrtc-ice-candidate', handleWebRTCIceCandidate);
-    socketService.on('media-state-changed', handleMediaStateChanged);
-    socketService.on('call-ended', handleCallEnded);
-    socketService.on('screen-share-started', handleScreenShareStarted);
-    socketService.on('screen-share-stopped', handleScreenShareStopped);
+    socketService.on("user-joined-call", handleUserJoined);
+    socketService.on("user-left-call", handleUserLeft);
+    socketService.on("webrtc-offer", handleWebRTCOffer);
+    socketService.on("webrtc-answer", handleWebRTCAnswer);
+    socketService.on("webrtc-ice-candidate", handleWebRTCIceCandidate);
+    socketService.on("media-state-changed", handleMediaStateChanged);
+    socketService.on("call-ended", handleCallEnded);
+    socketService.on("screen-share-started", handleScreenShareStarted);
+    socketService.on("screen-share-stopped", handleScreenShareStopped);
   };
 
   const handleUserJoined = (data: any) => {
-    console.log('User joined call:', data);
-    setParticipants(prev => {
-      const existing = prev.find(p => p.userId === data.userId);
+    console.log("User joined call:", data);
+    setParticipants((prev) => {
+      const existing = prev.find((p) => p.userId === data.userId);
       if (existing) return prev;
-      
-      return [...prev, {
-        userId: data.userId,
-        username: data.username || `User ${data.userId}`,
-        mediaState: data.mediaState || { video: false, audio: false, screen: false },
-        isHost: data.isHost || false,
-      }];
+
+      return [
+        ...prev,
+        {
+          userId: data.userId,
+          username: data.username || `User ${data.userId}`,
+          mediaState: data.mediaState || {
+            video: false,
+            audio: false,
+            screen: false,
+          },
+          isHost: data.isHost || false,
+        },
+      ];
     });
 
     // Create peer connection for new user
@@ -187,26 +208,26 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
   };
 
   const handleUserLeft = (data: any) => {
-    console.log('User left call:', data);
-    setParticipants(prev => prev.filter(p => p.userId !== data.userId));
-    
+    console.log("User left call:", data);
+    setParticipants((prev) => prev.filter((p) => p.userId !== data.userId));
+
     // Clean up peer connection
     const peerConnection = peerConnectionsRef.current.get(data.userId);
     if (peerConnection) {
       peerConnection.connection.close();
       peerConnectionsRef.current.delete(data.userId);
     }
-    
+
     remoteVideosRef.current.delete(data.userId);
   };
 
   const createPeerConnection = async (userId: string) => {
     try {
       const peerConnection = new RTCPeerConnection(rtcConfig);
-      
+
       // Add local stream to peer connection
       if (localStream) {
-        localStream.getTracks().forEach(track => {
+        localStream.getTracks().forEach((track) => {
           peerConnection.addTrack(track, localStream);
         });
       }
@@ -220,21 +241,30 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
         }
 
         // Update participant with stream
-        setParticipants(prev => prev.map(p => 
-          p.userId === userId ? { ...p, stream: remoteStream } : p
-        ));
+        setParticipants((prev) =>
+          prev.map((p) =>
+            p.userId === userId ? { ...p, stream: remoteStream } : p
+          )
+        );
       };
 
       // Handle ICE candidates
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          socketService.sendWebRTCIceCandidate(room.id, userId, event.candidate.toJSON());
+          socketService.sendWebRTCIceCandidate(
+            room.id,
+            userId,
+            event.candidate.toJSON()
+          );
         }
       };
 
       // Monitor connection state
       peerConnection.onconnectionstatechange = () => {
-        console.log(`Peer connection with ${userId}:`, peerConnection.connectionState);
+        console.log(
+          `Peer connection with ${userId}:`,
+          peerConnection.connectionState
+        );
       };
 
       peerConnectionsRef.current.set(userId, {
@@ -246,9 +276,8 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
       socketService.sendWebRTCOffer(room.id, userId, offer);
-
     } catch (error) {
-      console.error('Failed to create peer connection:', error);
+      console.error("Failed to create peer connection:", error);
     }
   };
 
@@ -259,7 +288,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
 
       // Add local stream
       if (localStream) {
-        localStream.getTracks().forEach(track => {
+        localStream.getTracks().forEach((track) => {
           peerConnection.addTrack(track, localStream);
         });
       }
@@ -276,11 +305,17 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
       // Handle ICE candidates
       peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
-          socketService.sendWebRTCIceCandidate(room.id, callerId, event.candidate.toJSON());
+          socketService.sendWebRTCIceCandidate(
+            room.id,
+            callerId,
+            event.candidate.toJSON()
+          );
         }
       };
 
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(offer)
+      );
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
 
@@ -291,7 +326,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
 
       socketService.sendWebRTCAnswer(room.id, callerId, answer);
     } catch (error) {
-      console.error('Failed to handle WebRTC offer:', error);
+      console.error("Failed to handle WebRTC offer:", error);
     }
   };
 
@@ -300,10 +335,12 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
       const { answererId, answer } = data;
       const peerConnection = peerConnectionsRef.current.get(answererId);
       if (peerConnection) {
-        await peerConnection.connection.setRemoteDescription(new RTCSessionDescription(answer));
+        await peerConnection.connection.setRemoteDescription(
+          new RTCSessionDescription(answer)
+        );
       }
     } catch (error) {
-      console.error('Failed to handle WebRTC answer:', error);
+      console.error("Failed to handle WebRTC answer:", error);
     }
   };
 
@@ -312,32 +349,34 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
       const { senderId, candidate } = data;
       const peerConnection = peerConnectionsRef.current.get(senderId);
       if (peerConnection && candidate) {
-        await peerConnection.connection.addIceCandidate(new RTCIceCandidate(candidate));
+        await peerConnection.connection.addIceCandidate(
+          new RTCIceCandidate(candidate)
+        );
       }
     } catch (error) {
-      console.error('Failed to handle ICE candidate:', error);
+      console.error("Failed to handle ICE candidate:", error);
     }
   };
 
   const handleMediaStateChanged = (data: any) => {
-    setParticipants(prev => prev.map(p => 
-      p.userId === data.userId 
-        ? { ...p, mediaState: data.mediaState }
-        : p
-    ));
+    setParticipants((prev) =>
+      prev.map((p) =>
+        p.userId === data.userId ? { ...p, mediaState: data.mediaState } : p
+      )
+    );
   };
 
   const handleCallEnded = (data: any) => {
-    console.log('Call ended:', data);
+    console.log("Call ended:", data);
     onClose();
   };
 
   const handleScreenShareStarted = (data: any) => {
-    console.log('Screen share started by:', data.userId);
+    console.log("Screen share started by:", data.userId);
   };
 
   const handleScreenShareStopped = (data: any) => {
-    console.log('Screen share stopped by:', data.userId);
+    console.log("Screen share stopped by:", data.userId);
   };
 
   const toggleVideo = async () => {
@@ -369,10 +408,10 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
       if (mediaState.screen) {
         // Stop screen sharing
         if (screenStream) {
-          screenStream.getTracks().forEach(track => track.stop());
+          screenStream.getTracks().forEach((track) => track.stop());
           setScreenStream(null);
         }
-        
+
         const newMediaState = { ...mediaState, screen: false };
         setMediaState(newMediaState);
         socketService.stopScreenShare(room.id);
@@ -381,14 +420,14 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
         // Start screen sharing
         const stream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
-          audio: true
+          audio: true,
         });
-        
+
         setScreenStream(stream);
         if (screenShareRef.current) {
           screenShareRef.current.srcObject = stream;
         }
-        
+
         const newMediaState = { ...mediaState, screen: true };
         setMediaState(newMediaState);
         socketService.startScreenShare(room.id);
@@ -400,7 +439,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
         };
       }
     } catch (error) {
-      console.error('Screen share error:', error);
+      console.error("Screen share error:", error);
     }
   };
 
@@ -413,26 +452,28 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
       } else {
         socketService.leaveCall(room.id);
       }
-      
+
       // Track call duration
-      const duration = Math.floor((Date.now() - callStartTimeRef.current) / 1000);
-      await callApi.endCall('call-session-id', duration);
+      const duration = Math.floor(
+        (Date.now() - callStartTimeRef.current) / 1000
+      );
+      await callApi.endCall("call-session-id", duration);
     } catch (error) {
-      console.error('Error ending call:', error);
+      console.error("Error ending call:", error);
     }
-    
+
     onClose();
   };
 
   const cleanup = () => {
     // Stop all media streams
     if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+      localStream.getTracks().forEach((track) => track.stop());
       setLocalStream(null);
     }
-    
+
     if (screenStream) {
-      screenStream.getTracks().forEach(track => track.stop());
+      screenStream.getTracks().forEach((track) => track.stop());
       setScreenStream(null);
     }
 
@@ -449,19 +490,22 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
     }
 
     // Remove socket listeners
-    socketService.off('user-joined-call', handleUserJoined);
-    socketService.off('user-left-call', handleUserLeft);
-    socketService.off('webrtc-offer', handleWebRTCOffer);
-    socketService.off('webrtc-answer', handleWebRTCAnswer);
-    socketService.off('webrtc-ice-candidate', handleWebRTCIceCandidate);
-    socketService.off('media-state-changed', handleMediaStateChanged);
-    socketService.off('call-ended', handleCallEnded);
-    socketService.off('screen-share-started', handleScreenShareStarted);
-    socketService.off('screen-share-stopped', handleScreenShareStopped);
+    socketService.off("user-joined-call", handleUserJoined);
+    socketService.off("user-left-call", handleUserLeft);
+    socketService.off("webrtc-offer", handleWebRTCOffer);
+    socketService.off("webrtc-answer", handleWebRTCAnswer);
+    socketService.off("webrtc-ice-candidate", handleWebRTCIceCandidate);
+    socketService.off("media-state-changed", handleMediaStateChanged);
+    socketService.off("call-ended", handleCallEnded);
+    socketService.off("screen-share-started", handleScreenShareStarted);
+    socketService.off("screen-share-stopped", handleScreenShareStopped);
   };
 
   const renderParticipantVideo = (participant: CallParticipant) => (
-    <div key={participant.userId} className="relative bg-gray-900 rounded-lg overflow-hidden">
+    <div
+      key={participant.userId}
+      className="relative bg-gray-900 rounded-lg overflow-hidden"
+    >
       <video
         ref={(el) => {
           if (el) remoteVideosRef.current.set(participant.userId, el);
@@ -471,7 +515,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
         muted={false}
         className="w-full h-full object-cover"
       />
-      
+
       {!participant.mediaState.video && (
         <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
           <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-semibold">
@@ -479,10 +523,12 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
           </div>
         </div>
       )}
-      
+
       <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm rounded-lg px-2 py-1">
         <div className="flex items-center space-x-1">
-          <span className="text-white text-sm font-medium">{participant.username}</span>
+          <span className="text-white text-sm font-medium">
+            {participant.username}
+          </span>
           {!participant.mediaState.audio && (
             <MicOff className="w-3 h-3 text-red-400" />
           )}
@@ -497,10 +543,12 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
   if (!isOpen) return null;
 
   return (
-    <div className={cn(
-      "fixed inset-0 z-50 bg-gray-900",
-      isFullscreen ? "p-0" : "p-4"
-    )}>
+    <div
+      className={cn(
+        "fixed inset-0 z-50 bg-gray-900",
+        isFullscreen ? "p-0" : "p-4"
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-black/20 backdrop-blur-sm">
         <div className="flex items-center space-x-4">
@@ -508,12 +556,12 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
             <span className="text-white font-medium">{room.name}</span>
           </div>
-          
+
           <div className="flex items-center space-x-2 text-gray-300">
             <Users className="w-4 h-4" />
             <span>{participants.length + 1}</span>
           </div>
-          
+
           <div className="text-gray-300">
             {formatCallDuration(callDuration)}
           </div>
@@ -526,9 +574,13 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="text-white hover:bg-white/10"
           >
-            {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+            {isFullscreen ? (
+              <Minimize className="w-5 h-5" />
+            ) : (
+              <Maximize className="w-5 h-5" />
+            )}
           </Button>
-          
+
           <Button
             variant="ghost"
             size="icon"
@@ -554,14 +606,19 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
             <p className="text-center text-gray-400 mt-2">Screen Sharing</p>
           </div>
         )}
-        
-        <div className={cn(
-          "grid gap-4 h-full",
-          participants.length === 0 ? "grid-cols-1" :
-          participants.length === 1 ? "grid-cols-2" :
-          participants.length <= 4 ? "grid-cols-2 grid-rows-2" :
-          "grid-cols-3 grid-rows-3"
-        )}>
+
+        <div
+          className={cn(
+            "grid gap-4 h-full",
+            participants.length === 0
+              ? "grid-cols-1"
+              : participants.length === 1
+              ? "grid-cols-2"
+              : participants.length <= 4
+              ? "grid-cols-2 grid-rows-2"
+              : "grid-cols-3 grid-rows-3"
+          )}
+        >
           {/* Local Video */}
           <div className="relative bg-gray-900 rounded-lg overflow-hidden">
             <video
@@ -571,7 +628,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
               muted
               className="w-full h-full object-cover scale-x-[-1]"
             />
-            
+
             {!mediaState.video && (
               <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
                 <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xl font-semibold">
@@ -579,7 +636,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
                 </div>
               </div>
             )}
-            
+
             <div className="absolute bottom-2 left-2 bg-black/50 backdrop-blur-sm rounded-lg px-2 py-1">
               <div className="flex items-center space-x-1">
                 <span className="text-white text-sm font-medium">You</span>
@@ -604,7 +661,11 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
             onClick={toggleAudio}
             className="rounded-full w-12 h-12"
           >
-            {mediaState.audio ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
+            {mediaState.audio ? (
+              <Mic className="w-5 h-5" />
+            ) : (
+              <MicOff className="w-5 h-5" />
+            )}
           </Button>
 
           {isVideoCall && (
@@ -614,7 +675,11 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
               onClick={toggleVideo}
               className="rounded-full w-12 h-12"
             >
-              {mediaState.video ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
+              {mediaState.video ? (
+                <Video className="w-5 h-5" />
+              ) : (
+                <VideoOff className="w-5 h-5" />
+              )}
             </Button>
           )}
 
@@ -624,7 +689,11 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
             onClick={toggleScreenShare}
             className="rounded-full w-12 h-12"
           >
-            {mediaState.screen ? <MonitorOff className="w-5 h-5" /> : <Monitor className="w-5 h-5" />}
+            {mediaState.screen ? (
+              <MonitorOff className="w-5 h-5" />
+            ) : (
+              <Monitor className="w-5 h-5" />
+            )}
           </Button>
 
           <Button
@@ -639,7 +708,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
       </div>
 
       {/* Connection Status */}
-      {connectionStatus === 'connecting' && (
+      {connectionStatus === "connecting" && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm rounded-lg p-8">
           <div className="flex flex-col items-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
@@ -648,7 +717,7 @@ export default function VideoCall({ room, isOpen, onClose, isVideoCall = true }:
         </div>
       )}
 
-      {connectionStatus === 'failed' && (
+      {connectionStatus === "failed" && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm rounded-lg p-8">
           <div className="flex flex-col items-center space-y-4">
             <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center">

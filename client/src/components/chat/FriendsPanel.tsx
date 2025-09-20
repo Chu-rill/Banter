@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Users,
   UserPlus,
@@ -13,36 +13,39 @@ import {
   X,
   Clock,
   Ban,
-  AlertCircle
-} from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { friendApi, Friend, User } from '@/lib/api';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { cn, formatTimeAgo } from '@/lib/utils';
+  AlertCircle,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { friendApi } from "@/lib/api";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { cn, formatTimeAgo } from "@/lib/utils";
+import { Friend, User } from "@/types";
 
 interface FriendsPanelProps {
   onStartDirectMessage?: (friend: User) => void;
 }
 
-type FriendsTab = 'all' | 'pending' | 'blocked' | 'add';
+type FriendsTab = "all" | "pending" | "blocked" | "add";
 
-export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps) {
+export default function FriendsPanel({
+  onStartDirectMessage,
+}: FriendsPanelProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<FriendsTab>('all');
+  const [activeTab, setActiveTab] = useState<FriendsTab>("all");
   const [friends, setFriends] = useState<Friend[]>([]);
   const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadFriends();
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'add' && searchQuery.trim()) {
+    if (activeTab === "add" && searchQuery.trim()) {
       searchUsers();
     } else {
       setSearchResults([]);
@@ -55,8 +58,8 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
       const friendsData = await friendApi.getFriends();
       setFriends(friendsData);
     } catch (error) {
-      console.error('Failed to load friends:', error);
-      setError('Failed to load friends');
+      console.error("Failed to load friends:", error);
+      setError("Failed to load friends");
     } finally {
       setLoading(false);
     }
@@ -67,16 +70,18 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
       setSearchLoading(true);
       const results = await friendApi.searchUsers(searchQuery.trim());
       // Filter out current user and existing friends
-      const filteredResults = results.filter(u => 
-        u.id !== user?.id && 
-        !friends.some(f => 
-          (f.requesterId === u.id || f.receiverId === u.id) &&
-          f.status !== 'DECLINED'
-        )
+      const filteredResults = results.filter(
+        (u) =>
+          u.id !== user?.id &&
+          !friends.some(
+            (f) =>
+              (f.requesterId === u.id || f.receiverId === u.id) &&
+              f.status !== "DECLINED"
+          )
       );
       setSearchResults(filteredResults);
     } catch (error) {
-      console.error('Search failed:', error);
+      console.error("Search failed:", error);
     } finally {
       setSearchLoading(false);
     }
@@ -85,97 +90,129 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
   const sendFriendRequest = async (userId: string) => {
     try {
       const newFriend = await friendApi.sendFriendRequest(userId);
-      setFriends(prev => [...prev, newFriend]);
+      setFriends((prev) => [...prev, newFriend]);
       // Remove from search results
-      setSearchResults(prev => prev.filter(u => u.id !== userId));
+      setSearchResults((prev) => prev.filter((u) => u.id !== userId));
     } catch (error: any) {
-      console.error('Failed to send friend request:', error);
-      setError(error.response?.data?.message || 'Failed to send friend request');
+      console.error("Failed to send friend request:", error);
+      setError(
+        error.response?.data?.message || "Failed to send friend request"
+      );
     }
   };
 
-  const respondToFriendRequest = async (friendshipId: string, action: 'accept' | 'decline') => {
+  const respondToFriendRequest = async (
+    friendshipId: string,
+    action: "accept" | "decline"
+  ) => {
     try {
-      if (action === 'accept') {
-        const updatedFriend = await friendApi.respondToFriendRequest(friendshipId, 'accept');
-        setFriends(prev => prev.map(f => f.id === friendshipId ? updatedFriend : f));
+      if (action === "accept") {
+        const updatedFriend = await friendApi.respondToFriendRequest(
+          friendshipId,
+          "accept"
+        );
+        setFriends((prev) =>
+          prev.map((f) => (f.id === friendshipId ? updatedFriend : f))
+        );
       } else {
-        const updatedFriend = await friendApi.respondToFriendRequest(friendshipId, 'decline');
-        setFriends(prev => prev.map(f => f.id === friendshipId ? updatedFriend : f));
+        const updatedFriend = await friendApi.respondToFriendRequest(
+          friendshipId,
+          "decline"
+        );
+        setFriends((prev) =>
+          prev.map((f) => (f.id === friendshipId ? updatedFriend : f))
+        );
       }
     } catch (error: any) {
-      console.error('Failed to respond to friend request:', error);
-      setError(error.response?.data?.message || 'Failed to respond to friend request');
+      console.error("Failed to respond to friend request:", error);
+      setError(
+        error.response?.data?.message || "Failed to respond to friend request"
+      );
     }
   };
 
   const removeFriend = async (friendshipId: string) => {
     try {
       await friendApi.removeFriend(friendshipId);
-      setFriends(prev => prev.filter(f => f.id !== friendshipId));
+      setFriends((prev) => prev.filter((f) => f.id !== friendshipId));
     } catch (error: any) {
-      console.error('Failed to remove friend:', error);
-      setError(error.response?.data?.message || 'Failed to remove friend');
+      console.error("Failed to remove friend:", error);
+      setError(error.response?.data?.message || "Failed to remove friend");
     }
   };
 
   const getFilteredFriends = () => {
+    if (!Array.isArray(friends)) return [];
+
     switch (activeTab) {
-      case 'all':
-        return friends.filter(f => f.status === 'ACCEPTED');
-      case 'pending':
-        return friends.filter(f => f.status === 'PENDING');
-      case 'blocked':
-        return friends.filter(f => f.status === 'BLOCKED');
+      case "all":
+        return friends.filter((f) => f.status === "ACCEPTED");
+      case "pending":
+        return friends.filter((f) => f.status === "PENDING");
+      case "blocked":
+        return friends.filter((f) => f.status === "BLOCKED");
       default:
         return [];
     }
   };
 
+  // Helper function to safely get character
+  const getInitial = (username?: string) => {
+    if (username && typeof username === "string" && username.length > 0) {
+      return username.charAt(0).toUpperCase();
+    }
+    return "?";
+  };
+
   const renderFriendCard = (friendship: Friend) => {
     const isReceiver = friendship.receiverId === user?.id;
     const friend = isReceiver ? friendship.requester : friendship.receiver;
-    const isPending = friendship.status === 'PENDING';
-    const isBlocked = friendship.status === 'BLOCKED';
+    const isPending = friendship.status === "PENDING";
+    const isBlocked = friendship.status === "BLOCKED";
     const canRespond = isPending && isReceiver;
 
     return (
-      <div key={friendship.id} className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors">
+      <div
+        key={friendship.id}
+        className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+      >
         <div className="flex items-center space-x-3">
           <div className="relative">
-            {friend.avatar ? (
+            {friend?.avatar ? (
               <img
                 src={friend.avatar}
-                alt={friend.username}
+                alt={friend?.username || "User"}
                 className="w-12 h-12 rounded-full object-cover"
               />
             ) : (
               <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                {friend.username.charAt(0).toUpperCase()}
+                {getInitial(friend?.username)}
               </div>
             )}
-            
-            {friendship.status === 'ACCEPTED' && (
-              <div className={cn(
-                "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card",
-                friend.isOnline ? "bg-green-500" : "bg-gray-400"
-              )} />
+
+            {friendship.status === "ACCEPTED" && (
+              <div
+                className={cn(
+                  "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card",
+                  friend?.isOnline ? "bg-green-500" : "bg-gray-400"
+                )}
+              />
             )}
           </div>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-foreground truncate">
-                {friend.username}
+                {friend?.username || "Unknown User"}
               </p>
-              
+
               {isPending && (
                 <div className="flex items-center space-x-1">
                   <Clock className="w-3 h-3 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">Pending</span>
                 </div>
               )}
-              
+
               {isBlocked && (
                 <div className="flex items-center space-x-1">
                   <Ban className="w-3 h-3 text-destructive" />
@@ -183,13 +220,16 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center justify-between mt-1">
               <p className="text-xs text-muted-foreground">
-                {friendship.status === 'ACCEPTED' 
-                  ? (friend.isOnline ? 'Online' : `Last seen ${formatTimeAgo(friend.lastSeen)}`)
-                  : `Request sent ${formatTimeAgo(friendship.createdAt)}`
-                }
+                {friendship.status === "ACCEPTED"
+                  ? friend?.isOnline
+                    ? "Online"
+                    : `Last seen ${formatTimeAgo(
+                        friend?.lastSeen || new Date().toISOString()
+                      )}`
+                  : `Request sent ${formatTimeAgo(friendship.createdAt)}`}
               </p>
             </div>
           </div>
@@ -200,7 +240,9 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => respondToFriendRequest(friendship.id, 'accept')}
+                  onClick={() =>
+                    respondToFriendRequest(friendship.id, "accept")
+                  }
                   className="h-8 w-8 p-0"
                 >
                   <Check className="w-4 h-4" />
@@ -208,7 +250,9 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => respondToFriendRequest(friendship.id, 'decline')}
+                  onClick={() =>
+                    respondToFriendRequest(friendship.id, "decline")
+                  }
                   className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                 >
                   <X className="w-4 h-4" />
@@ -216,7 +260,7 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
               </>
             )}
 
-            {friendship.status === 'ACCEPTED' && (
+            {friendship.status === "ACCEPTED" && friend && (
               <>
                 <Button
                   variant="outline"
@@ -226,18 +270,14 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
                 >
                   <MessageCircle className="w-4 h-4" />
                 </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                >
+
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <MoreVertical className="w-4 h-4" />
                 </Button>
               </>
             )}
 
-            {(isPending && !isReceiver) && (
+            {isPending && !isReceiver && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -253,55 +293,85 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
     );
   };
 
-  const renderUserSearchCard = (user: User) => (
-    <div key={user.id} className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors">
+  const renderUserSearchCard = (searchUser: User) => (
+    <div
+      key={searchUser.id}
+      className="p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors"
+    >
       <div className="flex items-center space-x-3">
         <div className="relative">
-          {user.avatar ? (
+          {searchUser?.avatar ? (
             <img
-              src={user.avatar}
-              alt={user.username}
+              src={searchUser.avatar}
+              alt={searchUser?.username || "User"}
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
             <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-              {user.username.charAt(0).toUpperCase()}
+              {getInitial(searchUser?.username)}
             </div>
           )}
-          
-          <div className={cn(
-            "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card",
-            user.isOnline ? "bg-green-500" : "bg-gray-400"
-          )} />
+
+          <div
+            className={cn(
+              "absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-card",
+              searchUser?.isOnline ? "bg-green-500" : "bg-gray-400"
+            )}
+          />
         </div>
 
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground truncate">
-            {user.username}
+            {searchUser?.username || "Unknown User"}
           </p>
           <p className="text-xs text-muted-foreground">
-            {user.isOnline ? 'Online' : `Last seen ${formatTimeAgo(user.lastSeen)}`}
+            {searchUser?.isOnline
+              ? "Online"
+              : `Last seen ${formatTimeAgo(
+                  searchUser?.lastSeen || new Date().toISOString()
+                )}`}
           </p>
         </div>
 
         <Button
           variant="outline"
           size="sm"
-          onClick={() => sendFriendRequest(user.id)}
-          className="flex items-center space-x-2"
+          onClick={() => sendFriendRequest(searchUser.id)}
+          className="flex items-center space-x-2 flex-shrink-0"
         >
           <UserPlus className="w-4 h-4" />
-          <span>Add Friend</span>
+          <span className="hidden sm:inline">Add Friend</span>
         </Button>
       </div>
     </div>
   );
 
   const tabs = [
-    { id: 'all', label: 'All', icon: Users, count: friends.filter(f => f.status === 'ACCEPTED').length },
-    { id: 'pending', label: 'Pending', icon: Clock, count: friends.filter(f => f.status === 'PENDING').length },
-    { id: 'blocked', label: 'Blocked', icon: Ban, count: friends.filter(f => f.status === 'BLOCKED').length },
-    { id: 'add', label: 'Add Friend', icon: UserPlus, count: 0 },
+    {
+      id: "all",
+      label: "All",
+      icon: Users,
+      count: Array.isArray(friends)
+        ? friends.filter((f) => f?.status === "ACCEPTED").length
+        : 0,
+    },
+    {
+      id: "pending",
+      label: "Pending",
+      icon: Clock,
+      count: Array.isArray(friends)
+        ? friends.filter((f) => f?.status === "PENDING").length
+        : 0,
+    },
+    {
+      id: "blocked",
+      label: "Blocked",
+      icon: Ban,
+      count: Array.isArray(friends)
+        ? friends.filter((f) => f?.status === "BLOCKED").length
+        : 0,
+    },
+    { id: "add", label: "Add", icon: UserPlus, count: 0 },
   ];
 
   if (loading) {
@@ -321,7 +391,7 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setError('')}
+            onClick={() => setError("")}
             className="ml-auto"
           >
             <X className="w-4 h-4" />
@@ -329,24 +399,24 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
         </div>
       )}
 
-      {/* Tabs */}
+      {/* Tabs - Made more compact and wrappable */}
       <div className="px-4 pb-4">
-        <div className="flex space-x-1 bg-muted/50 rounded-lg p-1">
+        <div className="flex flex-wrap gap-1 bg-muted/50 rounded-lg p-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as FriendsTab)}
               className={cn(
-                "flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium transition-colors",
+                "flex-1 min-w-[80px] flex items-center justify-center gap-1 py-2 px-2 rounded-md text-sm font-medium transition-colors",
                 activeTab === tab.id
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <tab.icon className="w-4 h-4" />
-              <span>{tab.label}</span>
+              <tab.icon className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{tab.label}</span>
               {tab.count > 0 && (
-                <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
+                <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1">
                   {tab.count}
                 </span>
               )}
@@ -356,7 +426,7 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
       </div>
 
       {/* Search for Add Friends tab */}
-      {activeTab === 'add' && (
+      {activeTab === "add" && (
         <div className="px-4 pb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -372,8 +442,8 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        <div className="px-4 space-y-3">
-          {activeTab === 'add' ? (
+        <div className="px-4 space-y-3 pb-4">
+          {activeTab === "add" ? (
             <>
               {searchLoading ? (
                 <div className="flex items-center justify-center py-8">
@@ -405,9 +475,10 @@ export default function FriendsPanel({ onStartDirectMessage }: FriendsPanelProps
                 <div className="text-center py-8">
                   <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-sm text-muted-foreground">
-                    {activeTab === 'all' && 'No friends yet. Start by adding some!'}
-                    {activeTab === 'pending' && 'No pending friend requests'}
-                    {activeTab === 'blocked' && 'No blocked users'}
+                    {activeTab === "all" &&
+                      "No friends yet. Start by adding some!"}
+                    {activeTab === "pending" && "No pending friend requests"}
+                    {activeTab === "blocked" && "No blocked users"}
                   </p>
                 </div>
               )}
