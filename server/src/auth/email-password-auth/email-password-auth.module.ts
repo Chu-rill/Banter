@@ -5,11 +5,13 @@ import { AuthController } from './email-password-auth.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/user/user.module';
 import { EmailModule } from 'src/email/email.module';
+import { RoomMessageModule } from 'src/room-message/room-message.module';
 
 @Module({
   imports: [
     UserModule,
     EmailModule,
+    RoomMessageModule,
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,

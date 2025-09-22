@@ -27,6 +27,7 @@ model User {
   callSessions           CallSession[]
   transactions           Transaction[]
   messages               Message[]
+  messageReads           MessageRead[] // New relation
   sentMessages           DirectMessage[] @relation("SentMessages")
   receivedMessages       DirectMessage[] @relation("ReceivedMessages")
   sentFriendRequests     Friendship[]    @relation("Requester")
@@ -127,17 +128,32 @@ enum RoomMode {
 }
 
 model Message {
-  id        String      @id @default(cuid())
+  id        String        @id @default(cuid())
   roomId    String
-  room      Room        @relation(fields: [roomId], references: [id])
+  room      Room          @relation(fields: [roomId], references: [id])
   userId    String
-  user      User        @relation(fields: [userId], references: [id])
-  type      MessageType @default(TEXT) // NEW: distinguishes text/media/voice
+  user      User          @relation(fields: [userId], references: [id])
+  type      MessageType   @default(TEXT)
   content   String? // for plain text messages
   mediaUrl  String? // file/image/audio/video URL
   mediaType MediaType? // what kind of media was uploaded
-  createdAt DateTime    @default(now())
-  isRead    Boolean     @default(false)
+  createdAt DateTime      @default(now())
+  readBy    MessageRead[] // Track who has read this message
+
+  @@index([roomId, createdAt]) // Optimize queries by room and time
+}
+
+// New table to track read receipts per user
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId]) // Each user can only read a message once
+  @@index([userId, readAt]) // Optimize queries for user's read messages
 }
 
 enum MessageType {

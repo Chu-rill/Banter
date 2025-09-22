@@ -24,6 +24,7 @@ import {
 } from 'src/utils/helper-functions/encryption';
 import { UserService } from 'src/user/user.service';
 import { EmailService } from 'src/email/email.service';
+import { RoomMessageGateway } from 'src/room-message/room-message.gateway';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly mailService: EmailService,
+    private readonly messageGateway: RoomMessageGateway,
   ) {}
 
   // AUTHENTICATION METHODS
@@ -75,7 +77,7 @@ export class AuthService {
       const token = await this.generateActionToken(user.id);
 
       const emailData = {
-        subject: 'Vidora Verification Email',
+        subject: 'Banter Verification Email',
         username: user.username,
         token,
       };
@@ -156,12 +158,14 @@ export class AuthService {
       this.logger.debug(
         `Updating online status and generating token for user: ${user.id}`,
       );
-      const [, token] = await Promise.all([
+      const [, , token] = await Promise.all([
         this.userService.updateOnlineStatus(user.id, true),
+        this.messageGateway.broadcastUserStatus(user.id, true),
         this.generateAuthToken(user.id),
       ]);
 
       this.logger.log(`Login successful for user: ${user.id}`);
+
       return {
         statusCode: HttpStatus.OK,
         success: true,
@@ -171,9 +175,10 @@ export class AuthService {
           username: user.username,
           email: user.email,
           isVerified: user.isVerified,
+          isOnline: user.isOnline,
           avatar: user.avatar,
         },
-        token,
+        token: token,
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -189,7 +194,10 @@ export class AuthService {
     this.logger.log(`Logout request for user: ${userId}`);
 
     try {
-      await this.userService.updateOnlineStatus(userId, false);
+      await Promise.all([
+        this.userService.updateOnlineStatus(userId, false),
+        this.messageGateway.broadcastUserStatus(userId, true),
+      ]);
       this.logger.log(`User logged out successfully: ${userId}`);
 
       return {
@@ -305,7 +313,7 @@ export class AuthService {
       const token = await this.generateActionToken(user.id);
 
       const emailData = {
-        subject: 'Vidora Verification Email',
+        subject: 'Banter Verification Email',
         username: user.username,
         token,
       };
@@ -320,6 +328,7 @@ export class AuthService {
         statusCode: HttpStatus.OK,
         success: true,
         message: 'Confirmation email sent successfully',
+        data: null,
       };
     } catch (error) {
       if (
@@ -384,6 +393,7 @@ export class AuthService {
       statusCode: HttpStatus.OK,
       success: true,
       message: 'Password reset link sent successfully',
+      data: null,
     };
   }
 
@@ -424,6 +434,7 @@ export class AuthService {
         statusCode: HttpStatus.OK,
         success: true,
         message: 'Password has been reset successfully',
+        data: null,
       };
     } catch (error) {
       this.logger.error('Reset password error:', error);

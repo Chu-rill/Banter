@@ -11,16 +11,16 @@ export class RoomMessageService {
     roomId: string,
     userId: string,
     content?: string,
-    type: MessageType = MessageType.TEXT,
-    mediaUrl?: string,
-    mediaType?: MediaType,
+    type?,
+    mediaUrl?,
+    mediaType?,
   ) {
     // Business rules example: prevent empty messages unless media
     if (!content && !mediaUrl) {
       throw new Error('Message must have content or media');
     }
 
-    return this.roomMessageRepository.createMessage(
+    return await this.roomMessageRepository.createMessage(
       roomId,
       userId,
       content,
@@ -30,8 +30,18 @@ export class RoomMessageService {
     );
   }
 
-  async getRoomMessages(roomId: string, limit = 50, cursor?: string) {
-    return this.roomMessageRepository.getMessages(roomId, limit, cursor);
+  async getRoomMessages(
+    roomId: string,
+    userId: string,
+    limit = 50,
+    cursor?: string,
+  ) {
+    return await this.roomMessageRepository.getMessages(
+      roomId,
+      userId,
+      limit,
+      cursor,
+    );
   }
 
   async sendSystemMessage(roomId: string, content: string, userId: string) {
@@ -48,5 +58,18 @@ export class RoomMessageService {
       content: data.content,
       timestamp: data.createdAt,
     };
+  }
+
+  async markMessagesRead(
+    roomId: string,
+    userId: string,
+    lastMessageId: string,
+  ) {
+    const data = await this.roomMessageRepository.markMessagesAsRead(
+      roomId,
+      userId,
+      lastMessageId,
+    );
+    return data;
   }
 }

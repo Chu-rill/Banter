@@ -10,5 +10,6 @@ import { GatewayModule } from 'src/gateway/gateway.module';
   controllers: [FriendshipController],
   providers: [FriendshipService, FriendshipRepository],
   imports: [PrismaModule, GatewayModule, UserModule],
+  exports: [FriendshipRepository, FriendshipService],
 })
 export class FriendshipModule {}

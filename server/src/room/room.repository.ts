@@ -106,4 +106,18 @@ export class RoomRepository {
       },
     });
   }
+
+  // Check if a user is a member of a room
+  async isRoomMember(roomId: string, userId: string): Promise<boolean> {
+    const room = await this.prisma.room.findFirst({
+      where: {
+        id: roomId,
+        participants: {
+          some: { id: userId },
+        },
+      },
+      select: { id: true },
+    });
+    return !!room;
+  }
 }

@@ -47,3 +47,6 @@ jspm_packages/
 # Optional eslint cache
 .eslintcache
 /generated/prisma
+
+cert.crt
+cert.key
