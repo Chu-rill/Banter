@@ -26,7 +26,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
-  handleOAuthCallback: (token: string) => Promise<void>;
+  handleOAuthCallback: (token: string) => Promise<User | null>;
   handleEmailVerification: (token: string) => Promise<void>;
 }
 
@@ -182,17 +182,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const handleOAuthCallback = async (token: string) => {
     try {
+      console.log("Handling OAuth callback with token:", token);
       setIsLoading(true);
       // Store the token
       TokenStorage.setToken(token);
 
       // Get user data
-      const response = await authApi.getCurrentUser();
-      const userData = response.data as User;
+      const { data } = await authApi.getCurrentUser();
+      const userData = data as User;
       setUser(userData);
-
-      // Redirect to chat
-      router.push("/chat");
+      return userData;
     } catch (error) {
       console.error("OAuth callback failed:", error);
       // Clear invalid token

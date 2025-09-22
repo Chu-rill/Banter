@@ -34,7 +34,7 @@ async function bootstrap() {
   // CORS configuration
   const corsOrigin = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',')
-    : ['http://localhost:3000', 'https://localhost:3000'];
+    : ['http://localhost:3000', 'https://localhost:3001'];
 
   const nestAppOptions: any = {
     cors: {

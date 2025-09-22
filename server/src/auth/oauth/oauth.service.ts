@@ -46,14 +46,17 @@ export class OauthService {
         username: user.username,
         token,
       };
-      await this.mailService.sendWelcomeEmail(user.email, data);
+      await this.mailService.sendWelcomeEmailOauth(user.email, data);
+      await Promise.all([
+        this.userRepository.markUserAsVerified(user.id),
+        this.userService.updateOnlineStatus(user.id, true),
+      ]);
     }
 
-    const payload = { id: user.id, username: user.username, email: user.email };
-    const [, token] = await Promise.all([
+    const [, , token] = await Promise.all([
       this.userService.updateOnlineStatus(user.id, true),
       this.messageGateway.broadcastUserStatus(user.id, true),
-      this.jwt.signAsync(payload),
+      this.authService.generateAuthToken(user.id),
     ]);
 
     return {

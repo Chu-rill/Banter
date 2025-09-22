@@ -91,6 +91,47 @@ export class EmailService {
     }
   }
 
+  async sendWelcomeEmailOauth(
+    email: string,
+    data: { subject: string; username: string; token: string },
+  ): Promise<void> {
+    try {
+      const verifyUrl = this.configService.get('LOGIN_URL');
+      const templateSource = await this.readTemplateFile(
+        this.welcomeTemplatePath,
+      );
+      const emailTemplate = handlebars.compile(templateSource);
+
+      const info = await this.transporter.sendMail({
+        from: this.configService.get<string>('EMAIL_USER'),
+        to: email,
+        subject: data.subject,
+        html: emailTemplate({
+          appName: 'Banter',
+          username: data.username,
+          verificationLink: verifyUrl,
+          title: 'Verification Email',
+        }),
+      });
+
+      this.logger.log(
+        `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      this.logger.error(
+        `Failed to send welcome email to ${email}: ${errorMessage}`,
+        error,
+      );
+
+      console.error(
+        `Error sending email with template: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
   async forgetPasswordEmail(
     email: string,
     data: { subject: string; username: string; token: string },

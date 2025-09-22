@@ -446,7 +446,7 @@ export class AuthService {
 
   //Helper Methods
 
-  private async generateAuthToken(userId: string): Promise<string> {
+  async generateAuthToken(userId: string): Promise<string> {
     try {
       this.logger.debug(`Generating auth token for user: ${userId}`);
       return await this.jwtService.signAsync({ userId });
