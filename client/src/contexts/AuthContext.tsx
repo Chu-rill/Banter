@@ -182,7 +182,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const handleOAuthCallback = async (token: string) => {
     try {
-      console.log("Handling OAuth callback with token:", token);
       setIsLoading(true);
       // Store the token
       TokenStorage.setToken(token);

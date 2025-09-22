@@ -10,13 +10,14 @@ import {
   useNotifications,
 } from "../../components/ui/NotificationSystem";
 import ThemeCustomizer from "../../components/ui/ThemeCustomizer";
-import { Room } from "@/lib/api";
+import { Room } from "@/types";
 
 function ChatPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showThemeCustomizer, setShowThemeCustomizer] = useState(false);
+  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
 
   const { notifications, addNotification, removeNotification } =
     useNotifications();

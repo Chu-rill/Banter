@@ -1,4 +1,5 @@
 "use client";
+import { createPortal } from "react-dom";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -13,6 +14,7 @@ import {
   Users,
   AlertCircle,
   Check,
+  Sparkles,
 } from "lucide-react";
 import { roomApi } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
@@ -115,242 +117,291 @@ export default function CreateRoomModal({
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop - solid dark overlay */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70 transition-opacity"
         onClick={handleClose}
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md mx-4 bg-card border border-border rounded-xl shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-semibold text-foreground">
-            Create New Room
-          </h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
-          {error && (
-            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
-
-          {/* Room Name */}
-          <div className="space-y-2">
-            <Input
-              {...register("name")}
-              label="Room Name"
-              placeholder="Enter room name"
-              error={errors.name?.message}
-              maxLength={50}
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Input
-              {...register("description")}
-              label="Description (Optional)"
-              placeholder="What's this room about?"
-              error={errors.description?.message}
-              maxLength={200}
-            />
-          </div>
-
-          {/* Room Type */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">
-              Room Type
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setValue("type", "PUBLIC")}
-                className={cn(
-                  "p-4 border rounded-lg text-left transition-all",
-                  watchType === "PUBLIC"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground"
-                )}
-              >
-                <div className="flex items-center space-x-3">
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center",
-                      watchType === "PUBLIC"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <Globe className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">Public</p>
-                    <p className="text-xs text-muted-foreground">
-                      Anyone can join
-                    </p>
-                  </div>
-                  {watchType === "PUBLIC" && (
-                    <Check className="w-4 h-4 text-primary ml-auto" />
-                  )}
+      {/* Modal - centered with solid background */}
+      <div className="relative w-full max-w-md transform transition-all">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-800">
+          {/* Header with gradient accent */}
+          <div className="relative overflow-hidden rounded-t-2xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-purple-600/10" />
+            <div className="relative flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setValue("type", "PRIVATE")}
-                className={cn(
-                  "p-4 border rounded-lg text-left transition-all",
-                  watchType === "PRIVATE"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground"
-                )}
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Create New Room
+                </h2>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                <div className="flex items-center space-x-3">
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center",
-                      watchType === "PRIVATE"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <Lock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">Private</p>
-                    <p className="text-xs text-muted-foreground">Invite only</p>
-                  </div>
-                  {watchType === "PRIVATE" && (
-                    <Check className="w-4 h-4 text-primary ml-auto" />
-                  )}
-                </div>
-              </button>
+                <X className="w-5 h-5" />
+              </Button>
             </div>
           </div>
 
-          {/* Room Mode */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">
-              Room Mode
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setValue("mode", "CHAT")}
-                className={cn(
-                  "p-3 border rounded-lg text-center transition-all",
-                  watchMode === "CHAT"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground"
-                )}
-              >
-                <Hash
+          {/* Form Content */}
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </p>
+              </div>
+            )}
+
+            {/* Room Name */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Room Name
+              </label>
+              <Input
+                {...register("name")}
+                placeholder="Enter room name"
+                error={errors.name?.message}
+                maxLength={50}
+                className="bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Description (Optional)
+              </label>
+              <Input
+                {...register("description")}
+                placeholder="What's this room about?"
+                error={errors.description?.message}
+                maxLength={200}
+                className="bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+              />
+            </div>
+
+            {/* Room Type */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Room Type
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setValue("type", "PUBLIC")}
                   className={cn(
-                    "w-5 h-5 mx-auto mb-1",
+                    "p-4 border-2 rounded-xl text-left transition-all",
+                    watchType === "PUBLIC"
+                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800"
+                  )}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                        watchType === "PUBLIC"
+                          ? "bg-purple-600 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                      )}
+                    >
+                      <Globe className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-900 dark:text-white">
+                        Public
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Anyone can join
+                      </p>
+                    </div>
+                    {watchType === "PUBLIC" && (
+                      <Check className="w-4 h-4 text-purple-600" />
+                    )}
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setValue("type", "PRIVATE")}
+                  className={cn(
+                    "p-4 border-2 rounded-xl text-left transition-all",
+                    watchType === "PRIVATE"
+                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800"
+                  )}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={cn(
+                        "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
+                        watchType === "PRIVATE"
+                          ? "bg-purple-600 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                      )}
+                    >
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-900 dark:text-white">
+                        Private
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Invite only
+                      </p>
+                    </div>
+                    {watchType === "PRIVATE" && (
+                      <Check className="w-4 h-4 text-purple-600" />
+                    )}
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Room Mode */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Room Mode
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setValue("mode", "CHAT")}
+                  className={cn(
+                    "p-3 border-2 rounded-lg text-center transition-all",
                     watchMode === "CHAT"
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800"
                   )}
-                />
-                <p className="text-xs font-medium">Chat Only</p>
-              </button>
+                >
+                  <Hash
+                    className={cn(
+                      "w-5 h-5 mx-auto mb-1",
+                      watchMode === "CHAT"
+                        ? "text-purple-600"
+                        : "text-gray-600 dark:text-gray-400"
+                    )}
+                  />
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Chat Only
+                  </p>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setValue("mode", "VIDEO")}
-                className={cn(
-                  "p-3 border rounded-lg text-center transition-all",
-                  watchMode === "VIDEO"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground"
-                )}
-              >
-                <Video
+                <button
+                  type="button"
+                  onClick={() => setValue("mode", "VIDEO")}
                   className={cn(
-                    "w-5 h-5 mx-auto mb-1",
+                    "p-3 border-2 rounded-lg text-center transition-all",
                     watchMode === "VIDEO"
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800"
                   )}
-                />
-                <p className="text-xs font-medium">Video Only</p>
-              </button>
+                >
+                  <Video
+                    className={cn(
+                      "w-5 h-5 mx-auto mb-1",
+                      watchMode === "VIDEO"
+                        ? "text-purple-600"
+                        : "text-gray-600 dark:text-gray-400"
+                    )}
+                  />
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Video Only
+                  </p>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setValue("mode", "BOTH")}
-                className={cn(
-                  "p-3 border rounded-lg text-center transition-all",
-                  watchMode === "BOTH"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-muted-foreground"
-                )}
-              >
-                <Users
+                <button
+                  type="button"
+                  onClick={() => setValue("mode", "BOTH")}
                   className={cn(
-                    "w-5 h-5 mx-auto mb-1",
+                    "p-3 border-2 rounded-lg text-center transition-all",
                     watchMode === "BOTH"
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                      ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800"
                   )}
-                />
-                <p className="text-xs font-medium">Both</p>
-              </button>
+                >
+                  <Users
+                    className={cn(
+                      "w-5 h-5 mx-auto mb-1",
+                      watchMode === "BOTH"
+                        ? "text-purple-600"
+                        : "text-gray-600 dark:text-gray-400"
+                    )}
+                  />
+                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    Both
+                  </p>
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Max Participants */}
-          <div className="space-y-2">
-            <Input
-              {...register("maxParticipants", { valueAsNumber: true })}
-              type="number"
-              label="Max Participants"
-              placeholder="10"
-              min={2}
-              max={100}
-              error={errors.maxParticipants?.message}
-            />
-            <p className="text-xs text-muted-foreground">
-              Maximum number of users who can join this room
-            </p>
-          </div>
+            {/* Max Participants */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Max Participants
+              </label>
+              {/* <Input
+                {...register("maxParticipants", { valueAsNumber: true })}
+                type="number"
+                label="Max Participants"
+                placeholder="10"
+                min={2}
+                max={100}
+                error={errors.maxParticipants?.message}
+              /> */}
 
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="gradient"
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
-              Create Room
-            </Button>
-          </div>
-        </form>
+              <select
+                {...register("maxParticipants", { valueAsNumber: true })}
+                defaultValue={10}
+                className="w-[180px] rounded-md border border-gray-300 dark:border-gray-700 
+             bg-gray-50 dark:bg-gray-800 p-2 text-sm"
+              >
+                {Array.from({ length: 99 }, (_, i) => i + 2).map((num) => (
+                  <option key={num} value={num}>
+                    {num}
+                  </option>
+                ))}
+              </select>
+
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Maximum number of users who can join this room
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end space-x-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isSubmitting}
+                className="border-gray-300 dark:border-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={isSubmitting}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+              >
+                Create Room
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
