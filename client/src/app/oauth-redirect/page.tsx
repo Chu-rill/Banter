@@ -54,10 +54,10 @@ export default function OAuthCallbackPage() {
         setUserInfo(userData);
         setStatus("success");
 
-        // Redirect after 2 seconds
+        // Redirect after 500 milliseconds
         setTimeout(() => {
           router.push("/chat");
-        }, 2000);
+        }, 500);
       } catch (err: any) {
         console.error("OAuth processing failed:", err);
         setStatus("error");

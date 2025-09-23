@@ -73,13 +73,18 @@ export class RoomRepository {
         creator: {
           select: { id: true, username: true, email: true, avatar: true },
         },
-        messages: {
-          include: {
-            user: { select: { id: true, username: true, avatar: true } },
-          },
-        },
         callSessions: true,
       },
+    });
+  }
+
+  async getMessagesByRoomId(roomId: string) {
+    return this.prisma.message.findMany({
+      where: { roomId },
+      include: {
+        user: { select: { id: true, username: true, avatar: true } },
+      },
+      orderBy: { createdAt: 'asc' },
     });
   }
 

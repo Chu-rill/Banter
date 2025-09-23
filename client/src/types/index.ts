@@ -69,6 +69,13 @@ export interface RoomResponse {
   data: Room | Room[] | { rooms: Room[]; pagination: RoomPagination };
 }
 
+export interface MessageResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: Message[];
+}
+
 export interface UserPagination {
   page: number;
   limit: number;

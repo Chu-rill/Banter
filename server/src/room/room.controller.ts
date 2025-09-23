@@ -77,6 +77,20 @@ export class RoomController {
     return this.roomService.getRoomById(dto);
   }
 
+  @Get(':id/messages')
+  @UsePipes(new ZodPipe(GetRoomSchema))
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get the room messages by the roomId' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Room CUID',
+    example: 'cl9v1z5t30000qzrmn1g6v6y',
+  })
+  async getMessagesByRoomById(@Param() dto: GetRoomDto) {
+    return this.roomService.getRoomMessages(dto);
+  }
+
   @Post(':id/join')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Join a room' })

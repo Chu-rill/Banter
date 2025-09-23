@@ -84,6 +84,22 @@ export class RoomService {
     };
   }
 
+  async getRoomMessages(dto: GetRoomDto) {
+    const { id } = dto;
+    const room = await this.roomRepository.getMessagesByRoomId(id);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Messages retrieved successfully',
+      data: room,
+    };
+  }
+
   async joinRoom(roomId: string, userId: string) {
     const room = await this.roomRepository.getRoomById(roomId);
 

@@ -10,7 +10,7 @@ import {
   Moon,
   Sun,
   Users,
-  Hash,
+  Group,
   Video,
   Expand,
   LogOut,
@@ -55,32 +55,19 @@ export default function ChatSidebar({
   const loadRooms = async () => {
     try {
       setLoading(true);
-      const roomsData: unknown = await roomApi.getRooms();
+      const roomsData = await roomApi.getRooms();
       console.log("Rooms data received:", roomsData); // Debug log
 
       // Ensure we have an array
-      if (Array.isArray(roomsData)) {
-        setRooms(roomsData as Room[]);
-      } else if (
-        roomsData &&
-        typeof roomsData === "object" &&
-        "data" in roomsData &&
-        Array.isArray((roomsData as { data?: unknown }).data)
-      ) {
-        // Handle wrapped response
-        setRooms((roomsData as { data: Room[] }).data);
-      } else if (
-        roomsData &&
-        typeof roomsData === "object" &&
-        "rooms" in roomsData &&
-        Array.isArray((roomsData as { rooms?: unknown }).rooms)
-      ) {
-        // Handle another possible wrapper
-        setRooms((roomsData as { rooms: Room[] }).rooms);
-      } else {
-        console.log("Unexpected rooms data structure:", roomsData);
-        setRooms([]);
+      let roomArray: Room[] = [];
+      if (Array.isArray(roomsData.data)) {
+        roomArray = roomsData.data as Room[];
+      } else if ("rooms" in roomsData.data) {
+        roomArray = roomsData.data.rooms;
+      } else if ("id" in roomsData.data) {
+        roomArray = [roomsData.data as Room];
       }
+      setRooms(roomArray);
     } catch (error) {
       console.error("Failed to load rooms:", error);
       setRooms([]); // Set empty array on error
@@ -150,7 +137,7 @@ export default function ChatSidebar({
                   selectedRoom?.id === room.id && "bg-accent"
                 )}
               >
-                <Hash className="w-4 h-4" />
+                <Group className="w-4 h-4" />
                 {room.isActive && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                 )}
@@ -258,7 +245,7 @@ export default function ChatSidebar({
           {activeTab === "rooms" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
           )}
-          <Hash className="w-4 h-4 inline-block mr-2" />
+          <Group className="w-4 h-4 inline-block mr-2" />
           Rooms
         </button>
         <button
@@ -297,7 +284,7 @@ export default function ChatSidebar({
               </div>
             ) : filteredRooms.length === 0 ? (
               <div className="text-center py-8">
-                <Hash className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <Group className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-sm text-muted-foreground">
                   {searchTerm ? "No rooms found" : "No rooms yet"}
                 </p>
@@ -330,7 +317,7 @@ export default function ChatSidebar({
                           {room.mode === "VIDEO" ? (
                             <Video className="w-6 h-6" />
                           ) : (
-                            <Hash className="w-6 h-6" />
+                            <Group className="w-6 h-6" />
                           )}
                         </div>
                         {room.isActive && (

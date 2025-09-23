@@ -2,6 +2,7 @@ import {
   AuthResponse,
   Friend,
   Message,
+  MessageResponse,
   Room,
   RoomResponse,
   User,
@@ -205,11 +206,11 @@ export const messageApi = {
     roomId: string,
     limit = 50,
     cursor?: string
-  ): Promise<Message[]> => {
+  ): Promise<MessageResponse> => {
     const params = new URLSearchParams({ limit: limit.toString() });
     if (cursor) params.append("cursor", cursor);
-
-    const { data } = await api.get(`/messages/room/${roomId}?${params}`);
+    console.log(roomId);
+    const { data } = await api.get(`/rooms/${roomId}/messages`);
     return data;
   },
 

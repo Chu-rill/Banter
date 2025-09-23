@@ -59,6 +59,8 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
   const [isInCall, setIsInCall] = useState(false);
   const [callUsers, setCallUsers] = useState<any[]>([]);
   const [isRecording, setIsRecording] = useState(false);
+  const [isVideoCallMode, setIsVideoCallMode] = useState(false);
+  const [showVideoCall, setShowVideoCall] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const [showSearch, setShowSearch] = useState(false);
@@ -122,8 +124,9 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
     try {
       setIsLoading(true);
       const roomMessages = await messageApi.getRoomMessages(room.id, 50);
+      const data = roomMessages.data as Message[];
       setMessages(
-        roomMessages.map((msg) => ({
+        data.map((msg) => ({
           ...msg,
           isOwn: msg.userId === user?.id,
         }))
