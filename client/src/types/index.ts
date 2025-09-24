@@ -102,3 +102,14 @@ export interface ErrorResponse {
   message: string;
   error?: any;
 }
+
+export interface MessageWithUser extends Message {
+  user: User;
+  isOwn?: boolean;
+}
+
+export interface TypingUser {
+  userId: string;
+  username: string;
+  roomId: string;
+}
