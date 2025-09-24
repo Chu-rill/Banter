@@ -508,15 +508,22 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
             <div
               className={cn(
                 "w-10 h-10 rounded-lg flex items-center justify-center",
-                room.mode === "VIDEO"
-                  ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400"
-                  : "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+                "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
               )}
             >
-              {room.mode === "VIDEO" ? (
-                <Video className="w-5 h-5" />
+              {room?.profilePicture ? (
+                <img
+                  src={room.profilePicture}
+                  alt={room.name || "Room"}
+                  className="w-11 h-11 rounded-xl object-cover shadow-md"
+                  onError={(e) => {
+                    // fallback if image fails to load
+                    (e.currentTarget as HTMLImageElement).src =
+                      "/Banter_logo.png";
+                  }}
+                />
               ) : (
-                <Users className="w-5 h-5" />
+                <Users className="w-6 h-6 text-muted-foreground" />
               )}
             </div>
 

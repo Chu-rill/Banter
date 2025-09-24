@@ -25,6 +25,7 @@ import {
   GetRoomDto,
   GetRoomSchema,
   RoomConnectionSchema,
+  UpdateRoomDto,
 } from './validation';
 import { ZodPipe } from 'src/utils/schema-validation/validation.pipe';
 import {

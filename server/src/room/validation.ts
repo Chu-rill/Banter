@@ -17,6 +17,17 @@ export const CreateRoomSchema = z.object({
   isPaid: z.boolean().optional(),
 });
 
+export const UpdateRoomSchema = z.object({
+  name: z.string().min(1).optional,
+  description: z.string().min(1).optional,
+  profilePicture: z.string().url().optional(),
+  type: RoleTypeEnum.optional(),
+  maxParticipants: z.number().int().min(2).optional,
+  mode: RoleModeEnum.optional(),
+  price: z.number().min(0).optional(),
+  isPaid: z.boolean().optional(),
+});
+
 export const GetRoomSchema = z.object({
   id: z.string().cuid(),
 });
@@ -34,6 +45,7 @@ export const RoomConnectionSchema = z.object({
 //Type inference from Zod schemas
 // export type Room = z.infer<typeof RoomSchema>;
 export type CreateRoomDto = z.infer<typeof CreateRoomSchema>;
+export type UpdateRoomDto = z.infer<typeof UpdateRoomSchema>;
 export type GetAllRoomsQueryDto = z.infer<typeof GetAllRoomsQuerySchema>;
 export type GetRoomDto = z.infer<typeof GetRoomSchema>;
 export type RoomConnectionDto = z.infer<typeof RoomConnectionSchema>;

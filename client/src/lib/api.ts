@@ -191,12 +191,12 @@ export const roomApi = {
     roomId: string,
     updates: Partial<Room>
   ): Promise<RoomResponse> => {
-    const { data } = await api.patch(`/rooms/${roomId}`, updates);
+    const { data } = await api.patch(`/rooms/admin/${roomId}`, updates);
     return data;
   },
 
   deleteRoom: async (roomId: string): Promise<void> => {
-    await api.delete(`/rooms/${roomId}`);
+    await api.delete(`/rooms/admin/${roomId}`);
   },
 };
 
@@ -209,7 +209,6 @@ export const messageApi = {
   ): Promise<MessageResponse> => {
     const params = new URLSearchParams({ limit: limit.toString() });
     if (cursor) params.append("cursor", cursor);
-    console.log(roomId);
     const { data } = await api.get(`/rooms/${roomId}/messages`);
     return data;
   },

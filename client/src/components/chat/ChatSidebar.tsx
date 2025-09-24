@@ -307,17 +307,24 @@ export default function ChatSidebar({
                         <div
                           className={cn(
                             "w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:scale-105",
-                            room.mode === "VIDEO"
-                              ? "bg-gradient-to-br from-emerald-500 to-green-600 text-white"
-                              : "bg-gradient-to-br from-blue-500 to-indigo-600 text-white",
+                            "bg-gradient-to-br from-blue-500 to-indigo-600 text-white",
                             selectedRoom?.id === room.id &&
                               "ring-2 ring-purple-500/30"
                           )}
                         >
-                          {room.mode === "VIDEO" ? (
-                            <Video className="w-6 h-6" />
+                          {room?.profilePicture ? (
+                            <img
+                              src={room.profilePicture}
+                              alt={room.name || "Room"}
+                              className="w-11 h-11 rounded-xl object-cover shadow-md"
+                              onError={(e) => {
+                                // fallback if image fails to load
+                                (e.currentTarget as HTMLImageElement).src =
+                                  "/Banter_logo.png";
+                              }}
+                            />
                           ) : (
-                            <Users className="w-6 h-6" />
+                            <Users className="w-6 h-6 text-muted-foreground" />
                           )}
                         </div>
                         {room.isActive && (

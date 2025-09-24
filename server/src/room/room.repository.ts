@@ -41,6 +41,21 @@ export class RoomRepository {
     });
   }
 
+  async updateRoom(id: string, updateData: any) {
+    return this.prisma.room.update({
+      where: { id },
+      data: updateData,
+      include: {
+        participants: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+        creator: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+      },
+    });
+  }
+
   async getAllRooms(page: number, limit: number) {
     const skip = (page - 1) * limit;
 

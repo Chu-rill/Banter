@@ -14,6 +14,7 @@ export interface Room {
   id: string;
   name: string;
   description?: string;
+  profilePicture?: string;
   type: "PUBLIC" | "PRIVATE";
   mode: "CHAT" | "VIDEO" | "BOTH";
   creatorId: string;
@@ -21,6 +22,8 @@ export interface Room {
   maxParticipants: number;
   isActive: boolean;
   createdAt: string;
+  price?: number;
+  isPaid?: boolean;
 }
 
 export interface Message {

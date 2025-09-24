@@ -11,6 +11,7 @@ import {
   GetAllRoomsQueryDto,
   GetRoomDto,
   RoomConnectionDto,
+  UpdateRoomDto,
 } from './validation';
 import { RoomMessageService } from 'src/room-message/room-message.service';
 import { UserRepository } from 'src/user/user.repository';
@@ -44,6 +45,20 @@ export class RoomService {
       statusCode: HttpStatus.CREATED,
       success: true,
       message: 'Room created successfully',
+      data: room,
+    };
+  }
+
+  async updateRoom(id: string, updateData: UpdateRoomDto) {
+    const res = await this.roomRepository.getRoomById(id);
+    if (!res) {
+      throw new NotFoundException('Room not found');
+    }
+    const room = await this.roomRepository.updateRoom(id, updateData);
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Room updated successfully',
       data: room,
     };
   }
