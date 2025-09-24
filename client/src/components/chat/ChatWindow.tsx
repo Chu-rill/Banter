@@ -516,7 +516,7 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
               {room.mode === "VIDEO" ? (
                 <Video className="w-5 h-5" />
               ) : (
-                <Group className="w-5 h-5" />
+                <Users className="w-5 h-5" />
               )}
             </div>
 
@@ -569,9 +569,9 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
               <Search className="w-4 h-4 md:w-5 md:h-5" />
             </Button>
 
-            <Button variant="ghost" size="icon" aria-label="More options">
+            {/* <Button variant="ghost" size="icon" aria-label="More options">
               <MoreVertical className="w-4 h-4 md:w-5 md:h-5" />
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>
@@ -628,7 +628,7 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-3">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
-                <Group className="w-8 h-8 text-muted-foreground" />
+                <Users className="w-8 h-8 text-muted-foreground" />
               </div>
               <div className="space-y-1">
                 <h3 className="font-semibold text-foreground">

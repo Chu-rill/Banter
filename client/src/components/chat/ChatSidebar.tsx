@@ -10,7 +10,7 @@ import {
   Moon,
   Sun,
   Users,
-  Group,
+  Contact,
   Video,
   Expand,
   LogOut,
@@ -137,7 +137,7 @@ export default function ChatSidebar({
                   selectedRoom?.id === room.id && "bg-accent"
                 )}
               >
-                <Group className="w-4 h-4" />
+                <Users className="w-4 h-4" />
                 {room.isActive && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                 )}
@@ -245,7 +245,7 @@ export default function ChatSidebar({
           {activeTab === "rooms" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
           )}
-          <Group className="w-4 h-4 inline-block mr-2" />
+          <Users className="w-4 h-4 inline-block mr-2" />
           Rooms
         </button>
         <button
@@ -260,7 +260,7 @@ export default function ChatSidebar({
           {activeTab === "friends" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
           )}
-          <Users className="w-4 h-4 inline-block mr-2" />
+          <Contact className="w-4 h-4 inline-block mr-2" />
           Friends
         </button>
       </div>
@@ -284,7 +284,7 @@ export default function ChatSidebar({
               </div>
             ) : filteredRooms.length === 0 ? (
               <div className="text-center py-8">
-                <Group className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-sm text-muted-foreground">
                   {searchTerm ? "No rooms found" : "No rooms yet"}
                 </p>
@@ -317,7 +317,7 @@ export default function ChatSidebar({
                           {room.mode === "VIDEO" ? (
                             <Video className="w-6 h-6" />
                           ) : (
-                            <Group className="w-6 h-6" />
+                            <Users className="w-6 h-6" />
                           )}
                         </div>
                         {room.isActive && (

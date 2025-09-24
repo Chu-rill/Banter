@@ -68,20 +68,28 @@ export default function FriendsPanel({
   const searchUsers = async () => {
     try {
       setSearchLoading(true);
-      const results = await friendApi.searchUsers(searchQuery.trim());
-      // Filter out current user and existing friends
-      const filteredResults = results.filter(
-        (u) =>
-          u.id !== user?.id &&
-          !friends.some(
-            (f) =>
-              (f.requesterId === u.id || f.receiverId === u.id) &&
-              f.status !== "DECLINED"
-          )
-      );
-      setSearchResults(filteredResults);
+      const result = await friendApi.searchUser(searchQuery.trim());
+
+      // API returns a structured response with statusCode, message, success, and data
+      const foundUser = result.data as User;
+
+      // Only add if it's not the current user and not already a friend
+      if (
+        foundUser &&
+        foundUser.id !== user?.id && // ✅ exclude current user
+        !friends.some(
+          (f) =>
+            (f.requesterId === foundUser.id || f.receiverId === foundUser.id) &&
+            f.status !== "DECLINED"
+        )
+      ) {
+        setSearchResults([foundUser]); // wrap in array for UI consistency
+      } else {
+        setSearchResults([]);
+      }
     } catch (error) {
       console.error("Search failed:", error);
+      setSearchResults([]);
     } finally {
       setSearchLoading(false);
     }

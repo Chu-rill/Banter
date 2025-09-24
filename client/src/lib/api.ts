@@ -267,24 +267,12 @@ export const friendApi = {
     await api.delete(`/friends/${friendshipId}`);
   },
 
-  searchUsers: async (query: string): Promise<User[]> => {
-    const response = await api.get(
-      `/users/search?q=${encodeURIComponent(query)}`
+  searchUser: async (query: string): Promise<UserResponse> => {
+    const { data } = await api.get(
+      `/users?username=${encodeURIComponent(query)}`
     );
-    // Handle different possible response structures
-    if (Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (response.data && Array.isArray(response.data.users)) {
-      return response.data.users;
-    } else {
-      console.error(
-        "Unexpected search users response structure:",
-        response.data
-      );
-      return [];
-    }
+
+    return data;
   },
 };
 

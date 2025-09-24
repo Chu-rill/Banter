@@ -58,6 +58,13 @@ export class UserController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get a user by username (via query)' })
+  async findOneByName(@Query('username') username: string) {
+    return this.userService.getUserByUsername(username);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List all users with pagination ' })
   @ApiQuery({ type: GetUsersQueryDtoSwagger })
   async getAllUsers(@Query() query: GetUsersQueryDto) {
