@@ -269,7 +269,7 @@ export default function CreateRoomModal({
             </div>
 
             {/* Room Mode */}
-            <div className="space-y-3">
+            {/* <div className="space-y-3">
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Room Mode
               </label>
@@ -343,7 +343,7 @@ export default function CreateRoomModal({
                   </p>
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Max Participants */}
             <div className="space-y-2">

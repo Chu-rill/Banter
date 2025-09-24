@@ -56,7 +56,7 @@ export default function ChatSidebar({
     try {
       setLoading(true);
       const roomsData = await roomApi.getRooms();
-      console.log("Rooms data received:", roomsData); // Debug log
+      // console.log("Rooms data received:", roomsData); // Debug log
 
       // Ensure we have an array
       let roomArray: Room[] = [];

@@ -18,6 +18,7 @@ import {
   Settings,
   Search,
   StopCircle,
+  Group,
 } from "lucide-react";
 import { messageApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +37,7 @@ interface ChatWindowProps {
 }
 
 import { User } from "@/types";
+import { CharacterCounter } from "./CharacterCounter";
 
 interface MessageWithUser extends Message {
   user: User;
@@ -71,7 +73,7 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
-  const messageInputRef = useRef<HTMLInputElement>(null);
+  const messageInputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef(false);
 
@@ -258,8 +260,8 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
     [room.id]
   );
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewMessage(e.target.value);
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    let value = e.target.value;
 
     // Start typing indicator
     if (e.target.value.trim() && !isTypingRef.current) {
@@ -267,8 +269,53 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
       isTypingRef.current = true;
     }
 
+    if (value.length >= 2000) {
+      // If we're at max length, allow the change but auto-add newline
+      // This prevents the user from being stuck
+      if (value.length === 2000 && !value.endsWith("\n")) {
+        value = value.slice(0, 1999) + "\n";
+      }
+    }
+
+    setNewMessage(value);
+
+    if (messageInputRef.current) {
+      messageInputRef.current.style.height = "auto";
+      messageInputRef.current.style.height = `${messageInputRef.current.scrollHeight}px`;
+    }
+
     // Reset typing timeout
     debouncedStopTyping();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Handle Shift+Enter for new line
+    if (e.key === "Enter" && e.shiftKey) {
+      const textarea = e.target as HTMLInputElement;
+      e.preventDefault(); // Prevent form submission
+      const value = textarea.value;
+      const start = textarea.selectionStart ?? value.length;
+      const end = textarea.selectionEnd ?? value.length;
+
+      // Insert newline at cursor position
+      const newValue = value.substring(0, start) + "\n" + value.substring(end);
+
+      if (newValue.length <= 2000) {
+        setNewMessage(newValue);
+
+        // Set cursor position after the newline
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+        }, 0);
+      }
+      return;
+    }
+
+    // Handle other shortcuts as needed
+    if (e.key === "Escape") {
+      // Clear input or close modal, etc.
+      setNewMessage("");
+    }
   };
 
   const handleEmojiClick = (emojiData: any) => {
@@ -469,7 +516,7 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
               {room.mode === "VIDEO" ? (
                 <Video className="w-5 h-5" />
               ) : (
-                <Hash className="w-5 h-5" />
+                <Group className="w-5 h-5" />
               )}
             </div>
 
@@ -581,7 +628,7 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-3">
               <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
-                <Hash className="w-8 h-8 text-muted-foreground" />
+                <Group className="w-8 h-8 text-muted-foreground" />
               </div>
               <div className="space-y-1">
                 <h3 className="font-semibold text-foreground">
@@ -653,22 +700,28 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
 
         <form
           onSubmit={handleSendMessage}
-          className="flex items-end space-x-1 md:space-x-2"
+          className="flex items-start gap-3 mb-5"
           aria-label="Send message"
         >
           <div className="flex-1 relative">
-            <Input
+            <textarea
               ref={messageInputRef}
               value={newMessage}
               onChange={handleInputChange}
-              placeholder={`Message #${room.name}...`}
-              className="pr-16 md:pr-20 resize-none min-h-[40px] max-h-32 text-base"
+              onKeyDown={handleKeyDown}
+              // placeholder={`Message #${room.name}...`}
+              className="w-full pr-16 md:pr-20 resize-none min-h-[40px] max-h-32 text-base whitespace-pre-wrap overflow-wrap-anywhere border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 leading-5"
               maxLength={2000}
               disabled={isSending}
-              style={{ fontSize: "16px" }} // Prevents zoom on iOS
+              rows={1}
+              style={{
+                fontSize: "16px",
+                wordWrap: "break-word",
+                overflowWrap: "break-word",
+              }}
             />
 
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+            <div className="absolute right-2 top-2 flex items-center space-x-1">
               <Button
                 type="button"
                 variant="ghost"
@@ -691,83 +744,22 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
               </Button>
             </div>
           </div>
-
-          {/* Voice recorder */}
-          <Button
-            type="button"
-            size="icon"
-            aria-label={isRecording ? "Stop recording" : "Start recording"}
-            onClick={async () => {
-              if (isRecording) {
-                // Stop
-                setIsRecording(false);
-                mediaRecorderRef.current?.stop();
-                return;
-              }
-              try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                  audio: true,
-                });
-                const mr = new MediaRecorder(stream);
-                recordedChunksRef.current = [];
-                mr.ondataavailable = (e) => {
-                  if (e.data.size > 0) recordedChunksRef.current.push(e.data);
-                };
-                mr.onstop = async () => {
-                  const blob = new Blob(recordedChunksRef.current, {
-                    type: "audio/webm",
-                  });
-                  const file = new File([blob], `voice-${Date.now()}.webm`, {
-                    type: "audio/webm",
-                  });
-                  try {
-                    // Upload then send media message
-                    const uploaded = await uploadApi.uploadFile(file, room.id);
-                    socketService.sendMessage({
-                      roomId: room.id,
-                      type: "MEDIA",
-                      mediaUrl: uploaded.url,
-                      mediaType: "AUDIO",
-                    });
-                  } catch (err) {
-                    console.error("Voice upload failed", err);
-                  }
-                  // stop all tracks
-                  stream.getTracks().forEach((t) => t.stop());
-                };
-                mediaRecorderRef.current = mr;
-                mr.start();
-                setIsRecording(true);
-              } catch (err) {
-                console.error("Mic permission denied", err);
-              }
-            }}
-            className={cn(
-              "flex-shrink-0",
-              isRecording && "bg-red-500 text-white hover:bg-red-600"
-            )}
-          >
-            {isRecording ? (
-              <StopCircle className="w-5 h-5" />
-            ) : (
-              <Mic className="w-4 h-4" />
-            )}
-          </Button>
-
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!newMessage.trim() || isSending}
-            className="flex-shrink-0"
-            aria-label="Send"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center content-between">
+            <CharacterCounter current={newMessage.length} />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!newMessage.trim() || isSending}
+              className="flex-shrink-0 mt-[2px]"
+              aria-label="Send"
+            >
+              <Send className="w-5 h-5" />
+            </Button>
+          </div>
         </form>
 
         <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-          <span>Press Enter to send, Shift + Enter for new line</span>
-          <span>{newMessage.length}/2000</span>
+          {/* <span>Press Enter to send, Shift + Enter for new line</span> */}
         </div>
       </div>
 
