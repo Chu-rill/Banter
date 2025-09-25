@@ -24,6 +24,7 @@ import { cn, formatTimeAgo } from "@/lib/utils";
 import CreateRoomModal from "./CreateRoomModal";
 import FriendsPanel from "./FriendsPanel";
 import { Room } from "@/types";
+import RoomList from "../room/RoomList";
 
 interface ChatSidebarProps {
   selectedRoom: Room | null;
@@ -266,135 +267,17 @@ export default function ChatSidebar({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <div className="flex-1 overflow-y-auto scrollbar-thin ">
         {activeTab === "rooms" && (
-          <div className="p-3">
-            {/* Create Room Button */}
-            <button
-              onClick={handleCreateRoom}
-              className="w-full flex items-center justify-start px-4 py-3 mb-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
-            >
-              <Plus className="w-5 h-5 mr-3" />
-              Create Room
-            </button>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-              </div>
-            ) : filteredRooms.length === 0 ? (
-              <div className="text-center py-8">
-                <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-sm text-muted-foreground">
-                  {searchTerm ? "No rooms found" : "No rooms yet"}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredRooms.map((room) => (
-                  <div
-                    key={room.id}
-                    onClick={() => onSelectRoom(room)}
-                    className={cn(
-                      "flex items-center p-3 rounded-xl cursor-pointer transition-all duration-200 group",
-                      selectedRoom?.id === room.id
-                        ? "bg-purple-600/10 border border-purple-500/20 shadow-lg"
-                        : "hover:bg-secondary/50 hover:shadow-md"
-                    )}
-                  >
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="relative">
-                        <div
-                          className={cn(
-                            "w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:scale-105",
-                            "bg-gradient-to-br from-blue-500 to-indigo-600 text-white",
-                            selectedRoom?.id === room.id &&
-                              "ring-2 ring-purple-500/30"
-                          )}
-                        >
-                          {room?.profilePicture ? (
-                            <img
-                              src={room.profilePicture}
-                              alt={room.name || "Room"}
-                              className="w-11 h-11 rounded-xl object-cover shadow-md"
-                              onError={(e) => {
-                                // fallback if image fails to load
-                                (e.currentTarget as HTMLImageElement).src =
-                                  "/Banter_logo.png";
-                              }}
-                            />
-                          ) : (
-                            <Users className="w-6 h-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        {room.isActive && (
-                          <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3
-                            className={cn(
-                              "text-sm font-semibold truncate transition-colors",
-                              selectedRoom?.id === room.id
-                                ? "text-purple-600"
-                                : "text-foreground group-hover:text-purple-600"
-                            )}
-                          >
-                            {room.name}
-                          </h3>
-                          <div className="flex items-center space-x-1">
-                            {room.type === "PRIVATE" && (
-                              <div
-                                className="w-2 h-2 bg-amber-500 rounded-full"
-                                title="Private room"
-                              />
-                            )}
-                            <span className="text-xs text-muted-foreground">
-                              {formatTimeAgo(room.createdAt)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-muted-foreground truncate">
-                            {room.description ||
-                              `${room.participants?.length || 0} ${
-                                room.participants?.length === 1
-                                  ? "member"
-                                  : "members"
-                              }`}
-                          </p>
-                          <div className="flex items-center space-x-1">
-                            <div className="flex -space-x-1">
-                              {room.participants
-                                ?.slice(0, 3)
-                                .map((participant, index) => (
-                                  <div
-                                    key={participant.id}
-                                    className="w-5 h-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full border border-background flex items-center justify-center text-xs text-white font-medium"
-                                    title={participant.username}
-                                  >
-                                    {participant.username
-                                      ?.charAt(0)
-                                      ?.toUpperCase() || "?"}
-                                  </div>
-                                ))}
-                              {room.participants?.length > 3 && (
-                                <div className="w-5 h-5 bg-muted border border-background rounded-full flex items-center justify-center text-xs font-medium">
-                                  +{room.participants.length - 3}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <RoomList
+            rooms={rooms}
+            user={user}
+            selectedRoom={selectedRoom}
+            loading={loading}
+            searchTerm={searchTerm}
+            onSelectRoom={onSelectRoom}
+            onCreateRoom={handleCreateRoom}
+          />
         )}
 
         {activeTab === "friends" && (

@@ -163,7 +163,7 @@ export default function ChatInput({
         </div>
 
         <div className="flex items-center content-between">
-          <CharacterCounter current={newMessage.length} />
+          {/* <CharacterCounter current={newMessage.length} /> */}
           <Button
             type="submit"
             size="icon"
