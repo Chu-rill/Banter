@@ -21,7 +21,7 @@ import { roomApi } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";
-import CreateRoomModal from "./CreateRoomModal";
+import CreateRoomModal from "../room/RoomModal";
 import FriendsPanel from "./FriendsPanel";
 import { Room } from "@/types";
 import RoomList from "../room/RoomList";

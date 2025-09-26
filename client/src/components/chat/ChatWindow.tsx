@@ -8,7 +8,7 @@ import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 import VideoCall from "./VideoCall";
 import FileUpload from "./FileUpload";
-import RoomDetails from "./RoomDetails";
+import RoomDetails from "../room/RoomDetails";
 import { useChat } from "@/hooks/useChat";
 import ChatSearch from "./ChatSearch";
 

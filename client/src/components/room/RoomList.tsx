@@ -60,7 +60,7 @@ export default function RoomList({
       {/* Create Room Button */}
       <button
         onClick={onCreateRoom}
-        className="flex items-center justify-center w-12 h-12 rounded-full bg-white text-black shadow-lg hover:cursor-pointer"
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-white text-black shadow-lg hover:cursor-pointer"
       >
         <Plus className="w-6 h-6" />
       </button>
