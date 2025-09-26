@@ -69,7 +69,13 @@ export interface RoomResponse {
   statusCode: number;
   success: boolean;
   message: string;
-  data: Room | Room[] | { rooms: Room[]; pagination: RoomPagination };
+  data: Room;
+}
+export interface RoomsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: { rooms: Room[]; pagination: RoomPagination };
 }
 
 export interface MessageResponse {

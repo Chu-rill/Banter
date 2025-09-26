@@ -61,7 +61,6 @@ export default function CreateRoomModal({
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mode, setMode] = useState<"create" | "join">("create");
-  console.log("current mode:", mode);
 
   const {
     register,

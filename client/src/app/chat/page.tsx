@@ -4,7 +4,7 @@ import { useState } from "react";
 import { withAuth } from "@/contexts/AuthContext";
 import ChatSidebar from "../../components/chat/ChatSidebar";
 import ChatWindow from "../../components/chat/ChatWindow";
-import UserProfile from "../../components/chat/UserProfile";
+import UserProfile from "../../components/user/UserProfile";
 import {
   NotificationSystem,
   useNotifications,

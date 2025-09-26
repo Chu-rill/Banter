@@ -5,6 +5,7 @@ import {
   MessageResponse,
   Room,
   RoomResponse,
+  RoomsResponse,
   User,
   UserResponse,
 } from "@/types";
@@ -157,7 +158,7 @@ export const authApi = {
 
 // Room API
 export const roomApi = {
-  getRooms: async (): Promise<RoomResponse> => {
+  getRooms: async (): Promise<RoomsResponse> => {
     const { data } = await api.get("/rooms");
     // Handle different possible response structures
     return data;

@@ -66,7 +66,7 @@ export default function CreateRoom({
       const created = Array.isArray(room.data)
         ? room.data[0]
         : "rooms" in room.data
-        ? room.data.rooms[0]
+        ? room.data
         : room.data;
 
       onRoomCreated(created);

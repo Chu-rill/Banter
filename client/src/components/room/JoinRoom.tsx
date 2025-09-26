@@ -59,7 +59,10 @@ export default function JoinRoom({
       setError(null);
 
       const response = await roomApi.getRooms();
-      const rooms = response.data as Room[];
+
+      const rooms = response.data.rooms as Room[];
+
+      console.log("Fetched rooms:", rooms);
 
       const roomsWithStatus = rooms.map((room) => ({
         ...room,
@@ -68,6 +71,7 @@ export default function JoinRoom({
       }));
 
       setAvailableRooms(roomsWithStatus);
+      console.log("Available rooms:", roomsWithStatus);
     } catch (err) {
       setError("Failed to load available rooms");
     } finally {
