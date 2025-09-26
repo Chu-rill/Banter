@@ -102,10 +102,11 @@ export class RoomController {
     example: 'cl9v1z5t30000qzrmn1g6v6y',
   })
   async joinRoom(@Param('id') id: string, @Request() req) {
-    const dto = { roomId: id, userId: req.user.id };
+    const roomId = id;
+    const userId = req.user.id;
 
-    const parsed = RoomConnectionSchema.parse(dto);
-    // return this.roomService.joinRoom(parsed);
+    // const parsed = RoomConnectionSchema.parse(userId);
+    return this.roomService.joinRoom(roomId, userId);
   }
 
   @Delete(':id/leave')

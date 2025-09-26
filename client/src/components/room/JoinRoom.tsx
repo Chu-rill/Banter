@@ -5,7 +5,7 @@ import { Room } from "@/types";
 import { roomApi } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Search, Loader2, Users } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import RoomCard from "./RoomCard";
 import RoomGrid from "./RoomGrid";
 import { cn } from "@/lib/utils";
@@ -101,7 +101,10 @@ export default function JoinRoom({
       setAvailableRooms((prev) =>
         prev.map((r) => (r.id === room.id ? { ...r, isMember: true } : r))
       );
-      setJoiningRoomId(null);
+      setTimeout(() => {
+        setJoiningRoomId(null);
+        onClose();
+      }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to join room");
       setJoiningRoomId(null);
