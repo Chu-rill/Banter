@@ -1,4 +1,3 @@
-// components/chat/JoinRoom.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,19 +5,10 @@ import { Room } from "@/types";
 import { roomApi } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import {
-  Search,
-  Users,
-  Lock,
-  Globe,
-  Hash,
-  X,
-  Filter,
-  UserPlus,
-  Loader2,
-  CheckCircle,
-  Clock,
-} from "lucide-react";
+import { Search, Loader2, Users } from "lucide-react";
+import RoomCard from "./RoomCard";
+import RoomGrid from "./RoomGrid";
+import { cn } from "@/lib/utils";
 
 interface JoinRoomProps {
   isOpen: boolean;
@@ -28,12 +18,12 @@ interface JoinRoomProps {
   currentRooms?: Room[]; // Rooms user is already in
 }
 
-type RoomFilter = "ALL" | "PUBLIC" | "PRIVATE";
-type RoomSort = "NEWEST" | "POPULAR" | "ALPHABETICAL";
+export type RoomFilter = "ALL" | "PUBLIC" | "PRIVATE";
+export type RoomSort = "NEWEST" | "POPULAR" | "ALPHABETICAL";
 
-interface RoomWithStatus extends Room {
+export interface RoomWithStatus extends Room {
   isMember?: boolean;
-  isPending?: boolean; // For pending join requests
+  isPending?: boolean;
 }
 
 export default function JoinRoom({
@@ -59,10 +49,7 @@ export default function JoinRoom({
       setError(null);
 
       const response = await roomApi.getRooms();
-
       const rooms = response.data.rooms as Room[];
-
-      console.log("Fetched rooms:", rooms);
 
       const roomsWithStatus = rooms.map((room) => ({
         ...room,
@@ -71,13 +58,41 @@ export default function JoinRoom({
       }));
 
       setAvailableRooms(roomsWithStatus);
-      console.log("Available rooms:", roomsWithStatus);
     } catch (err) {
       setError("Failed to load available rooms");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const filteredRooms = availableRooms
+    .filter((room) => {
+      // Search filter
+      if (searchQuery) {
+        return room.name.toLowerCase().includes(searchQuery.toLowerCase());
+      }
+      return true;
+    })
+    .filter((room) => {
+      // Room type filter
+      if (filter === "ALL") return true;
+      return room.type === filter;
+    })
+    .sort((a, b) => {
+      // Sorting logic
+      if (sortBy === "NEWEST") {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+      if (sortBy === "POPULAR") {
+        return (b.participants?.length || 0) - (a.participants?.length || 0);
+      }
+      if (sortBy === "ALPHABETICAL") {
+        return a.name.localeCompare(b.name);
+      }
+      return 0;
+    });
 
   const handleJoinRoom = async (room: RoomWithStatus) => {
     try {
@@ -97,7 +112,7 @@ export default function JoinRoom({
 
   return (
     <div className="p-6 space-y-5">
-      {/* Error Message */}
+      {/* Error */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-600 dark:text-red-400">
           {error}
@@ -116,27 +131,52 @@ export default function JoinRoom({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {(["ALL", "PUBLIC", "PRIVATE"] as RoomFilter[]).map((f) => (
-          <Button
-            key={f}
-            variant={filter === f ? "default" : "outline"}
-            size="sm"
-            onClick={() => setFilter(f)}
-          >
-            {f}
-          </Button>
-        ))}
-        {(["POPULAR", "NEWEST", "ALPHABETICAL"] as RoomSort[]).map((s) => (
-          <Button
-            key={s}
-            variant={sortBy === s ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSortBy(s)}
-          >
-            {s}
-          </Button>
-        ))}
+      <div className="flex flex-col gap-4">
+        {/* Room Type Filters */}
+        <div>
+          <span className="text-xs font-medium text-muted-foreground block mb-2">
+            Filter by Type
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {(["ALL", "PUBLIC", "PRIVATE"] as RoomFilter[]).map((f) => (
+              <Button
+                key={f}
+                variant={filter === f ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "rounded-full",
+                  filter === f ? "bg-blue-600 text-white" : ""
+                )}
+                onClick={() => setFilter(f)}
+              >
+                {f}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sort Options */}
+        <div>
+          <span className="text-xs font-medium text-muted-foreground block mb-2">
+            Sort by
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {(["POPULAR", "NEWEST", "ALPHABETICAL"] as RoomSort[]).map((s) => (
+              <Button
+                key={s}
+                variant={sortBy === s ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "rounded-full",
+                  sortBy === s ? "bg-blue-600 text-white" : ""
+                )}
+                onClick={() => setSortBy(s)}
+              >
+                {s}
+              </Button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Rooms List */}
@@ -150,14 +190,20 @@ export default function JoinRoom({
             No rooms found. Try searching or changing filters.
           </div>
         ) : (
-          availableRooms.map((room) => (
-            <RoomCard
-              key={room.id}
-              room={room}
-              onJoin={handleJoinRoom}
-              isJoining={joiningRoomId === room.id}
-            />
-          ))
+          filteredRooms.map(
+            (
+              room // ✅ use filteredRooms
+            ) => (
+              <RoomCard
+                key={room.id}
+                filter={filter}
+                sortBy={sortBy}
+                room={room}
+                onJoin={handleJoinRoom}
+                isJoining={joiningRoomId === room.id}
+              />
+            )
+          )
         )}
       </div>
 
@@ -168,197 +214,5 @@ export default function JoinRoom({
         </Button>
       </div>
     </div>
-  );
-}
-
-// Room Grid Component
-interface RoomGridProps {
-  rooms: RoomWithStatus[];
-  isLoading: boolean;
-  onJoinRoom: (room: RoomWithStatus) => void;
-  joiningRoomId: string | null;
-}
-
-function RoomGrid({
-  rooms,
-  isLoading,
-  onJoinRoom,
-  joiningRoomId,
-}: RoomGridProps) {
-  if (isLoading) {
-    return (
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-        </div>
-      </div>
-    );
-  }
-
-  if (rooms.length === 0) {
-    return (
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="text-center py-12">
-          <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-          <h3 className="font-medium text-lg mb-1">No rooms found</h3>
-          <p className="text-sm text-muted-foreground">
-            Try adjusting your search or filters
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex-1 overflow-y-auto p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {rooms.map((room) => (
-          <RoomCard
-            key={room.id}
-            room={room}
-            onJoin={onJoinRoom}
-            isJoining={joiningRoomId === room.id}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Room Card Component
-interface RoomCardProps {
-  room: RoomWithStatus;
-  onJoin: (room: RoomWithStatus) => void;
-  isJoining: boolean;
-}
-
-function RoomCard({ room, onJoin, isJoining }: RoomCardProps) {
-  const isRoomFull = room.participants?.length >= room.maxParticipants;
-
-  return (
-    <div className="border border-border rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:border-primary/20">
-      {/* Room Header */}
-      <div className="flex items-start gap-3 mb-3">
-        {room.profilePicture ? (
-          <img
-            src={room.profilePicture}
-            alt={room.name}
-            className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-          />
-        ) : (
-          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center flex-shrink-0">
-            <Hash className="w-6 h-6 text-white" />
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg truncate">{room.name}</h3>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            {room.type === "PRIVATE" ? (
-              <Lock className="w-3 h-3" />
-            ) : (
-              <Globe className="w-3 h-3" />
-            )}
-            <span>{room.type.toLowerCase()}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Room Description */}
-      {room.description && (
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-          {room.description}
-        </p>
-      )}
-
-      {/* Room Stats */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-        <span className="flex items-center gap-1">
-          <Users className="w-4 h-4" />
-          {room.participants?.length || 0}/{room.maxParticipants}
-        </span>
-        {room.createdAt && (
-          <span className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            {new Date(room.createdAt).toLocaleDateString()}
-          </span>
-        )}
-      </div>
-
-      {/* Join Button */}
-      <RoomJoinButton
-        room={room}
-        onJoin={onJoin}
-        isJoining={isJoining}
-        isRoomFull={isRoomFull}
-      />
-    </div>
-  );
-}
-
-// Room Join Button Component
-interface RoomJoinButtonProps {
-  room: RoomWithStatus;
-  onJoin: (room: RoomWithStatus) => void;
-  isJoining: boolean;
-  isRoomFull: boolean;
-}
-
-function RoomJoinButton({
-  room,
-  onJoin,
-  isJoining,
-  isRoomFull,
-}: RoomJoinButtonProps) {
-  if (room.isMember) {
-    return (
-      <div className="flex items-center justify-center py-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 rounded-lg">
-        <CheckCircle className="w-4 h-4 mr-2" />
-        Already Joined
-      </div>
-    );
-  }
-
-  if (room.isPending) {
-    return (
-      <div className="flex items-center justify-center py-2 text-sm text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-        <Clock className="w-4 h-4 mr-2" />
-        Request Pending
-      </div>
-    );
-  }
-
-  if (isRoomFull) {
-    return (
-      <Button disabled className="w-full" variant="outline">
-        <Users className="w-4 h-4 mr-2" />
-        Room Full
-      </Button>
-    );
-  }
-
-  return (
-    <Button
-      onClick={() => onJoin(room)}
-      disabled={isJoining}
-      className="w-full"
-      variant={room.type === "PRIVATE" ? "outline" : "default"}
-    >
-      {isJoining ? (
-        <>
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          {room.type === "PRIVATE" ? "Requesting..." : "Joining..."}
-        </>
-      ) : room.type === "PRIVATE" ? (
-        <>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Request to Join
-        </>
-      ) : (
-        <>
-          <UserPlus className="w-4 h-4 mr-2" />
-          Join Room
-        </>
-      )}
-    </Button>
   );
 }
