@@ -15,7 +15,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 // Centralized token storage utilities (same as in AuthContext)
-const TokenStorage = {
+export const TokenStorage = {
   getToken: () => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("authToken");
@@ -157,49 +157,6 @@ export const authApi = {
 };
 
 // Room API
-export const roomApi = {
-  getRooms: async (): Promise<RoomsResponse> => {
-    const { data } = await api.get("/rooms");
-    // Handle different possible response structures
-    return data;
-  },
-
-  getRoom: async (roomId: string): Promise<RoomResponse> => {
-    const { data } = await api.get(`/rooms/${roomId}`);
-    return data;
-  },
-
-  createRoom: async (roomData: {
-    name: string;
-    description?: string;
-    type: "PUBLIC" | "PRIVATE";
-    mode: "CHAT" | "VIDEO" | "BOTH";
-    maxParticipants?: number;
-  }): Promise<RoomResponse> => {
-    const { data } = await api.post("/rooms", roomData);
-    return data;
-  },
-
-  joinRoom: async (roomId: string): Promise<void> => {
-    await api.post(`/rooms/${roomId}/join`);
-  },
-
-  leaveRoom: async (roomId: string): Promise<void> => {
-    await api.post(`/rooms/${roomId}/leave`);
-  },
-
-  updateRoom: async (
-    roomId: string,
-    updates: Partial<Room>
-  ): Promise<RoomResponse> => {
-    const { data } = await api.patch(`/rooms/admin/${roomId}`, updates);
-    return data;
-  },
-
-  deleteRoom: async (roomId: string): Promise<void> => {
-    await api.delete(`/rooms/admin/${roomId}`);
-  },
-};
 
 // Message API
 export const messageApi = {

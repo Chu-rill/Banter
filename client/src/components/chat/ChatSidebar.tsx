@@ -17,7 +17,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { roomApi } from "@/lib/api";
+import { roomApi } from "@/lib/api/room";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";
@@ -25,6 +25,7 @@ import CreateRoomModal from "../room/RoomModal";
 import FriendsPanel from "../user/FriendsPanel";
 import { Room } from "@/types";
 import RoomList from "../room/RoomList";
+import { useRooms } from "@/contexts/RoomsContext";
 
 interface ChatSidebarProps {
   selectedRoom: Room | null;
@@ -42,42 +43,19 @@ export default function ChatSidebar({
   onShowProfile,
 }: ChatSidebarProps) {
   const { user, logout } = useAuth();
+  const { rooms, loadRooms, loading } = useRooms();
   const { theme, setTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [newRooms, setNewRooms] = useState<Room[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"rooms" | "friends">("rooms");
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
 
   useEffect(() => {
     loadRooms();
-  }, []);
+  }, [loadRooms]);
 
-  const loadRooms = async () => {
-    try {
-      setLoading(true);
-      const roomsData = await roomApi.getRooms();
-      // console.log("Rooms data received:", roomsData); // Debug log
-
-      // Ensure we have an array
-      let roomArray: Room[] = [];
-      if (Array.isArray(roomsData.data)) {
-        roomArray = roomsData.data as Room[];
-      } else if ("rooms" in roomsData.data) {
-        roomArray = roomsData.data.rooms;
-      } else if ("id" in roomsData.data) {
-        roomArray = [roomsData.data as Room];
-      }
-      setRooms(roomArray);
-    } catch (error) {
-      console.error("Failed to load rooms:", error);
-      setRooms([]); // Set empty array on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredRooms = rooms.filter((room) =>
+  const filteredRooms = rooms.filter((room: Room) =>
     room.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -86,8 +64,9 @@ export default function ChatSidebar({
   };
 
   const handleRoomCreated = (newRoom: Room) => {
-    setRooms((prev) => [newRoom, ...prev]);
+    setNewRooms((prev) => [newRoom, ...prev]);
     onSelectRoom(newRoom);
+    loadRooms();
   };
 
   // Helper function to get user initial safely
@@ -127,7 +106,7 @@ export default function ChatSidebar({
           </Button>
 
           <div className="flex-1 w-full">
-            {filteredRooms.slice(0, 8).map((room) => (
+            {filteredRooms.slice(0, 8).map((room: Room) => (
               <Button
                 key={room.id}
                 variant="ghost"

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Room } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import {
   Users,
@@ -17,8 +18,9 @@ import {
   UserPlus,
   LogOut,
 } from "lucide-react";
-import { roomApi } from "@/lib/api";
+import { roomApi } from "@/lib/api/room";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRooms } from "@/contexts/RoomsContext";
 
 interface RoomDetailsProps {
   room: Room;
@@ -34,6 +36,7 @@ export default function RoomDetails({
   onUpdated,
 }: RoomDetailsProps) {
   const { user } = useAuth();
+  const { loadRooms } = useRooms();
   const [isEditing, setIsEditing] = useState(false);
   const [editedRoom, setEditedRoom] = useState(room);
   const [loading, setLoading] = useState(false);
@@ -58,6 +61,8 @@ export default function RoomDetails({
     try {
       setLoading(true);
       await roomApi.leaveRoom(room.id);
+      loadRooms();
+      toast.success("Left Room!");
       onClose();
     } catch (err) {
       console.error("Failed to leave room", err);

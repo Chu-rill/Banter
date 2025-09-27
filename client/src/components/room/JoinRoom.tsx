@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Room } from "@/types";
-import { roomApi } from "@/lib/api";
+import { roomApi } from "@/lib/api/room";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Search, Loader2 } from "lucide-react";
@@ -48,10 +48,9 @@ export default function JoinRoom({
       setIsLoading(true);
       setError(null);
 
-      const response = await roomApi.getRooms();
-      const rooms = response.data.rooms as Room[];
+      const data = await roomApi.getRooms();
 
-      const roomsWithStatus = rooms.map((room) => ({
+      const roomsWithStatus = data.map((room) => ({
         ...room,
         isMember: currentRooms.some((r) => r.id === room.id),
         isPending: false,
