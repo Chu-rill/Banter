@@ -22,9 +22,10 @@ import { useRooms } from "@/contexts/RoomsContext";
 interface DetailsTabProps {
   room: Room;
   onClose: () => void;
+  onLeaveRoom?: () => void;
 }
 
-export default function DetailsTab({ room, onClose }: DetailsTabProps) {
+export default function DetailsTab({ room, onClose, onLeaveRoom }: DetailsTabProps) {
   const { user } = useAuth();
   const { loadRooms } = useRooms();
   const [isEditing, setIsEditing] = useState(false);
@@ -52,6 +53,7 @@ export default function DetailsTab({ room, onClose }: DetailsTabProps) {
       await roomApi.leaveRoom(room.id);
       loadRooms();
       toast.success("Left Room!");
+      onLeaveRoom?.();
       onClose();
     } catch (err) {
       console.error("Failed to leave room", err);
@@ -85,6 +87,7 @@ export default function DetailsTab({ room, onClose }: DetailsTabProps) {
       setLoading(true);
       const deleted = await roomApi.deleteRoom(room.id);
       loadRooms();
+      onLeaveRoom?.();
       onClose();
     } catch (error) {
       console.error("Failed to delete room", error);

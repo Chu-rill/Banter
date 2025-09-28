@@ -15,9 +15,10 @@ import ChatSearch from "./ChatSearch";
 interface ChatWindowProps {
   room: Room;
   onToggleSidebar: () => void;
+  onLeaveRoom?: () => void;
 }
 
-export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
+export default function ChatWindow({ room, onToggleSidebar, onLeaveRoom }: ChatWindowProps) {
   const {
     messages,
     typingUsers,
@@ -101,7 +102,11 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
       )}
 
       {showRoomDetails && (
-        <GroupInfo room={room} onClose={() => setShowRoomDetails(false)} />
+        <GroupInfo
+          room={room}
+          onClose={() => setShowRoomDetails(false)}
+          onLeaveRoom={onLeaveRoom}
+        />
       )}
     </div>
   );

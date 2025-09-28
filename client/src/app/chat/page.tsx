@@ -47,6 +47,7 @@ function ChatPage() {
           <ChatWindow
             room={selectedRoom}
             onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onLeaveRoom={() => setSelectedRoom(null)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">

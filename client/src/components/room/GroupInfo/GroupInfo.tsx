@@ -29,6 +29,7 @@ interface RoomDetailsProps {
   onClose: () => void;
   onJoined?: (room: Room) => void;
   onUpdated?: (room: Room) => void;
+  onLeaveRoom?: () => void;
 }
 
 export default function GroupInfo({
@@ -36,6 +37,7 @@ export default function GroupInfo({
   onClose,
   onJoined,
   onUpdated,
+  onLeaveRoom,
 }: RoomDetailsProps) {
   const [activeTab, setActiveTab] = useState<"details" | "members">("details");
 
@@ -87,6 +89,7 @@ export default function GroupInfo({
             <DetailsTab
               room={room}
               onClose={onClose}
+              onLeaveRoom={onLeaveRoom}
               // onJoined={onJoined}
               // onUpdated={onUpdated}
             />
