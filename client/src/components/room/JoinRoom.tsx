@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Room } from "@/types";
-import { roomApi } from "@/lib/api/room";
+import { roomApi } from "@/lib/api/roomApi";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Search, Loader2 } from "lucide-react";
 import RoomCard from "./RoomCard";
 import RoomGrid from "./RoomGrid";
 import { cn } from "@/lib/utils";
+import { useRooms } from "@/contexts/RoomsContext";
 
 interface JoinRoomProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export default function JoinRoom({
   const [isLoading, setIsLoading] = useState(false);
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { loadRooms } = useRooms();
 
   useEffect(() => {
     if (isOpen) loadAvailableRooms();
@@ -103,6 +105,7 @@ export default function JoinRoom({
       setTimeout(() => {
         setJoiningRoomId(null);
         onClose();
+        loadRooms();
       }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to join room");

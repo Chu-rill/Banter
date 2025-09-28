@@ -43,10 +43,10 @@ export const roomApi = {
   },
 
   updateRoom: async (
-    roomId: string,
+    id: string,
     updates: Partial<Room>
   ): Promise<RoomResponse> => {
-    const { data } = await api.patch(`/rooms/admin/${roomId}`, updates);
+    const { data } = await api.patch(`/rooms/admin/${id}`, updates);
     return data;
   },
 

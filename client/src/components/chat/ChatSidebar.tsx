@@ -17,7 +17,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { roomApi } from "@/lib/api/room";
+import { roomApi } from "@/lib/api/roomApi";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";

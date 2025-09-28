@@ -18,11 +18,11 @@ export const CreateRoomSchema = z.object({
 });
 
 export const UpdateRoomSchema = z.object({
-  name: z.string().min(1).optional,
-  description: z.string().min(1).optional,
+  name: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
   profilePicture: z.string().url().optional(),
   type: RoleTypeEnum.optional(),
-  maxParticipants: z.number().int().min(2).optional,
+  maxParticipants: z.number().int().min(2).optional(),
   mode: RoleModeEnum.optional(),
   price: z.number().min(0).optional(),
   isPaid: z.boolean().optional(),

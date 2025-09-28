@@ -32,7 +32,7 @@ import {
 @ApiTags('Rooms-Admin')
 @ApiBearerAuth('JWT-auth')
 @Controller('rooms/admin')
-@UseGuards(JwtAuthGuard, RoomAdminGuard)
+@UseGuards(RoomAdminGuard)
 export class RoomAdminController {
   constructor(private readonly roomService: RoomService) {}
 
@@ -46,14 +46,16 @@ export class RoomAdminController {
     // return this.roomService.kickMember(roomId, req.user.id, userId);
   }
 
-  @Patch()
-  @UsePipes(new ZodPipe(UpdateRoomSchema))
+  @Patch(':id')
+  // @UsePipes(new ZodPipe(UpdateRoomSchema))
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update a Room' })
   @ApiBody({ type: CreateRoomDtoSwagger })
   @ApiResponse({ status: 200, description: 'Room updated successfully' })
-  async updateRoom(@Body() updateRoomDto: UpdateRoomDto, @Request() req) {
-    return this.roomService.updateRoom(req.user.id, updateRoomDto);
+  async updateRoom(@Body() updateRoomDto: any, @Param('id') id: string) {
+    // console.log('Param id:', id);
+    // console.log('Body dto:', updateRoomDto);
+    return this.roomService.updateRoom(id, updateRoomDto);
   }
 
   @Delete(':id')

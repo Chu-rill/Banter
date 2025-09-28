@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Globe, Lock, Check, AlertCircle } from "lucide-react";
-import { roomApi } from "@/lib/api/room";
+import { roomApi } from "@/lib/api/roomApi";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";

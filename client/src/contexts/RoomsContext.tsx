@@ -6,7 +6,7 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import { roomApi } from "@/lib/api/room";
+import { roomApi } from "@/lib/api/roomApi";
 import { Room } from "@/types";
 
 interface RoomProviderProps {

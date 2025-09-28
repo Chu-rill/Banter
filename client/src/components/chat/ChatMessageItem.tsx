@@ -1,21 +1,15 @@
 // components/chat/ChatMessageItem.tsx
 "use client";
 
-import { useState } from "react";
 import { MessageWithUser } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
-import ChatReactions from "./ChatReactions";
 import { cn, formatTimeAgo } from "@/lib/utils";
 
 interface ChatMessageItemProps {
   message: MessageWithUser;
-  // onAddReaction: (messageId: string, emoji: string) => void;
 }
 
-export default function ChatMessageItem({
-  message,
-}: // onAddReaction,
-ChatMessageItemProps) {
+export default function ChatMessageItem({ message }: ChatMessageItemProps) {
   const { user } = useAuth();
   const isOwn = message.isOwn || message.userId === user?.id;
   const showAvatar = !isOwn;
@@ -23,42 +17,46 @@ ChatMessageItemProps) {
   return (
     <div
       className={cn(
-        "flex items-end space-x-2 mb-4",
-        isOwn ? "flex-row-reverse space-x-reverse" : "flex-row"
+        "flex items-end mb-3",
+        isOwn ? "justify-end" : "justify-start"
       )}
     >
+      {/* Avatar for others */}
       {showAvatar && (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-          {message.user.avatar ? (
-            <img
-              src={message.user.avatar}
-              alt={message.user.username}
-              className="w-8 h-8 rounded-full object-cover"
-            />
-          ) : (
-            message.user.username.charAt(0).toUpperCase()
-          )}
+        <div className="mr-2 flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white text-sm font-medium">
+            {message.user.avatar ? (
+              <img
+                src={message.user.avatar}
+                alt={message.user.username}
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              message.user.username.charAt(0).toUpperCase()
+            )}
+          </div>
         </div>
       )}
 
+      {/* Message bubble */}
       <div
         className={cn(
-          "flex flex-col max-w-[70%]",
+          "flex flex-col max-w-[75%]",
           isOwn ? "items-end" : "items-start"
         )}
       >
         {!isOwn && (
-          <span className="text-xs text-muted-foreground mb-1 px-2">
+          <span className="text-xs text-muted-foreground mb-1 px-1">
             {message.user.username}
           </span>
         )}
 
         <div
           className={cn(
-            "px-4 py-2 rounded-2xl break-words",
+            "px-3 py-2 rounded-lg shadow-sm break-words",
             isOwn
-              ? "bg-primary text-primary-foreground rounded-br-md"
-              : "bg-muted text-foreground rounded-bl-md"
+              ? "bg-green-500 text-white rounded-tr-none"
+              : "bg-gray-200 text-black rounded-tl-none"
           )}
         >
           {message.type === "TEXT" ? (
@@ -90,15 +88,10 @@ ChatMessageItemProps) {
           )}
         </div>
 
-        {/* <ChatReactions
-          messageId={message.id}
-          isOwn={isOwn}
-          onAddReaction={onAddReaction}
-        /> */}
-
+        {/* Time */}
         <span
           className={cn(
-            "text-xs text-muted-foreground mt-1 px-2",
+            "text-xs text-muted-foreground mt-1 px-1",
             isOwn ? "text-right" : "text-left"
           )}
         >

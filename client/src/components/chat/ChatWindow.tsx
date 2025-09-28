@@ -8,7 +8,7 @@ import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
 import VideoCall from "./VideoCall";
 import FileUpload from "./FileUpload";
-import RoomDetails from "../room/RoomDetails";
+import GroupInfo from "../room/GroupInfo/GroupInfo";
 import { useChat } from "@/hooks/useChat";
 import ChatSearch from "./ChatSearch";
 
@@ -101,7 +101,7 @@ export default function ChatWindow({ room, onToggleSidebar }: ChatWindowProps) {
       )}
 
       {showRoomDetails && (
-        <RoomDetails room={room} onClose={() => setShowRoomDetails(false)} />
+        <GroupInfo room={room} onClose={() => setShowRoomDetails(false)} />
       )}
     </div>
   );

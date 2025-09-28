@@ -58,15 +58,6 @@ async function bootstrap() {
   // Security middleware
   app.use(helmet());
 
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
-
   // Global prefix
   app.setGlobalPrefix('/api/v1');
 
