@@ -1,11 +1,11 @@
 import {
   Controller,
-  Post,
-  Body,
-  UseGuards,
   Get,
   Req,
   Res,
+  UseGuards,
+  Logger,
+  HttpException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { OauthService } from './oauth.service';
@@ -14,6 +14,8 @@ import { ConfigService } from '@nestjs/config';
 
 @Controller('oauth')
 export class OauthController {
+  private readonly logger = new Logger(OauthController.name);
+
   constructor(
     private readonly oauthService: OauthService,
     private readonly configService: ConfigService,
@@ -23,18 +25,57 @@ export class OauthController {
   @UseGuards(GoogleGuard)
   async googleAuth(@Req() req) {
     // This triggers the Google OAuth flow
+    // The GoogleGuard will redirect to Google's OAuth page
   }
 
   @Get('google/callback')
   @UseGuards(GoogleGuard)
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
-    const result = await this.oauthService.validateOAuthGoogleLogin(req);
+    try {
+      // Log the incoming request for debugging
+      // this.logger.log('Google OAuth callback received');
 
-    const redirectUrl = `${this.configService.get<string>(
-      'FRONTEND_URL',
-    )}?token=${result.token}`;
+      // Validate OAuth login and get result with token
+      const result = await this.oauthService.validateOAuthGoogleLogin(req);
 
-    return res.redirect(redirectUrl);
+      if (!result || !result.token) {
+        throw new Error('No token generated');
+      }
+
+      // Get frontend URL from config
+      const frontendUrl =
+        this.configService.get<string>('FRONTEND_URL') ||
+        'http://localhost:3000';
+
+      // Construct redirect URL with token
+      const redirectUrl = `${frontendUrl}/oauth-redirect?token=${encodeURIComponent(result.token)}`;
+
+      // this.logger.log(`Redirecting to: ${redirectUrl}`);
+
+      // Redirect to frontend with token
+      return res.redirect(redirectUrl);
+    } catch (error) {
+      this.logger.error('Google OAuth callback error:', error);
+
+      // Get frontend URL for error redirect
+      const frontendUrl =
+        this.configService.get<string>('FRONTEND_URL_REDIRECT') ||
+        'http://localhost:3000/oauth/callback';
+
+      // Determine error message
+      let errorMessage = 'Authentication failed';
+
+      if (error instanceof HttpException) {
+        errorMessage = error.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // Redirect with error
+      const errorRedirectUrl = `${frontendUrl}?error=${encodeURIComponent(errorMessage)}`;
+
+      return res.redirect(errorRedirectUrl);
+    }
   }
 }
 

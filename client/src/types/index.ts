@@ -14,6 +14,7 @@ export interface Room {
   id: string;
   name: string;
   description?: string;
+  profilePicture?: string;
   type: "PUBLIC" | "PRIVATE";
   mode: "CHAT" | "VIDEO" | "BOTH";
   creatorId: string;
@@ -21,6 +22,8 @@ export interface Room {
   maxParticipants: number;
   isActive: boolean;
   createdAt: string;
+  price?: number;
+  isPaid?: boolean;
 }
 
 export interface Message {
@@ -66,7 +69,20 @@ export interface RoomResponse {
   statusCode: number;
   success: boolean;
   message: string;
-  data: Room | Room[] | { rooms: Room[]; pagination: RoomPagination };
+  data: Room;
+}
+export interface RoomsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: { rooms: Room[]; pagination: RoomPagination };
+}
+
+export interface MessageResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: Message[];
 }
 
 export interface UserPagination {
@@ -91,4 +107,15 @@ export interface ErrorResponse {
   success: boolean;
   message: string;
   error?: any;
+}
+
+export interface MessageWithUser extends Message {
+  user: User;
+  isOwn?: boolean;
+}
+
+export interface TypingUser {
+  userId: string;
+  username: string;
+  roomId: string;
 }

@@ -41,6 +41,21 @@ export class RoomRepository {
     });
   }
 
+  async updateRoom(id: string, updateData: any) {
+    return this.prisma.room.update({
+      where: { id },
+      data: updateData,
+      include: {
+        participants: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+        creator: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+      },
+    });
+  }
+
   async getAllRooms(page: number, limit: number) {
     const skip = (page - 1) * limit;
 
@@ -73,13 +88,18 @@ export class RoomRepository {
         creator: {
           select: { id: true, username: true, email: true, avatar: true },
         },
-        messages: {
-          include: {
-            user: { select: { id: true, username: true, avatar: true } },
-          },
-        },
         callSessions: true,
       },
+    });
+  }
+
+  async getMessagesByRoomId(roomId: string) {
+    return this.prisma.message.findMany({
+      where: { roomId },
+      include: {
+        user: { select: { id: true, username: true, avatar: true } },
+      },
+      orderBy: { createdAt: 'asc' },
     });
   }
 
@@ -119,5 +139,23 @@ export class RoomRepository {
       select: { id: true },
     });
     return !!room;
+  }
+
+  async deleteRoom(id: string, userId: string) {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+      select: { creator: true },
+    });
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    if (room.creator.id !== userId) {
+      throw new Error('Only the room creator can delete this room');
+    }
+    return this.prisma.room.delete({
+      where: { id },
+    });
   }
 }

@@ -34,7 +34,7 @@ async function bootstrap() {
   // CORS configuration
   const corsOrigin = process.env.FRONTEND_URL
     ? process.env.FRONTEND_URL.split(',')
-    : ['http://localhost:3000', 'https://localhost:3000'];
+    : ['http://localhost:3000', 'https://localhost:3001'];
 
   const nestAppOptions: any = {
     cors: {
@@ -57,15 +57,6 @@ async function bootstrap() {
 
   // Security middleware
   app.use(helmet());
-
-  // Global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
-  );
 
   // Global prefix
   app.setGlobalPrefix('/api/v1');

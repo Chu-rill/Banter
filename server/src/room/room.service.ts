@@ -11,6 +11,7 @@ import {
   GetAllRoomsQueryDto,
   GetRoomDto,
   RoomConnectionDto,
+  UpdateRoomDto,
 } from './validation';
 import { RoomMessageService } from 'src/room-message/room-message.service';
 import { UserRepository } from 'src/user/user.repository';
@@ -48,6 +49,20 @@ export class RoomService {
     };
   }
 
+  async updateRoom(id: string, updateData: UpdateRoomDto) {
+    const res = await this.roomRepository.getRoomById(id);
+    if (!res) {
+      throw new NotFoundException('Room not found');
+    }
+    const room = await this.roomRepository.updateRoom(id, updateData);
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Room updated successfully',
+      data: room,
+    };
+  }
+
   async getAllRooms(dto: GetAllRoomsQueryDto) {
     let { page, limit } = dto;
     const { rooms, total } = await this.roomRepository.getAllRooms(page, limit);
@@ -80,6 +95,22 @@ export class RoomService {
       statusCode: HttpStatus.OK,
       success: true,
       message: 'Room retrieved successfully',
+      data: room,
+    };
+  }
+
+  async getRoomMessages(dto: GetRoomDto) {
+    const { id } = dto;
+    const room = await this.roomRepository.getMessagesByRoomId(id);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Messages retrieved successfully',
       data: room,
     };
   }
@@ -158,5 +189,19 @@ export class RoomService {
       throw new NotFoundException('Room not found');
     }
     return room;
+  }
+
+  async deleteRoom(id: string, userId: string) {
+    let res = this.roomRepository.getRoomById(id);
+    if (!res) {
+      throw new NotFoundException('Room not found');
+    }
+    const room = await this.roomRepository.deleteRoom(id, userId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Room deleted successfully',
+    };
   }
 }

@@ -25,6 +25,7 @@ import {
   GetRoomDto,
   GetRoomSchema,
   RoomConnectionSchema,
+  UpdateRoomDto,
 } from './validation';
 import { ZodPipe } from 'src/utils/schema-validation/validation.pipe';
 import {
@@ -77,6 +78,20 @@ export class RoomController {
     return this.roomService.getRoomById(dto);
   }
 
+  @Get(':id/messages')
+  @UsePipes(new ZodPipe(GetRoomSchema))
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get the room messages by the roomId' })
+  @ApiParam({
+    name: 'id',
+    type: String,
+    description: 'Room CUID',
+    example: 'cl9v1z5t30000qzrmn1g6v6y',
+  })
+  async getMessagesByRoomById(@Param() dto: GetRoomDto) {
+    return this.roomService.getRoomMessages(dto);
+  }
+
   @Post(':id/join')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Join a room' })
@@ -87,10 +102,11 @@ export class RoomController {
     example: 'cl9v1z5t30000qzrmn1g6v6y',
   })
   async joinRoom(@Param('id') id: string, @Request() req) {
-    const dto = { roomId: id, userId: req.user.id };
+    const roomId = id;
+    const userId = req.user.id;
 
-    const parsed = RoomConnectionSchema.parse(dto);
-    // return this.roomService.joinRoom(parsed);
+    // const parsed = RoomConnectionSchema.parse(userId);
+    return this.roomService.joinRoom(roomId, userId);
   }
 
   @Delete(':id/leave')
@@ -103,9 +119,10 @@ export class RoomController {
     example: 'cl9v1z5t30000qzrmn1g6v6y',
   })
   async leaveRoom(@Param('id') id: string, @Request() req) {
-    const dto = { roomId: id, userId: req.user.id };
+    const roomId = id;
+    const userId = req.user.id;
 
-    const parsed = RoomConnectionSchema.parse(dto);
-    // return this.roomService.leaveRoom(parsed);
+    // const parsed = RoomConnectionSchema.parse(dto);
+    return this.roomService.leaveRoom(roomId, userId);
   }
 }

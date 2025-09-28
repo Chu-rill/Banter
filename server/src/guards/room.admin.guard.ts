@@ -4,24 +4,59 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthRequest } from '../types/auth.request';
 
 @Injectable()
 export class RoomAdminGuard implements CanActivate {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthRequest>();
-    const user = request.user;
 
-    if (!user) {
-      throw new ForbiddenException('User not authenticated');
+    // JWT Authentication logic from JwtAuthGuard
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException(
+        'Missing or invalid authorization header',
+      );
     }
 
-    // Get the roomId from request (could be from params or body depending on your routes)
-    const roomId = request.params.roomId || request.body.roomId;
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedException('Token not found');
+    }
+
+    let user;
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+      user = await this.prisma.user.findUnique({
+        where: { id: payload.userId },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+        },
+      });
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+      request.user = user;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    // Room admin authorization logic
+    const roomId = request.params.id || request.body.roomId;
+
     if (!roomId) {
       throw new ForbiddenException('Room ID is required');
     }

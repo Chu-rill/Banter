@@ -2,8 +2,10 @@ import {
   AuthResponse,
   Friend,
   Message,
+  MessageResponse,
   Room,
   RoomResponse,
+  RoomsResponse,
   User,
   UserResponse,
 } from "@/types";
@@ -13,7 +15,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 // Centralized token storage utilities (same as in AuthContext)
-const TokenStorage = {
+export const TokenStorage = {
   getToken: () => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("authToken");
@@ -154,62 +156,16 @@ export const authApi = {
   },
 };
 
-// Room API
-export const roomApi = {
-  getRooms: async (): Promise<RoomResponse> => {
-    const { data } = await api.get("/rooms");
-    // Handle different possible response structures
-    return data;
-  },
-
-  getRoom: async (roomId: string): Promise<RoomResponse> => {
-    const { data } = await api.get(`/rooms/${roomId}`);
-    return data;
-  },
-
-  createRoom: async (roomData: {
-    name: string;
-    description?: string;
-    type: "PUBLIC" | "PRIVATE";
-    mode: "CHAT" | "VIDEO" | "BOTH";
-    maxParticipants?: number;
-  }): Promise<RoomResponse> => {
-    const { data } = await api.post("/rooms", roomData);
-    return data;
-  },
-
-  joinRoom: async (roomId: string): Promise<void> => {
-    await api.post(`/rooms/${roomId}/join`);
-  },
-
-  leaveRoom: async (roomId: string): Promise<void> => {
-    await api.post(`/rooms/${roomId}/leave`);
-  },
-
-  updateRoom: async (
-    roomId: string,
-    updates: Partial<Room>
-  ): Promise<RoomResponse> => {
-    const { data } = await api.patch(`/rooms/${roomId}`, updates);
-    return data;
-  },
-
-  deleteRoom: async (roomId: string): Promise<void> => {
-    await api.delete(`/rooms/${roomId}`);
-  },
-};
-
 // Message API
 export const messageApi = {
   getRoomMessages: async (
     roomId: string,
     limit = 50,
     cursor?: string
-  ): Promise<Message[]> => {
+  ): Promise<MessageResponse> => {
     const params = new URLSearchParams({ limit: limit.toString() });
     if (cursor) params.append("cursor", cursor);
-
-    const { data } = await api.get(`/messages/room/${roomId}?${params}`);
+    const { data } = await api.get(`/rooms/${roomId}/messages`);
     return data;
   },
 
@@ -233,59 +189,6 @@ export const messageApi = {
 };
 
 // Friend API
-export const friendApi = {
-  getFriends: async (): Promise<Friend[]> => {
-    const response = await api.get("/friendship/me");
-    // Handle different possible response structures
-    if (Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (response.data && Array.isArray(response.data.friends)) {
-      return response.data.friends;
-    } else {
-      console.error("Unexpected friends response structure:", response.data);
-      return [];
-    }
-  },
-
-  sendFriendRequest: async (receiverId: string): Promise<Friend> => {
-    const { data } = await api.post("/friends/request", { receiverId });
-    return data;
-  },
-
-  respondToFriendRequest: async (
-    friendshipId: string,
-    action: "accept" | "decline"
-  ): Promise<Friend> => {
-    const { data } = await api.patch(`/friends/${friendshipId}/${action}`);
-    return data;
-  },
-
-  removeFriend: async (friendshipId: string): Promise<void> => {
-    await api.delete(`/friends/${friendshipId}`);
-  },
-
-  searchUsers: async (query: string): Promise<User[]> => {
-    const response = await api.get(
-      `/users/search?q=${encodeURIComponent(query)}`
-    );
-    // Handle different possible response structures
-    if (Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (response.data && Array.isArray(response.data.users)) {
-      return response.data.users;
-    } else {
-      console.error(
-        "Unexpected search users response structure:",
-        response.data
-      );
-      return [];
-    }
-  },
-};
 
 // Call API
 export const callApi = {

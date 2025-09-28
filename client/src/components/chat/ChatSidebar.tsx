@@ -10,20 +10,22 @@ import {
   Moon,
   Sun,
   Users,
-  Hash,
+  Contact,
   Video,
   Expand,
   LogOut,
   Minimize2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { roomApi } from "@/lib/api";
+import { roomApi } from "@/lib/api/roomApi";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";
-import CreateRoomModal from "./CreateRoomModal";
-import FriendsPanel from "./FriendsPanel";
+import CreateRoomModal from "../room/RoomModal";
+import FriendsPanel from "../user/FriendsPanel";
 import { Room } from "@/types";
+import RoomList from "../room/RoomList";
+import { useRooms } from "@/contexts/RoomsContext";
 
 interface ChatSidebarProps {
   selectedRoom: Room | null;
@@ -41,55 +43,19 @@ export default function ChatSidebar({
   onShowProfile,
 }: ChatSidebarProps) {
   const { user, logout } = useAuth();
+  const { rooms, loadRooms, loading } = useRooms();
   const { theme, setTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [newRooms, setNewRooms] = useState<Room[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"rooms" | "friends">("rooms");
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
 
   useEffect(() => {
     loadRooms();
-  }, []);
+  }, [loadRooms]);
 
-  const loadRooms = async () => {
-    try {
-      setLoading(true);
-      const roomsData: unknown = await roomApi.getRooms();
-      console.log("Rooms data received:", roomsData); // Debug log
-
-      // Ensure we have an array
-      if (Array.isArray(roomsData)) {
-        setRooms(roomsData as Room[]);
-      } else if (
-        roomsData &&
-        typeof roomsData === "object" &&
-        "data" in roomsData &&
-        Array.isArray((roomsData as { data?: unknown }).data)
-      ) {
-        // Handle wrapped response
-        setRooms((roomsData as { data: Room[] }).data);
-      } else if (
-        roomsData &&
-        typeof roomsData === "object" &&
-        "rooms" in roomsData &&
-        Array.isArray((roomsData as { rooms?: unknown }).rooms)
-      ) {
-        // Handle another possible wrapper
-        setRooms((roomsData as { rooms: Room[] }).rooms);
-      } else {
-        console.log("Unexpected rooms data structure:", roomsData);
-        setRooms([]);
-      }
-    } catch (error) {
-      console.error("Failed to load rooms:", error);
-      setRooms([]); // Set empty array on error
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredRooms = rooms.filter((room) =>
+  const filteredRooms = rooms.filter((room: Room) =>
     room.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -98,8 +64,9 @@ export default function ChatSidebar({
   };
 
   const handleRoomCreated = (newRoom: Room) => {
-    setRooms((prev) => [newRoom, ...prev]);
+    setNewRooms((prev) => [newRoom, ...prev]);
     onSelectRoom(newRoom);
+    loadRooms();
   };
 
   // Helper function to get user initial safely
@@ -139,7 +106,7 @@ export default function ChatSidebar({
           </Button>
 
           <div className="flex-1 w-full">
-            {filteredRooms.slice(0, 8).map((room) => (
+            {filteredRooms.slice(0, 8).map((room: Room) => (
               <Button
                 key={room.id}
                 variant="ghost"
@@ -150,7 +117,7 @@ export default function ChatSidebar({
                   selectedRoom?.id === room.id && "bg-accent"
                 )}
               >
-                <Hash className="w-4 h-4" />
+                <Users className="w-4 h-4" />
                 {room.isActive && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                 )}
@@ -258,7 +225,7 @@ export default function ChatSidebar({
           {activeTab === "rooms" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
           )}
-          <Hash className="w-4 h-4 inline-block mr-2" />
+          <Users className="w-4 h-4 inline-block mr-2" />
           Rooms
         </button>
         <button
@@ -273,134 +240,23 @@ export default function ChatSidebar({
           {activeTab === "friends" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
           )}
-          <Users className="w-4 h-4 inline-block mr-2" />
+          <Contact className="w-4 h-4 inline-block mr-2" />
           Friends
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin">
+      <div className="flex-1 overflow-y-auto scrollbar-thin ">
         {activeTab === "rooms" && (
-          <div className="p-3">
-            {/* Create Room Button */}
-            <button
-              onClick={handleCreateRoom}
-              className="w-full flex items-center justify-start px-4 py-3 mb-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
-            >
-              <Plus className="w-5 h-5 mr-3" />
-              Create Room
-            </button>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-              </div>
-            ) : filteredRooms.length === 0 ? (
-              <div className="text-center py-8">
-                <Hash className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-sm text-muted-foreground">
-                  {searchTerm ? "No rooms found" : "No rooms yet"}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {filteredRooms.map((room) => (
-                  <div
-                    key={room.id}
-                    onClick={() => onSelectRoom(room)}
-                    className={cn(
-                      "flex items-center p-3 rounded-xl cursor-pointer transition-all duration-200 group",
-                      selectedRoom?.id === room.id
-                        ? "bg-purple-600/10 border border-purple-500/20 shadow-lg"
-                        : "hover:bg-secondary/50 hover:shadow-md"
-                    )}
-                  >
-                    <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <div className="relative">
-                        <div
-                          className={cn(
-                            "w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:scale-105",
-                            room.mode === "VIDEO"
-                              ? "bg-gradient-to-br from-emerald-500 to-green-600 text-white"
-                              : "bg-gradient-to-br from-blue-500 to-indigo-600 text-white",
-                            selectedRoom?.id === room.id &&
-                              "ring-2 ring-purple-500/30"
-                          )}
-                        >
-                          {room.mode === "VIDEO" ? (
-                            <Video className="w-6 h-6" />
-                          ) : (
-                            <Hash className="w-6 h-6" />
-                          )}
-                        </div>
-                        {room.isActive && (
-                          <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3
-                            className={cn(
-                              "text-sm font-semibold truncate transition-colors",
-                              selectedRoom?.id === room.id
-                                ? "text-purple-600"
-                                : "text-foreground group-hover:text-purple-600"
-                            )}
-                          >
-                            {room.name}
-                          </h3>
-                          <div className="flex items-center space-x-1">
-                            {room.type === "PRIVATE" && (
-                              <div
-                                className="w-2 h-2 bg-amber-500 rounded-full"
-                                title="Private room"
-                              />
-                            )}
-                            <span className="text-xs text-muted-foreground">
-                              {formatTimeAgo(room.createdAt)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-muted-foreground truncate">
-                            {room.description ||
-                              `${room.participants?.length || 0} ${
-                                room.participants?.length === 1
-                                  ? "member"
-                                  : "members"
-                              }`}
-                          </p>
-                          <div className="flex items-center space-x-1">
-                            <div className="flex -space-x-1">
-                              {room.participants
-                                ?.slice(0, 3)
-                                .map((participant, index) => (
-                                  <div
-                                    key={participant.id}
-                                    className="w-5 h-5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full border border-background flex items-center justify-center text-xs text-white font-medium"
-                                    title={participant.username}
-                                  >
-                                    {participant.username
-                                      ?.charAt(0)
-                                      ?.toUpperCase() || "?"}
-                                  </div>
-                                ))}
-                              {room.participants?.length > 3 && (
-                                <div className="w-5 h-5 bg-muted border border-background rounded-full flex items-center justify-center text-xs font-medium">
-                                  +{room.participants.length - 3}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <RoomList
+            rooms={rooms}
+            user={user}
+            selectedRoom={selectedRoom}
+            loading={loading}
+            searchTerm={searchTerm}
+            onSelectRoom={onSelectRoom}
+            onCreateRoom={handleCreateRoom}
+          />
         )}
 
         {activeTab === "friends" && (

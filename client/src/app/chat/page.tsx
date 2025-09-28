@@ -4,19 +4,20 @@ import { useState } from "react";
 import { withAuth } from "@/contexts/AuthContext";
 import ChatSidebar from "../../components/chat/ChatSidebar";
 import ChatWindow from "../../components/chat/ChatWindow";
-import UserProfile from "../../components/chat/UserProfile";
+import UserProfile from "../../components/user/UserProfile";
 import {
   NotificationSystem,
   useNotifications,
 } from "../../components/ui/NotificationSystem";
 import ThemeCustomizer from "../../components/ui/ThemeCustomizer";
-import { Room } from "@/lib/api";
+import { Room } from "@/types";
 
 function ChatPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showThemeCustomizer, setShowThemeCustomizer] = useState(false);
+  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
 
   const { notifications, addNotification, removeNotification } =
     useNotifications();
@@ -46,6 +47,7 @@ function ChatPage() {
           <ChatWindow
             room={selectedRoom}
             onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+            onLeaveRoom={() => setSelectedRoom(null)}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">

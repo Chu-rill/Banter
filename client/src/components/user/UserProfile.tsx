@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   X,
   User,
@@ -21,44 +21,50 @@ import {
   LogOut,
   Shield,
   Palette,
-  Globe
-} from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { useAuth } from '@/contexts/AuthContext';
-import { uploadApi } from '@/lib/api';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { cn } from '@/lib/utils';
+  Globe,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { useAuth } from "@/contexts/AuthContext";
+import { uploadApi } from "@/lib/api";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { cn } from "@/lib/utils";
 
 interface UserProfileProps {
   onClose: () => void;
   onOpenThemeCustomizer?: () => void;
 }
 
-type ProfileTab = 'profile' | 'settings' | 'notifications';
+type ProfileTab = "profile" | "settings" | "notifications";
 
 const profileSchema = z.object({
   username: z
     .string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username must be less than 20 characters')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be less than 20 characters")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores"
+    ),
   email: z
     .string()
-    .min(1, 'Email is required')
-    .email('Please enter a valid email address'),
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProfileProps) {
+export default function UserProfile({
+  onClose,
+  onOpenThemeCustomizer,
+}: UserProfileProps) {
   const { user, updateUser, logout } = useAuth();
   const { theme, setTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState<ProfileTab>('profile');
+  const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -69,56 +75,58 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      username: user?.username || '',
-      email: user?.email || '',
+      username: user?.username || "",
+      email: user?.email || "",
     },
   });
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
-      setError('');
-      setSuccess('');
-      
+      setError("");
+      setSuccess("");
+
       // TODO: Implement profile update API call
-      console.log('Update profile:', data);
-      
+      console.log("Update profile:", data);
+
       updateUser({
         username: data.username,
         email: data.email,
       });
-      
-      setSuccess('Profile updated successfully!');
+
+      setSuccess("Profile updated successfully!");
       setIsEditing(false);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+      setError(err.response?.data?.message || "Failed to update profile");
     }
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
       return;
     }
 
     // Validate file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be less than 5MB');
+      setError("Image must be less than 5MB");
       return;
     }
 
     try {
       setIsUploading(true);
-      setError('');
-      
+      setError("");
+
       const response = await uploadApi.uploadAvatar(file);
       updateUser({ avatar: response.url });
-      setSuccess('Avatar updated successfully!');
+      setSuccess("Avatar updated successfully!");
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to upload avatar');
+      setError(err.response?.data?.message || "Failed to upload avatar");
     } finally {
       setIsUploading(false);
     }
@@ -126,18 +134,18 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
 
   const handleCancel = () => {
     reset({
-      username: user?.username || '',
-      email: user?.email || '',
+      username: user?.username || "",
+      email: user?.email || "",
     });
     setIsEditing(false);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
   };
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: "profile", label: "Profile", icon: User },
+    // { id: "settings", label: "Settings", icon: Settings },
+    // { id: "notifications", label: "Notifications", icon: Bell },
   ];
 
   return (
@@ -172,7 +180,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
       {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
         {/* Profile Tab */}
-        {activeTab === 'profile' && (
+        {activeTab === "profile" && (
           <div className="p-4 space-y-6">
             {/* Status Messages */}
             {error && (
@@ -185,7 +193,9 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
             {success && (
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 flex items-center space-x-2">
                 <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                <p className="text-sm text-green-700 dark:text-green-400">{success}</p>
+                <p className="text-sm text-green-700 dark:text-green-400">
+                  {success}
+                </p>
               </div>
             )}
 
@@ -204,7 +214,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
                       {user?.username.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  
+
                   {isUploading && (
                     <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
@@ -219,7 +229,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
                 >
                   <Camera className="w-4 h-4" />
                 </button>
-                
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -228,17 +238,21 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
                   className="hidden"
                 />
               </div>
-              
+
               <div className="mt-3">
-                <h3 className="text-lg font-semibold text-foreground">{user?.username}</h3>
+                <h3 className="text-lg font-semibold text-foreground">
+                  {user?.username}
+                </h3>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
                 <div className="flex items-center justify-center space-x-1 mt-1">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full",
-                    user?.isOnline ? "bg-green-500" : "bg-gray-400"
-                  )} />
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      user?.isOnline ? "bg-green-500" : "bg-gray-400"
+                    )}
+                  />
                   <span className="text-xs text-muted-foreground">
-                    {user?.isOnline ? 'Online' : 'Offline'}
+                    {user?.isOnline ? "Online" : "Offline"}
                   </span>
                 </div>
               </div>
@@ -247,7 +261,9 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
             {/* Profile Form */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium text-foreground">Account Information</h4>
+                <h4 className="text-sm font-medium text-foreground">
+                  Account Information
+                </h4>
                 {!isEditing ? (
                   <Button
                     variant="outline"
@@ -285,7 +301,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <Input
-                    {...register('username')}
+                    {...register("username")}
                     label="Username"
                     disabled={!isEditing}
                     error={errors.username?.message}
@@ -295,7 +311,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
 
                 <div>
                   <Input
-                    {...register('email')}
+                    {...register("email")}
                     type="email"
                     label="Email Address"
                     disabled={!isEditing}
@@ -309,11 +325,13 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
         )}
 
         {/* Settings Tab */}
-        {activeTab === 'settings' && (
+        {activeTab === "settings" && (
           <div className="p-4 space-y-6">
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-foreground">Appearance</h4>
-              
+              <h4 className="text-sm font-medium text-foreground">
+                Appearance
+              </h4>
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -327,7 +345,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
                       </p>
                     </div>
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -340,8 +358,10 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-foreground">Privacy & Security</h4>
-              
+              <h4 className="text-sm font-medium text-foreground">
+                Privacy & Security
+              </h4>
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -349,13 +369,15 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
                       <Shield className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">Two-Factor Authentication</p>
+                      <p className="text-sm font-medium">
+                        Two-Factor Authentication
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         Add extra security to your account
                       </p>
                     </div>
                   </div>
-                  
+
                   <Button variant="outline" size="sm">
                     Enable
                   </Button>
@@ -373,7 +395,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
                       </p>
                     </div>
                   </div>
-                  
+
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
@@ -390,8 +412,10 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-foreground">Account Actions</h4>
-              
+              <h4 className="text-sm font-medium text-foreground">
+                Account Actions
+              </h4>
+
               <div className="space-y-3">
                 <Button
                   variant="destructive"
@@ -407,29 +431,48 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
         )}
 
         {/* Notifications Tab */}
-        {activeTab === 'notifications' && (
+        {activeTab === "notifications" && (
           <div className="p-4 space-y-6">
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-foreground">Push Notifications</h4>
-              
+              <h4 className="text-sm font-medium text-foreground">
+                Push Notifications
+              </h4>
+
               <div className="space-y-3">
                 {[
-                  { label: 'New Messages', desc: 'Get notified when you receive messages' },
-                  { label: 'Friend Requests', desc: 'Get notified about friend requests' },
-                  { label: 'Call Invitations', desc: 'Get notified when someone calls you' },
-                  { label: 'Room Invites', desc: 'Get notified when invited to rooms' },
+                  {
+                    label: "New Messages",
+                    desc: "Get notified when you receive messages",
+                  },
+                  {
+                    label: "Friend Requests",
+                    desc: "Get notified about friend requests",
+                  },
+                  {
+                    label: "Call Invitations",
+                    desc: "Get notified when someone calls you",
+                  },
+                  {
+                    label: "Room Invites",
+                    desc: "Get notified when invited to rooms",
+                  },
                 ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center space-x-3">
                       <div className="p-2 bg-muted rounded-lg">
                         <Bell className="w-4 h-4" />
                       </div>
                       <div>
                         <p className="text-sm font-medium">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.desc}
+                        </p>
                       </div>
                     </div>
-                    
+
                     <label className="flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -447,8 +490,10 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-sm font-medium text-foreground">Sound & Vibration</h4>
-              
+              <h4 className="text-sm font-medium text-foreground">
+                Sound & Vibration
+              </h4>
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -462,7 +507,7 @@ export default function UserProfile({ onClose, onOpenThemeCustomizer }: UserProf
                       </p>
                     </div>
                   </div>
-                  
+
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"

@@ -3,8 +3,10 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import "./accessibility.css";
+import { RoomsProvider } from "@/contexts/RoomsContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,7 +18,7 @@ export const metadata: Metadata = {
   description:
     "Connect with friends through high-quality video calls and real-time messaging. Built with modern web technologies for the best user experience.",
   keywords: "chat, video call, messaging, communication, real-time",
-  authors: [{ name: "Banter Team" }],
+  authors: [{ name: "Churchill Daniel" }],
   openGraph: {
     title: "Banter - Modern Chat & Video Calling",
     description:
@@ -62,7 +64,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <LoadingProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <RoomsProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </RoomsProvider>
+            <Toaster position="top-right" reverseOrder={false} />
           </LoadingProvider>
         </ThemeProvider>
       </body>

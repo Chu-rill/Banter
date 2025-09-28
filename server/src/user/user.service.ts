@@ -21,6 +21,36 @@ export class UserService {
     };
   }
 
+  async getUserByEmail(email: string) {
+    const user = await this.userRepository.getUserByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'User retrieved successfully',
+      data: user,
+    };
+  }
+
+  async getUserByUsername(username: string) {
+    const user = await this.userRepository.getUserByUsername(username);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'User retrieved successfully',
+      data: user,
+    };
+  }
+
   async updateUser(id: string, updateData: UpdateUserDto) {
     try {
       const user = await this.userRepository.updateUser(id, updateData);
