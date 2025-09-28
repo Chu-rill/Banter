@@ -10,7 +10,7 @@ datasource db {
 
 model User {
   id                     String          @id @default(cuid())
-  username               String
+  username               String          @unique
   email                  String          @unique
   password               String?
   avatar                 String?
@@ -113,8 +113,8 @@ model Room {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  callSessions CallSession[]
-  messages     Message[]
+  messages     Message[]     @relation("RoomMessages")
+  callSessions CallSession[] @relation("RoomCallSessions")
 }
 
 enum RoomType {
@@ -131,7 +131,7 @@ enum RoomMode {
 model Message {
   id        String        @id @default(cuid())
   roomId    String
-  room      Room          @relation(fields: [roomId], references: [id])
+  room      Room          @relation("RoomMessages", fields: [roomId], references: [id], onDelete: Cascade)
   userId    String
   user      User          @relation(fields: [userId], references: [id])
   type      MessageType   @default(TEXT)
@@ -189,7 +189,7 @@ enum SubscriptionPlan {
 model CallSession {
   id        String   @id @default(cuid())
   roomId    String
-  room      Room     @relation(fields: [roomId], references: [id])
+  room      Room     @relation("RoomCallSessions", fields: [roomId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   duration  Int // in seconds

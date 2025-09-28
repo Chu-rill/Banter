@@ -80,6 +80,19 @@ export default function DetailsTab({ room, onClose }: DetailsTabProps) {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      const deleted = await roomApi.deleteRoom(room.id);
+      loadRooms();
+      onClose();
+    } catch (error) {
+      console.error("Failed to delete room", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Room Info */}
@@ -206,7 +219,7 @@ export default function DetailsTab({ room, onClose }: DetailsTabProps) {
               <Button
                 className=" bg-red-500 hover:bg-red-600 hover:cursor-pointer"
                 variant="outline"
-                onClick={() => setIsEditing(true)}
+                onClick={handleDelete}
               >
                 <Trash className="w-4 h-4 mr-1" /> Delete
               </Button>

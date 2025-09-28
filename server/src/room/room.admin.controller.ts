@@ -59,8 +59,9 @@ export class RoomAdminController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   async deleteRoom(@Param('id') roomId: string, @Request() req) {
     // Only room creator can delete the room
-    // return this.roomService.deleteRoom(roomId, req.user.id);
+    return this.roomService.deleteRoom(roomId, req.user.id);
   }
 }

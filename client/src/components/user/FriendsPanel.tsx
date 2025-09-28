@@ -16,7 +16,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { friendApi } from "@/lib/api";
+import { friendApi } from "@/lib/api/friendApi";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";

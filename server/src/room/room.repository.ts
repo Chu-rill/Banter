@@ -140,4 +140,22 @@ export class RoomRepository {
     });
     return !!room;
   }
+
+  async deleteRoom(id: string, userId: string) {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+      select: { creator: true },
+    });
+
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    if (room.creator.id !== userId) {
+      throw new Error('Only the room creator can delete this room');
+    }
+    return this.prisma.room.delete({
+      where: { id },
+    });
+  }
 }

@@ -190,4 +190,18 @@ export class RoomService {
     }
     return room;
   }
+
+  async deleteRoom(id: string, userId: string) {
+    let res = this.roomRepository.getRoomById(id);
+    if (!res) {
+      throw new NotFoundException('Room not found');
+    }
+    const room = await this.roomRepository.deleteRoom(id, userId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Room deleted successfully',
+    };
+  }
 }
