@@ -4,6 +4,8 @@
 import { MessageWithUser } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn, formatTimeAgo } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { UserIcon } from "lucide-react";
 
 interface ChatMessageItemProps {
   message: MessageWithUser;
@@ -13,7 +15,10 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
   const { user } = useAuth();
   const isOwn = message.isOwn || message.userId === user?.id;
   const showAvatar = !isOwn;
-
+  const [imageError, setImageError] = useState(false);
+  useEffect(() => {
+    setImageError(false);
+  }, [message.user.avatar]);
   return (
     <div
       className={cn(
@@ -24,15 +29,20 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
       {/* Avatar for others */}
       {showAvatar && (
         <div className="mr-2 flex-shrink-0">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white text-sm font-medium">
-            {message.user.avatar ? (
+          <div
+            className={cn(
+              "w-8 h-8 rounded-full bg-green-700 flex items-center justify-center text-white text-sm font-medium"
+            )}
+          >
+            {imageError || !message.user.avatar ? (
+              <UserIcon className="w-8 h-8 text-gray-400" />
+            ) : (
               <img
                 src={message.user.avatar}
                 alt={message.user.username}
                 className="w-8 h-8 rounded-full object-cover"
+                onError={() => setImageError(true)}
               />
-            ) : (
-              message.user.username.charAt(0).toUpperCase()
             )}
           </div>
         </div>

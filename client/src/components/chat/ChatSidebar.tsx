@@ -15,6 +15,7 @@ import {
   Expand,
   LogOut,
   Minimize2,
+  UserIcon,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { roomApi } from "@/lib/api/roomApi";
@@ -22,7 +23,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import CreateRoomModal from "../room/RoomModal";
-import FriendsPanel from "../user/FriendsPanel";
+import FriendsPanel from "../user/Friends/FriendsPanel";
 import { Room } from "@/types";
 import RoomList from "../room/RoomList";
 import { useRooms } from "@/contexts/RoomsContext";
@@ -47,6 +48,7 @@ export default function ChatSidebar({
   const { theme, setTheme } = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
   const [newRooms, setNewRooms] = useState<Room[]>([]);
+  const [imageError, setImageError] = useState(false);
   // const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"rooms" | "friends">("rooms");
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
@@ -54,6 +56,9 @@ export default function ChatSidebar({
   useEffect(() => {
     loadRooms();
   }, [loadRooms]);
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.avatar]);
 
   const filteredRooms = rooms.filter((room: Room) =>
     room.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -274,16 +279,15 @@ export default function ChatSidebar({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
             <div className="relative">
-              {user?.avatar ? (
+              {imageError || !user?.avatar ? (
+                <UserIcon className="w-8 h-8 text-gray-400" />
+              ) : (
                 <img
-                  src={user.avatar}
+                  src={user?.avatar}
                   alt={user?.username || "User"}
                   className="w-11 h-11 rounded-xl object-cover shadow-md"
+                  onError={() => setImageError(true)}
                 />
-              ) : (
-                <div className="w-11 h-11 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center text-white text-sm font-semibold shadow-md">
-                  {getUserInitial()}
-                </div>
               )}
               <div
                 className={cn(

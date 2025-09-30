@@ -14,6 +14,12 @@ export class FriendshipRepository {
     return user;
   }
 
+  async getById(id: string) {
+    return await this.prisma.friendship.findUnique({
+      where: { id },
+    });
+  }
+
   async respondToRequest(friendshipId: string, status: FriendStatus) {
     const friendship = await this.prisma.friendship.findUnique({
       where: { id: friendshipId },
@@ -32,18 +38,12 @@ export class FriendshipRepository {
   async getFriendshipsByStatus(userId: string, status: FriendStatus) {
     return this.prisma.friendship.findMany({
       where: {
-        OR: [
-          { requesterId: userId, status: status },
-          { receiverId: userId, status: status },
-        ],
+        status,
+        OR: [{ requesterId: userId }, { receiverId: userId }],
       },
       include: {
-        requester: {
-          select: { id: true, username: true, email: true, avatar: true },
-        },
-        // receiver: {
-        //   select: { id: true, username: true, email: true, avatar: true },
-        // },
+        requester: true,
+        receiver: true,
       },
     });
   }

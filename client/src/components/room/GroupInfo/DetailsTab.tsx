@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Room } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -25,15 +25,24 @@ interface DetailsTabProps {
   onLeaveRoom?: () => void;
 }
 
-export default function DetailsTab({ room, onClose, onLeaveRoom }: DetailsTabProps) {
+export default function DetailsTab({
+  room,
+  onClose,
+  onLeaveRoom,
+}: DetailsTabProps) {
   const { user } = useAuth();
   const { loadRooms } = useRooms();
   const [isEditing, setIsEditing] = useState(false);
   const [editedRoom, setEditedRoom] = useState(room);
   const [loading, setLoading] = useState(false);
-
   const isCreator = user?.id === room.creatorId;
   const isParticipant = room.participants?.some((p) => p.id === user?.id);
+
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [room?.profilePicture]);
 
   const handleJoin = async () => {
     try {
@@ -71,9 +80,11 @@ export default function DetailsTab({ room, onClose, onLeaveRoom }: DetailsTabPro
         maxParticipants: editedRoom.maxParticipants,
         profilePicture: editedRoom.profilePicture,
       });
+      toast.success("Room Updated!");
       setIsEditing(false);
       loadRooms();
       onClose();
+
       // onUpdated?.(updated.data);
     } catch (err) {
       console.error("Failed to update room", err);
@@ -88,6 +99,7 @@ export default function DetailsTab({ room, onClose, onLeaveRoom }: DetailsTabPro
       const deleted = await roomApi.deleteRoom(room.id);
       loadRooms();
       onLeaveRoom?.();
+      toast.success("Room Deleted!");
       onClose();
     } catch (error) {
       console.error("Failed to delete room", error);
@@ -100,16 +112,17 @@ export default function DetailsTab({ room, onClose, onLeaveRoom }: DetailsTabPro
     <div className="space-y-6">
       {/* Room Info */}
       <div className="flex items-center space-x-4">
-        {room.profilePicture ? (
+        {imageError || !room.profilePicture ? (
+          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-md">
+            <Users className="w-10 h-10 text-white" />
+          </div>
+        ) : (
           <img
             src={room.profilePicture}
             alt={room.name}
             className="w-20 h-20 rounded-xl object-cover shadow-md"
+            onError={() => setImageError(true)}
           />
-        ) : (
-          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-md">
-            <Users className="w-10 h-10 text-white" />
-          </div>
         )}
         <div className="flex-1">
           {isEditing ? (

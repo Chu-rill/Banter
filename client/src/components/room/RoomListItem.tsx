@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatTimeAgo } from "@/lib/utils";
 import { Room } from "@/types";
+import { useEffect, useState } from "react";
 
 interface RoomListItemProps {
   room: Room;
@@ -14,6 +15,12 @@ export default function RoomListItem({
   selected,
   onClick,
 }: RoomListItemProps) {
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [room?.profilePicture]);
+
   return (
     <div
       onClick={onClick}
@@ -29,23 +36,20 @@ export default function RoomListItem({
           <div
             className={cn(
               "w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-all duration-200 group-hover:scale-105",
-              !room?.profilePicture &&
+              (!room?.profilePicture || imageError) &&
                 "bg-gradient-to-br from-blue-500 to-indigo-600 text-white",
               selected && "ring-2 ring-purple-500/30"
             )}
           >
-            {room?.profilePicture ? (
+            {imageError || !room?.profilePicture ? (
+              <Users className="w-8 h-8 text-white" />
+            ) : (
               <img
                 src={room.profilePicture}
                 alt={room.name || "Room"}
                 className="w-11 h-11 rounded-xl object-cover shadow-md"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "/Banter_logo.png";
-                }}
+                onError={() => setImageError(true)}
               />
-            ) : (
-              <Users className="w-6 h-6 text-muted-foreground" />
             )}
           </div>
           {room.isActive && (

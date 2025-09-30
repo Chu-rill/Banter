@@ -399,15 +399,17 @@ export class RoomMessageGateway
       // Get user's friends
       const data = await this.friendshipService.listFriends(userId);
       const friends = data.data;
-      const friendIds = friends.map((friendship) =>
-        friendship.requesterId === userId
-          ? friendship.receiverId
-          : friendship.requesterId,
-      );
+      // const friendIds = friends.map((friendship) =>
+      //   friendship.requesterId === userId
+      //     ? friendship.receiverId
+      //     : friendship.requesterId,
+      // );
 
       // Broadcast status to friends
-      for (const friendId of friendIds) {
-        const friendSocketId = await this.userRedis.getUserSocket(friendId);
+      for (const friendId of friends) {
+        const friendSocketId = await this.userRedis.getUserSocket(
+          friendId.friend.id,
+        );
         if (friendSocketId) {
           this.server.to(friendSocketId).emit('friend-status-change', {
             userId,
