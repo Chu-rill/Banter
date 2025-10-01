@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
 import { Room } from "@/types";
+import toast from "react-hot-toast";
 
 const createRoomSchema = z.object({
   name: z
@@ -70,6 +71,7 @@ export default function CreateRoom({
         : room.data;
 
       onRoomCreated(created);
+      toast.success("Room Created!");
       reset();
       onClose();
     } catch (err: any) {

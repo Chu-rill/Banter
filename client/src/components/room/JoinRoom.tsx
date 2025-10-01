@@ -10,6 +10,7 @@ import RoomCard from "./RoomCard";
 import RoomGrid from "./RoomGrid";
 import { cn } from "@/lib/utils";
 import { useRooms } from "@/contexts/RoomsContext";
+import toast from "react-hot-toast";
 
 interface JoinRoomProps {
   isOpen: boolean;
@@ -104,6 +105,7 @@ export default function JoinRoom({
       );
       setTimeout(() => {
         setJoiningRoomId(null);
+        toast.success("Room Joined!");
         onClose();
         loadRooms();
       }, 1000);

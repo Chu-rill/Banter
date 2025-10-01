@@ -61,15 +61,21 @@ export class FriendshipService {
 
   async updateFriendshipStatus(
     friendshipId: string,
-    requesterId: string,
-    receiverId: string,
+    userId: string,
     status: FriendStatus,
   ) {
     try {
-      const [friendship, user] = await Promise.all([
-        this.friendshipRepository.respondToRequest(friendshipId, status),
-        this.userRepository.getUserById(requesterId),
-      ]);
+      const friendship = await this.friendshipRepository.getById(friendshipId);
+
+      if (!friendship) {
+        throw new BadRequestException('Friendship not found');
+      }
+
+      const { requesterId, receiverId } = friendship;
+
+      const user = await this.userRepository.getUserById(userId);
+
+      const notifyUserId = userId === requesterId ? receiverId : requesterId;
 
       // Map friend status -> notification & message
       const statusMap = {
@@ -94,7 +100,7 @@ export class FriendshipService {
 
       const notification = await this.prisma.notification.create({
         data: {
-          userId: receiverId,
+          userId: notifyUserId,
           type: config.type,
           message: config.message,
           metadata: {
@@ -125,15 +131,25 @@ export class FriendshipService {
   }
 
   async listFriends(userId: string) {
-    let list = await this.friendshipRepository.getFriendshipsByStatus(
+    let friendships = await this.friendshipRepository.getFriendshipsByStatus(
       userId,
       FriendStatus.ACCEPTED,
     );
+
+    const friends = friendships.map((f) => {
+      const otherUser = f.requesterId === userId ? f.receiver : f.requester;
+      return {
+        friendshipId: f.id,
+        status: f.status,
+        friend: otherUser,
+      };
+    });
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
       message: 'List of friends retrieved successfully',
-      data: list,
+      data: friends,
     };
   }
   async listRequests(userId: string) {

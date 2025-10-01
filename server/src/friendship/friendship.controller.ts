@@ -27,11 +27,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { FriendStatus } from '@generated/prisma';
 
 @ApiTags('Friendship')
 @ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
-@Controller('friendship')
+@Controller('friends')
 export class FriendshipController {
   constructor(private readonly friendshipService: FriendshipService) {}
 
@@ -52,9 +53,55 @@ export class FriendshipController {
   }
 
   // ➡️ Accept friend request
-  @Patch(':friendshipId/status')
+  @Patch(':friendshipId/accept')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Update friendship status (accept/decline/block)' })
+  @ApiOperation({ summary: 'Update friendship status accept' })
+  @ApiParam({
+    name: 'friendshipId',
+    type: String,
+    description: 'Friendship ID',
+    example: 'cl9v1z5t30000qzrmn1g6v6y',
+  })
+  @ApiResponse({ status: 200, description: 'Friendship status updated' })
+  async acceptRequest(
+    @Param('friendshipId') friendshipId: string,
+    @Request() req,
+  ) {
+    const userId = req.user.id;
+    return this.friendshipService.updateFriendshipStatus(
+      friendshipId,
+      userId,
+      FriendStatus.ACCEPTED,
+    );
+  }
+
+  //DECLINE
+  @Patch(':friendshipId/decline')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update friendship status  decline' })
+  @ApiParam({
+    name: 'friendshipId',
+    type: String,
+    description: 'Friendship ID',
+    example: 'cl9v1z5t30000qzrmn1g6v6y',
+  })
+  @ApiResponse({ status: 200, description: 'Friendship status updated' })
+  async declineRequest(
+    @Param('friendshipId') friendshipId: string,
+    @Request() req,
+  ) {
+    const userId = req.user.id;
+    return this.friendshipService.updateFriendshipStatus(
+      friendshipId,
+      userId,
+      FriendStatus.DECLINED,
+    );
+  }
+
+  //BLOCK
+  @Patch(':friendshipId/block')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update friendship status block' })
   @ApiParam({
     name: 'friendshipId',
     type: String,
@@ -63,20 +110,18 @@ export class FriendshipController {
   })
   @ApiBody({ type: UpdateFriendStatusDtoSwagger })
   @ApiResponse({ status: 200, description: 'Friendship status updated' })
-  async updateStatus(
+  async blockRequest(
     @Param('friendshipId') friendshipId: string,
     @Body(new ZodPipe(UpdateStatusSchema)) dto: UpdateStatusDto,
     @Request() req,
   ) {
-    const receiverId = req.user.id;
+    const userId = req.user.id;
     return this.friendshipService.updateFriendshipStatus(
       friendshipId,
-      dto.requesterId,
-      receiverId,
-      dto.status,
+      userId,
+      FriendStatus.BLOCKED,
     );
   }
-
   // ➡️ List current user’s friends
   @Get('me')
   @HttpCode(HttpStatus.OK)

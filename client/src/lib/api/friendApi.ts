@@ -1,32 +1,26 @@
-import { Friend, UserResponse } from "@/types";
+import { Friend, User, UserResponse } from "@/types";
 import api from "../api";
 
 export const friendApi = {
   getFriends: async (): Promise<Friend[]> => {
-    const response = await api.get("/friendship/me");
+    const response = await api.get("/friends/me");
     // Handle different possible response structures
-    if (Array.isArray(response.data)) {
-      return response.data;
-    } else if (response.data && Array.isArray(response.data.data)) {
-      return response.data.data;
-    } else if (response.data && Array.isArray(response.data.friends)) {
-      return response.data.friends;
-    } else {
-      console.error("Unexpected friends response structure:", response.data);
-      return [];
-    }
+    response.data;
+    return response.data.data;
   },
 
   sendFriendRequest: async (receiverId: string): Promise<Friend> => {
-    const { data } = await api.post("/friends/request", { receiverId });
+    const { data } = await api.post(`/friends/${receiverId}`);
     return data;
   },
 
-  respondToFriendRequest: async (
-    friendshipId: string,
-    action: "accept" | "decline"
-  ): Promise<Friend> => {
-    const { data } = await api.patch(`/friends/${friendshipId}/${action}`);
+  acceptRequest: async (friendshipId: string): Promise<Friend> => {
+    const { data } = await api.patch(`/friends/${friendshipId}/accept`);
+    return data;
+  },
+
+  declineRequest: async (friendshipId: string): Promise<Friend> => {
+    const { data } = await api.patch(`/friends/${friendshipId}/decline`);
     return data;
   },
 
@@ -34,11 +28,11 @@ export const friendApi = {
     await api.delete(`/friends/${friendshipId}`);
   },
 
-  searchUser: async (query: string): Promise<UserResponse> => {
+  searchUser: async (query: string): Promise<User> => {
     const { data } = await api.get(
       `/users?username=${encodeURIComponent(query)}`
     );
 
-    return data;
+    return data.data;
   },
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,6 +22,7 @@ import {
   Shield,
   Palette,
   Globe,
+  UserIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -148,6 +149,12 @@ export default function UserProfile({
     // { id: "notifications", label: "Notifications", icon: Bell },
   ];
 
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.avatar]);
+
   return (
     <div className="w-80 bg-card border-l border-border flex flex-col max-h-screen">
       {/* Header */}
@@ -203,16 +210,17 @@ export default function UserProfile({
             <div className="text-center">
               <div className="relative inline-block">
                 <div className="relative">
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.username}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-border"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-semibold border-4 border-border">
-                      {user?.username.charAt(0).toUpperCase()}
+                  {imageError || !user?.avatar ? (
+                    <div className="bg-gray-500 w-12 h-12 rounded-full flex items-center justify-center text-white font-medium">
+                      <UserIcon className="w-8 h-8 text-white" />
                     </div>
+                  ) : (
+                    <img
+                      src={user?.avatar}
+                      alt={user?.username}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-border"
+                      onError={() => setImageError(true)}
+                    />
                   )}
 
                   {isUploading && (

@@ -3,9 +3,10 @@
 
 import { Room } from "@/types";
 import { Button } from "@/components/ui/Button";
-import { UserPlus } from "lucide-react";
+import { UserIcon, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface RoomMembersTabProps {
   room: Room;
@@ -15,6 +16,15 @@ export default function MembersTab({ room }: RoomMembersTabProps) {
   const { user } = useAuth();
   const isCreator = user?.id === room.creatorId;
   const isParticipant = room.participants?.some((p) => p.id === user?.id);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setImageErrors({});
+  }, [room?.participants]);
+
+  const handleImageError = (participantId: string) => {
+    setImageErrors(prev => ({ ...prev, [participantId]: true }));
+  };
 
   return (
     <div className="space-y-4">
@@ -26,17 +36,18 @@ export default function MembersTab({ room }: RoomMembersTabProps) {
             className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center text-white font-medium">
-                {participant.avatar ? (
-                  <img
-                    src={participant.avatar}
-                    alt={participant.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                ) : (
-                  participant.username.charAt(0).toUpperCase()
-                )}
-              </div>
+              {imageErrors[participant.id] || !participant.avatar ? (
+                <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-6 h-6 text-white" />
+                </div>
+              ) : (
+                <img
+                  src={participant.avatar}
+                  alt={participant.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={() => handleImageError(participant.id)}
+                />
+              )}
               <div>
                 <p className="font-medium">{participant.username}</p>
                 {participant.id === room.creatorId && (
