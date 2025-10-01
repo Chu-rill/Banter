@@ -1,6 +1,7 @@
-import { MessageCircle, UserCheck, UserX } from "lucide-react";
+import { MessageCircle, UserCheck, UserX, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Friend, User } from "@/types";
+import { useState, useEffect } from "react";
 
 interface FriendCardProps {
   friendship: Friend;
@@ -22,14 +23,27 @@ export default function FriendCard({
       ? friendship.receiver
       : friendship.requester;
 
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [friend.avatar]);
+
   return (
     <div className="flex items-center justify-between p-2 border rounded">
       <div className="flex items-center gap-2">
-        <img
-          src={friend.avatar || "/Banter_logo.png"}
-          alt={friend.username}
-          className="w-8 h-8 rounded-full"
-        />
+        {imageError || !friend.avatar ? (
+          <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
+            <UserIcon className="w-5 h-5 text-white" />
+          </div>
+        ) : (
+          <img
+            src={friend.avatar}
+            alt={friend.username}
+            className="w-8 h-8 rounded-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        )}
         <span>{friend.username}</span>
       </div>
       <div className="flex gap-2">

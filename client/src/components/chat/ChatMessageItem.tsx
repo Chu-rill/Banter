@@ -29,22 +29,18 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
       {/* Avatar for others */}
       {showAvatar && (
         <div className="mr-2 flex-shrink-0">
-          <div
-            className={cn(
-              "w-8 h-8 rounded-full bg-green-700 flex items-center justify-center text-white text-sm font-medium"
-            )}
-          >
-            {imageError || !message.user.avatar ? (
-              <UserIcon className="w-8 h-8 text-gray-400" />
-            ) : (
-              <img
-                src={message.user.avatar}
-                alt={message.user.username}
-                className="w-8 h-8 rounded-full object-cover"
-                onError={() => setImageError(true)}
-              />
-            )}
-          </div>
+          {imageError || !message.user.avatar ? (
+            <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
+              <UserIcon className="w-5 h-5 text-white" />
+            </div>
+          ) : (
+            <img
+              src={message.user.avatar}
+              alt={message.user.username}
+              className="w-8 h-8 rounded-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          )}
         </div>
       )}
 

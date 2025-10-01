@@ -151,16 +151,17 @@ export default function ChatSidebar({
             onClick={onShowProfile}
             className="w-10 h-10"
           >
-            {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user?.username || "User"}
-                className="w-6 h-6 rounded-full"
-              />
-            ) : (
+            {imageError || !user?.avatar ? (
               <div className="w-6 h-6 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center text-white text-xs">
                 {getUserInitial()}
               </div>
+            ) : (
+              <img
+                src={user.avatar}
+                alt={user?.username || "User"}
+                className="w-6 h-6 rounded-full object-cover"
+                onError={() => setImageError(true)}
+              />
             )}
           </Button>
         </div>

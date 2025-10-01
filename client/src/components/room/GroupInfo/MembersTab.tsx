@@ -16,11 +16,15 @@ export default function MembersTab({ room }: RoomMembersTabProps) {
   const { user } = useAuth();
   const isCreator = user?.id === room.creatorId;
   const isParticipant = room.participants?.some((p) => p.id === user?.id);
-  const [imageError, setImageError] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    setImageError(false);
+    setImageErrors({});
   }, [room?.participants]);
+
+  const handleImageError = (participantId: string) => {
+    setImageErrors(prev => ({ ...prev, [participantId]: true }));
+  };
 
   return (
     <div className="space-y-4">
@@ -32,18 +36,18 @@ export default function MembersTab({ room }: RoomMembersTabProps) {
             className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-medium">
-                {imageError || !participant.avatar ? (
-                  <UserIcon className="w-8 h-8 text-white" />
-                ) : (
-                  <img
-                    src={participant.avatar}
-                    alt={participant.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                    onError={() => setImageError(true)}
-                  />
-                )}
-              </div>
+              {imageErrors[participant.id] || !participant.avatar ? (
+                <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center">
+                  <UserIcon className="w-6 h-6 text-white" />
+                </div>
+              ) : (
+                <img
+                  src={participant.avatar}
+                  alt={participant.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                  onError={() => handleImageError(participant.id)}
+                />
+              )}
               <div>
                 <p className="font-medium">{participant.username}</p>
                 {participant.id === room.creatorId && (
