@@ -1,10 +1,10 @@
 import { MessageCircle, UserCheck, UserX, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Friend, User } from "@/types";
+import { Friend, FriendEntry, User } from "@/types";
 import { useState, useEffect } from "react";
 
 interface FriendCardProps {
-  friendship: Friend;
+  friendship: FriendEntry;
   currentUser: User | null;
   onRespond: (friendshipId: string, action: "accept" | "decline") => void;
   onRemove: (friendshipId: string) => void;
@@ -18,18 +18,18 @@ export default function FriendCard({
   onRemove,
   onMessage,
 }: FriendCardProps) {
-  const friend =
-    friendship.requesterId === currentUser?.id
-      ? friendship.receiver
-      : friendship.requester;
+  const friend = friendship.friend;
+  // friendship.requesterId === currentUser?.id
+  //   ? friendship.receiver
+  //   : friendship.requester;
 
   const [imageError, setImageError] = useState(false);
-  const isIncomingRequest =
-    friendship.status === "PENDING" &&
-    friendship.receiverId === currentUser?.id;
-  const isOutgoingRequest =
-    friendship.status === "PENDING" &&
-    friendship.requesterId === currentUser?.id;
+  const isIncomingRequest = friendship.status === "PENDING";
+  //  &&
+  // friendship.receiverId === currentUser?.id;
+  const isOutgoingRequest = friendship.status === "PENDING";
+  // &&
+  // friendship.requesterId === currentUser?.id;
 
   useEffect(() => {
     setImageError(false);
@@ -71,7 +71,7 @@ export default function FriendCard({
             <Button
               size="sm"
               variant="default"
-              onClick={() => onRespond(friendship.id, "accept")}
+              onClick={() => onRespond(friendship.friendshipId, "accept")}
               className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
             >
               <UserCheck size={16} />
@@ -80,7 +80,7 @@ export default function FriendCard({
               size="sm"
               variant="destructive"
               className="bg-red-500 hover:bg-red-600 hover:cursor-pointer"
-              onClick={() => onRespond(friendship.id, "decline")}
+              onClick={() => onRespond(friendship.friendshipId, "decline")}
             >
               <UserX size={16} />
             </Button>
@@ -89,7 +89,7 @@ export default function FriendCard({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => onRemove(friendship.id)}
+            onClick={() => onRemove(friendship.friendshipId)}
             disabled
             className="text-muted-foreground"
           >
@@ -103,7 +103,7 @@ export default function FriendCard({
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => onRemove(friendship.id)}
+              onClick={() => onRemove(friendship.friendshipId)}
             >
               <UserX size={16} />
             </Button>

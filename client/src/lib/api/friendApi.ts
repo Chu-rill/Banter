@@ -1,10 +1,9 @@
-import { Friend, User, UserResponse } from "@/types";
+import { Friend, FriendEntry, User, UserResponse } from "@/types";
 import api from "../api";
 
 export const friendApi = {
-  getFriends: async (): Promise<Friend[]> => {
+  getFriends: async (): Promise<FriendEntry[]> => {
     const response = await api.get("/friends/me");
-    // Handle different possible response structures
     response.data;
     return response.data.data;
   },

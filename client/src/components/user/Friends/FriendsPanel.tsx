@@ -13,7 +13,7 @@ import SearchInput from "./SearchInput";
 import EmptyState from "./EmptyState";
 import LoadingSpinner from "./LoadingSpinner";
 
-import { Friend, User } from "@/types";
+import { Friend, FriendEntry, User } from "@/types";
 import { useFriends } from "@/contexts/FriendContext"; // updated import
 import toast from "react-hot-toast";
 
@@ -253,9 +253,9 @@ export default function FriendsPanel() {
 
     return (
       <div className="p-4 space-y-2">
-        {filteredFriends.map((f: Friend) => (
+        {filteredFriends.map((f: FriendEntry) => (
           <FriendCard
-            key={f.id}
+            key={f.friendshipId}
             friendship={f}
             currentUser={user}
             onRespond={handleRespond}

@@ -6,7 +6,7 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import { Friend } from "@/types";
+import { Friend, FriendEntry } from "@/types";
 import { friendApi } from "@/lib/api/friendApi";
 
 interface FriendProviderProps {
@@ -20,7 +20,7 @@ interface RoomsContextType {
 const FriendContext = createContext<any | null>(null);
 
 export function FriendProvider({ children }: FriendProviderProps) {
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friends, setFriends] = useState<FriendEntry[]>([]);
   const [pending, setPending] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
 
