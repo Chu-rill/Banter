@@ -49,6 +49,12 @@ export interface Friend {
   createdAt: string;
 }
 
+export interface FriendEntry {
+  friendshipId: string;
+  status: "PENDING" | "ACCEPTED" | "BLOCKED" | "DECLINED";
+  friend: User;
+}
+
 //Auth Responses
 export interface AuthResponse {
   statusCode: number;
@@ -83,6 +89,13 @@ export interface MessageResponse {
   success: boolean;
   message: string;
   data: Message[];
+}
+
+export interface ListFriendsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: FriendEntry[];
 }
 
 export interface UserPagination {

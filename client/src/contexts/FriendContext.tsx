@@ -6,30 +6,44 @@ import {
   useCallback,
   ReactNode,
 } from "react";
-import { roomApi } from "@/lib/api/roomApi";
-import { Room } from "@/types";
+import { Friend } from "@/types";
+import { friendApi } from "@/lib/api/friendApi";
 
 interface FriendProviderProps {
   children: ReactNode;
 }
 interface RoomsContextType {
-  rooms: Room[];
+  friends: Friend[];
   loadRooms: () => Promise<void>;
 }
 
 const FriendContext = createContext<any | null>(null);
 
-export function RoomsProvider({ children }: FriendProviderProps) {
-  const [friends, setFriends] = useState<Room[]>([]);
+export function FriendProvider({ children }: FriendProviderProps) {
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [pending, setPending] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const friendsRooms = useCallback(async () => {
+  const listFriends = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await roomApi.getRooms();
+      const data = await friendApi.getFriends();
       setFriends(data);
     } catch (error) {
-      console.error("Failed to load rooms:", error);
+      console.error("Failed to friends:", error);
+      setFriends([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const listPendingRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await friendApi.getPendingRequests();
+      setPending(data);
+    } catch (error) {
+      console.error("Failed to pending requests:", error);
       setFriends([]);
     } finally {
       setLoading(false);
@@ -37,12 +51,14 @@ export function RoomsProvider({ children }: FriendProviderProps) {
   }, []);
 
   return (
-    <FriendContext.Provider value={{ friends, friendsRooms }}>
+    <FriendContext.Provider
+      value={{ friends, listFriends, pending, listPendingRequests }}
+    >
       {children}
     </FriendContext.Provider>
   );
 }
 
-export function useRooms() {
+export function useFriends() {
   return useContext(FriendContext);
 }

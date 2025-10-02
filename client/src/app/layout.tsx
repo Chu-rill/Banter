@@ -7,6 +7,7 @@ import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import "./accessibility.css";
 import { RoomsProvider } from "@/contexts/RoomsContext";
+import { FriendProvider } from "@/contexts/FriendContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -64,9 +65,11 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <LoadingProvider>
-            <RoomsProvider>
-              <AuthProvider>{children}</AuthProvider>
-            </RoomsProvider>
+            <FriendProvider>
+              <RoomsProvider>
+                <AuthProvider>{children}</AuthProvider>
+              </RoomsProvider>
+            </FriendProvider>
             <Toaster position="top-right" reverseOrder={false} />
           </LoadingProvider>
         </ThemeProvider>

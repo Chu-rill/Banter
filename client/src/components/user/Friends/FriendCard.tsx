@@ -24,15 +24,23 @@ export default function FriendCard({
       : friendship.requester;
 
   const [imageError, setImageError] = useState(false);
+  const isIncomingRequest =
+    friendship.status === "PENDING" &&
+    friendship.receiverId === currentUser?.id;
+  const isOutgoingRequest =
+    friendship.status === "PENDING" &&
+    friendship.requesterId === currentUser?.id;
 
   useEffect(() => {
     setImageError(false);
-  }, [friend.avatar]);
+  }, [friend?.avatar]);
+
+  console.log();
 
   return (
     <div className="flex items-center justify-between p-2 border rounded">
       <div className="flex items-center gap-2">
-        {imageError || !friend.avatar ? (
+        {imageError || !friend?.avatar ? (
           <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
             <UserIcon className="w-5 h-5 text-white" />
           </div>
@@ -44,27 +52,49 @@ export default function FriendCard({
             onError={() => setImageError(true)}
           />
         )}
-        <span>{friend.username}</span>
+        <div className="flex flex-col">
+          <span className="font-medium">{friend?.username}</span>
+          {isIncomingRequest && (
+            <span className="text-xs text-blue-500">Wants to be friends</span>
+          )}
+          {isOutgoingRequest && (
+            <span className="text-xs text-yellow-500">Request sent</span>
+          )}
+          {friendship.status === "ACCEPTED" && friend?.isOnline && (
+            <span className="text-xs text-green-500">Online</span>
+          )}
+        </div>
       </div>
       <div className="flex gap-2">
-        {friendship.status === "PENDING" &&
-        friendship.receiverId === currentUser?.id ? (
+        {isIncomingRequest ? (
           <>
             <Button
               size="sm"
               variant="default"
               onClick={() => onRespond(friendship.id, "accept")}
+              className="bg-green-500 hover:bg-green-600 hover:cursor-pointer"
             >
               <UserCheck size={16} />
             </Button>
             <Button
               size="sm"
               variant="destructive"
+              className="bg-red-500 hover:bg-red-600 hover:cursor-pointer"
               onClick={() => onRespond(friendship.id, "decline")}
             >
               <UserX size={16} />
             </Button>
           </>
+        ) : isOutgoingRequest ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onRemove(friendship.id)}
+            disabled
+            className="text-muted-foreground"
+          >
+            Pending
+          </Button>
         ) : (
           <>
             <Button size="sm" variant="ghost" onClick={() => onMessage(friend)}>

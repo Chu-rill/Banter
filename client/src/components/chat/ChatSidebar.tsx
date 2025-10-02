@@ -267,10 +267,10 @@ export default function ChatSidebar({
 
         {activeTab === "friends" && (
           <FriendsPanel
-            onStartDirectMessage={(friend) => {
-              // TODO: Create direct message room or navigate to existing DM
-              console.log("Start DM with:", friend.username);
-            }}
+          // onStartDirectMessage={(friend) => {
+          //   // TODO: Create direct message room or navigate to existing DM
+          //   console.log("Start DM with:", friend.username);
+          // }}
           />
         )}
       </div>

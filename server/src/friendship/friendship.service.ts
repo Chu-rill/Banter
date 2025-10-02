@@ -65,6 +65,10 @@ export class FriendshipService {
     status: FriendStatus,
   ) {
     try {
+      const value = await this.friendshipRepository.respondToRequest(
+        friendshipId,
+        status,
+      );
       const friendship = await this.friendshipRepository.getById(friendshipId);
 
       if (!friendship) {

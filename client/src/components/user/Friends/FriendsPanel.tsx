@@ -3,15 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { friendApi } from "@/lib/api/friendApi";
-import {
-  Users,
-  UserPlus,
-  UserCheck,
-  UserX,
-  MessageCircle,
-  Clock,
-  Ban,
-} from "lucide-react";
+import { Users, UserPlus, Clock, Ban } from "lucide-react";
 
 import FriendsTabs from "./FriendsTabs";
 import ErrorBanner from "./ErrorBanner";
@@ -22,50 +14,76 @@ import EmptyState from "./EmptyState";
 import LoadingSpinner from "./LoadingSpinner";
 
 import { Friend, User } from "@/types";
+import { useFriends } from "@/contexts/FriendContext"; // updated import
+import toast from "react-hot-toast";
 
 export type FriendsTab = "all" | "pending" | "blocked" | "add";
 
 export default function FriendsPanel() {
   const { user } = useAuth();
+  const { friends, listFriends, pending, listPendingRequests } = useFriends(); // use context
   const [activeTab, setActiveTab] = useState<FriendsTab>("all");
-  const [friends, setFriends] = useState<Friend[]>([]);
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [defaultUsers, setDefaultUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingDefaults, setLoadingDefaults] = useState(false);
   const [error, setError] = useState("");
 
   const tabs: { id: FriendsTab; label: string; icon: any; count: number }[] = [
-    { id: "all", label: "All", icon: Users, count: friends.length },
+    {
+      id: "all",
+      label: "All",
+      icon: Users,
+      count: friends.filter((f: Friend) => f.status === "ACCEPTED").length,
+    },
     {
       id: "pending",
       label: "Pending",
       icon: Clock,
-      count: friends.filter((f) => f.status === "PENDING").length,
+      count: friends.filter((f: Friend) => f.status === "PENDING").length,
     },
     {
       id: "blocked",
       label: "Blocked",
       icon: Ban,
-      count: friends.filter((f) => f.status === "BLOCKED").length,
+      count: friends.filter((f: Friend) => f.status === "BLOCKED").length,
     },
     { id: "add", label: "Add", icon: UserPlus, count: 0 },
   ];
 
-  // fetch friends
+  // load friends once
   useEffect(() => {
-    const fetchFriends = async () => {
-      setLoading(true);
-      try {
-        const res = await friendApi.getFriends();
-        setFriends(res);
-      } catch {
-        setError("Failed to load friends");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFriends();
-  }, []);
+    listFriends();
+  }, [listFriends]);
+
+  useEffect(() => {
+    listPendingRequests();
+  }, [listPendingRequests]);
+
+  // Load default users when "add" tab is selected and clear search when switching tabs
+  useEffect(() => {
+    if (activeTab !== "add") {
+      setSearchTerm("");
+      setSearchResults([]);
+    }
+    setError(""); // Clear any errors when switching tabs
+  }, [activeTab]);
+
+  // Auto-search when search term changes
+  useEffect(() => {
+    if (activeTab === "add") {
+      const timeoutId = setTimeout(() => {
+        if (searchTerm.trim().length >= 2) {
+          handleSearch();
+        } else if (searchTerm.trim().length === 0) {
+          setSearchResults([]);
+        }
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [searchTerm, activeTab]);
 
   const handleRespond = async (
     friendshipId: string,
@@ -74,40 +92,73 @@ export default function FriendsPanel() {
     try {
       if (action === "accept") {
         await friendApi.acceptRequest(friendshipId);
+        toast.success("Friend request accepted!");
       } else {
         await friendApi.declineRequest(friendshipId);
+        toast.success("Friend request declined");
       }
-      setFriends((prev) => prev.filter((f) => f.id !== friendshipId));
-    } catch {
-      setError("Failed to respond to friend request");
+      listFriends(); // refresh
+      listPendingRequests();
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || `Failed to ${action} friend request`;
+      setError(message);
     }
   };
 
   const handleRemove = async (friendshipId: string) => {
     try {
       await friendApi.removeFriend(friendshipId);
-      setFriends((prev) => prev.filter((f) => f.id !== friendshipId));
-    } catch {
-      setError("Failed to remove friend");
+      toast.success("Friend removed");
+      listFriends(); // refresh
+      listPendingRequests();
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message || "Failed to remove friend";
+      setError(message);
     }
   };
 
   const handleSendRequest = async (userId: string) => {
     try {
-      const data = await friendApi.sendFriendRequest(userId);
-      // setSearchResults(data);
-    } catch {
-      setError("Failed to send request");
+      await friendApi.sendFriendRequest(userId);
+      toast.success("Friend request sent!");
+
+      // Remove user from search results and default users
+      setSearchResults((prev) => prev.filter((u) => u.id !== userId));
+      setDefaultUsers((prev) => prev.filter((u) => u.id !== userId));
+
+      listFriends(); // refresh to show new pending request
+      listPendingRequests();
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        setError("Friend request already exists");
+      } else {
+        setError("Failed to send friend request");
+      }
     }
   };
 
   const handleSearch = async () => {
-    if (!searchTerm) return;
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      return;
+    }
     setLoading(true);
     try {
-      const res = await friendApi.searchUser(searchTerm);
-      const data = Array.isArray(res) ? res : [res];
-      setSearchResults(data);
+      const users = await friendApi.searchUser(searchTerm);
+      // Filter out current user and existing friends
+      interface ExistingFriend {
+        requesterId: string;
+        receiverId: string;
+      }
+      const existingFriendIds: string[] = friends.map((f: ExistingFriend) =>
+        f.requesterId === user?.id ? f.receiverId : f.requesterId
+      );
+      const filteredUsers = users.filter(
+        (u) => u.id !== user?.id && !existingFriendIds.includes(u.id)
+      );
+      setSearchResults(filteredUsers);
     } catch {
       setError("Failed to search users");
     } finally {
@@ -116,8 +167,6 @@ export default function FriendsPanel() {
   };
 
   const renderContent = () => {
-    if (loading) return <LoadingSpinner />;
-
     if (activeTab === "add") {
       return (
         <div className="p-4 space-y-4">
@@ -127,36 +176,84 @@ export default function FriendsPanel() {
             placeholder="Search users..."
             onSearch={handleSearch}
           />
-          <div className="space-y-2">
-            {searchResults.length === 0 ? (
-              <EmptyState
-                icon={UserPlus}
-                message="Search to find new friends"
-              />
-            ) : (
-              searchResults.map((user) => (
-                <UserSearchCard
-                  key={user.id}
-                  searchUser={user}
-                  onSendRequest={handleSendRequest}
-                />
-              ))
-            )}
-          </div>
+
+          {loading ? (
+            <LoadingSpinner />
+          ) : (
+            <div className="space-y-2">
+              {searchTerm.trim() ? (
+                searchResults.length === 0 ? (
+                  <EmptyState icon={UserPlus} message="No users found" />
+                ) : (
+                  <>
+                    <h3 className="text-sm font-medium text-muted-foreground px-2">
+                      Search Results
+                    </h3>
+                    {searchResults.map((user) => (
+                      <UserSearchCard
+                        key={user.id}
+                        searchUser={user}
+                        onSendRequest={handleSendRequest}
+                      />
+                    ))}
+                  </>
+                )
+              ) : (
+                <>
+                  {loadingDefaults ? (
+                    <LoadingSpinner />
+                  ) : defaultUsers.length === 0 ? (
+                    <EmptyState
+                      icon={UserPlus}
+                      message="No suggested users available"
+                    />
+                  ) : (
+                    <>
+                      <h3 className="text-sm font-medium text-muted-foreground px-2">
+                        Suggested Users
+                      </h3>
+                      {defaultUsers.map((user) => (
+                        <UserSearchCard
+                          key={user.id}
+                          searchUser={user}
+                          onSendRequest={handleSendRequest}
+                        />
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       );
     }
 
-    const filteredFriends = friends.filter(
-      (f) => f.status === activeTab.toUpperCase() || activeTab === "all"
-    );
+    let filteredFriends = friends;
+    let emptyMessage = "No friends to show";
+
+    if (activeTab === "pending") {
+      filteredFriends = pending.filter((f: Friend) => f.status === "PENDING");
+      emptyMessage = "No pending friend requests";
+    } else if (activeTab === "blocked") {
+      filteredFriends = friends.filter((f: Friend) => f.status === "BLOCKED");
+      emptyMessage = "No blocked users";
+    } else if (activeTab === "all") {
+      filteredFriends = friends.filter((f: Friend) => f.status === "ACCEPTED");
+      emptyMessage = "No friends yet";
+    }
+
     if (filteredFriends.length === 0) {
-      return <EmptyState icon={Users} message="No friends to show" />;
+      return (
+        <div className="p-4">
+          <EmptyState icon={Users} message={emptyMessage} />
+        </div>
+      );
     }
 
     return (
-      <div className="space-y-2">
-        {filteredFriends.map((f) => (
+      <div className="p-4 space-y-2">
+        {filteredFriends.map((f: Friend) => (
           <FriendCard
             key={f.id}
             friendship={f}
@@ -177,8 +274,12 @@ export default function FriendsPanel() {
         setActiveTab={setActiveTab}
         tabs={tabs}
       />
-      <div className="flex-1 overflow-y-auto p-4">
-        {error && <ErrorBanner message={error} onClose={() => setError("")} />}
+      <div className="flex-1 overflow-y-auto">
+        {error && (
+          <div className="p-4">
+            <ErrorBanner message={error} onClose={() => setError("")} />
+          </div>
+        )}
         {renderContent()}
       </div>
     </div>

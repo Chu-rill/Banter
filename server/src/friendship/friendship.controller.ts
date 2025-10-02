@@ -132,7 +132,7 @@ export class FriendshipController {
     return this.friendshipService.listFriends(userId);
   }
 
-  @Get('me/requests')
+  @Get('requests')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List current user’s friend requests' })
   @ApiResponse({ status: 200, description: 'List of friend requests' })

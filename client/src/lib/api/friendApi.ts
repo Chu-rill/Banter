@@ -14,6 +14,11 @@ export const friendApi = {
     return data;
   },
 
+  getPendingRequests: async (): Promise<Friend[]> => {
+    const { data } = await api.get("/friends/requests");
+    return data.data;
+  },
+
   acceptRequest: async (friendshipId: string): Promise<Friend> => {
     const { data } = await api.patch(`/friends/${friendshipId}/accept`);
     return data;
@@ -28,11 +33,15 @@ export const friendApi = {
     await api.delete(`/friends/${friendshipId}`);
   },
 
-  searchUser: async (query: string): Promise<User> => {
+  searchUser: async (query: string): Promise<User[]> => {
     const { data } = await api.get(
       `/users?username=${encodeURIComponent(query)}`
     );
+    return Array.isArray(data.data) ? data.data : [data.data];
+  },
 
-    return data.data;
+  getRandomUsers: async (limit: number = 10): Promise<User[]> => {
+    const { data } = await api.get(`/users?limit=${limit}`);
+    return Array.isArray(data.data) ? data.data : [data.data];
   },
 };
