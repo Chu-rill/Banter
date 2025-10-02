@@ -5,6 +5,7 @@ import { Room } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Menu, Users, Phone, Video, Search, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface ChatHeaderProps {
   room: Room;
@@ -23,6 +24,7 @@ export default function ChatHeader({
   onToggleSearch,
   onShowDetails,
 }: ChatHeaderProps) {
+  const [imageError, setImageError] = useState(false);
   return (
     <div className="p-4 border-b border-border bg-card/50 backdrop-blur-sm">
       <div className="flex items-center justify-between">
@@ -37,24 +39,23 @@ export default function ChatHeader({
             <Menu className="w-5 h-5" />
           </Button>
 
-          <div
-            className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center",
-              "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
-            )}
-          >
-            {room?.profilePicture ? (
+          <div>
+            {imageError || !room?.profilePicture ? (
+              <div
+                className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center",
+                  "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+                )}
+              >
+                <Users className="w-6 h-6 text-muted-foreground" />
+              </div>
+            ) : (
               <img
                 src={room.profilePicture}
                 alt={room.name || "Room"}
                 className="w-11 h-11 rounded-xl object-cover shadow-md"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "/Banter_logo.png";
-                }}
+                onError={() => setImageError(true)}
               />
-            ) : (
-              <Users className="w-6 h-6 text-muted-foreground" />
             )}
           </div>
 

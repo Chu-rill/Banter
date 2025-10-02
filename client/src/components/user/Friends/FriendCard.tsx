@@ -19,23 +19,15 @@ export default function FriendCard({
   onMessage,
 }: FriendCardProps) {
   const friend = friendship.friend;
-  // friendship.requesterId === currentUser?.id
-  //   ? friendship.receiver
-  //   : friendship.requester;
 
   const [imageError, setImageError] = useState(false);
   const isIncomingRequest = friendship.status === "PENDING";
-  //  &&
-  // friendship.receiverId === currentUser?.id;
+
   const isOutgoingRequest = friendship.status === "PENDING";
-  // &&
-  // friendship.requesterId === currentUser?.id;
 
   useEffect(() => {
     setImageError(false);
   }, [friend?.avatar]);
-
-  console.log();
 
   return (
     <div className="flex items-center justify-between p-2 border rounded">
