@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
-import socketService from "@/lib/socket";
+import { socketService } from "@/lib/socket";
 import { AuthResponse, User } from "@/types/index";
 
 interface AuthContextType {
@@ -71,19 +71,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     initializeAuth();
   }, []);
 
-  // Connect sockets when authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      // Connect to socket services
-      socketService.connect();
-      socketService.connectToMessages();
-      socketService.connectToCall();
-    } else {
-      // Disconnect sockets when not authenticated
-      socketService.disconnect();
-    }
-  }, [isAuthenticated, user]);
-
   const initializeAuth = async () => {
     const token = TokenStorage.getToken();
 
@@ -104,6 +91,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(false);
     }
   };
+
+  // Connect sockets when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const wsToken = TokenStorage.getToken();
+      if (!wsToken) return;
+      // Connect to socket services
+      socketService.connectRoomMessages(wsToken);
+      socketService.connectDirectMessages(wsToken);
+      // socketService.connectToCall();
+    } else {
+      // Disconnect sockets when not authenticated
+      socketService.disconnect();
+    }
+  }, [isAuthenticated, user]);
 
   const login = async (email: string, password: string) => {
     try {

@@ -55,6 +55,21 @@ export interface FriendEntry {
   friend: User;
 }
 
+export interface DirectMessage {
+  id: string;
+  participants: User[];
+  lastMessage?: Message;
+  lastMessageAt?: string;
+  isActive: boolean;
+  createdAt: string;
+  unreadCount?: number;
+}
+
+export interface DirectMessageContext {
+  selectedFriend: User | null;
+  selectedDM: DirectMessage | null;
+}
+
 //Auth Responses
 export interface AuthResponse {
   statusCode: number;
@@ -131,4 +146,12 @@ export interface TypingUser {
   userId: string;
   username: string;
   roomId: string;
+}
+
+export interface SendMessage {
+  roomId: string;
+  type: "TEXT" | "MEDIA" | "VOICE" | "SYSTEM";
+  content?: string;
+  mediaUrl?: string;
+  mediaType?: "IMAGE" | "VIDEO" | "AUDIO" | "FILE" | undefined;
 }

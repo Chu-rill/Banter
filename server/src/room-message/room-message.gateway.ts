@@ -192,6 +192,41 @@ export class RoomMessageGateway
     }
   }
 
+  @SubscribeMessage('get-messages')
+  async handleGetMessages(
+    @MessageBody() data: { roomId: string; limit?: number; cursor?: string },
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    const userId = client.userId || client.data.userId;
+    if (!userId) {
+      client.emit('error', { message: 'Not authenticated' });
+      return;
+    }
+
+    const { roomId, limit = 50, cursor } = data;
+
+    const room = await this.roomService.findById(roomId);
+    if (!room) {
+      client.emit('error', { message: 'Room not found' });
+      return;
+    }
+
+    try {
+      const messages = await this.messageService.getRoomMessages(
+        roomId,
+        userId,
+        limit,
+        cursor,
+      );
+
+      // send only to the requesting client
+      client.emit('messages', { roomId, messages });
+    } catch (error) {
+      this.logger.error('Error fetching messages:', error);
+      client.emit('error', { message: 'Failed to fetch messages' });
+    }
+  }
+
   @SubscribeMessage('join-room')
   async handleJoinRoom(
     @MessageBody() data: RoomConnectionDto,

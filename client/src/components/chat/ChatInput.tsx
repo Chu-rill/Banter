@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { CharacterCounter } from "./CharacterCounter";
 import EmojiPicker from "emoji-picker-react";
 import { debounce } from "@/lib/utils";
+import { SendMessage } from "@/types";
 
 interface ChatInputProps {
   roomId: string;
-  onSendMessage: (message: { content?: string; type: string }) => void;
+  onSendMessage: (message: Partial<SendMessage>) => void;
   onStartTyping: () => void;
   onStopTyping: () => void;
   onOpenFileUpload: () => void;
@@ -107,9 +108,9 @@ export default function ChatInput({
           <EmojiPicker
             onEmojiClick={handleEmojiClick}
             theme={
-              document.documentElement.classList.contains("dark")
+              (document.documentElement.classList.contains("dark")
                 ? "dark"
-                : "light"
+                : "light") as import("emoji-picker-react").Theme
             }
           />
         </div>

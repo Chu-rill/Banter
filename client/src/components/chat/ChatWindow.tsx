@@ -9,7 +9,7 @@ import ChatInput from "./ChatInput";
 import VideoCall from "./VideoCall";
 import FileUpload from "./FileUpload";
 import GroupInfo from "../room/GroupInfo/GroupInfo";
-import { useChat } from "@/hooks/useChat";
+import { useChat } from "@/hooks/useRoomChat";
 import ChatSearch from "./ChatSearch";
 
 interface ChatWindowProps {
@@ -18,7 +18,11 @@ interface ChatWindowProps {
   onLeaveRoom?: () => void;
 }
 
-export default function ChatWindow({ room, onToggleSidebar, onLeaveRoom }: ChatWindowProps) {
+export default function ChatWindow({
+  room,
+  onToggleSidebar,
+  onLeaveRoom,
+}: ChatWindowProps) {
   const {
     messages,
     typingUsers,
@@ -26,7 +30,6 @@ export default function ChatWindow({ room, onToggleSidebar, onLeaveRoom }: ChatW
     sendMessage,
     startTyping,
     stopTyping,
-    // addReaction,
   } = useChat(room.id);
 
   const [showVideoCall, setShowVideoCall] = useState(false);
@@ -90,10 +93,20 @@ export default function ChatWindow({ room, onToggleSidebar, onLeaveRoom }: ChatW
         <FileUpload
           roomId={room.id}
           onFileUploaded={(file) => {
+            // Map file.type to allowed mediaType values
+            const getMediaType = (
+              type: string
+            ): "IMAGE" | "VIDEO" | "AUDIO" | "FILE" => {
+              if (type.startsWith("image/")) return "IMAGE";
+              if (type.startsWith("video/")) return "VIDEO";
+              if (type.startsWith("audio/")) return "AUDIO";
+              return "FILE";
+            };
+
             sendMessage({
               type: "MEDIA",
               mediaUrl: file.url,
-              mediaType: file.type,
+              mediaType: getMediaType(file.type),
             });
             setShowFileUpload(false);
           }}

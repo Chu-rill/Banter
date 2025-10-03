@@ -43,12 +43,12 @@ export default function FriendsPanel() {
       icon: Clock,
       count: friends.filter((f: Friend) => f.status === "PENDING").length,
     },
-    {
-      id: "blocked",
-      label: "Blocked",
-      icon: Ban,
-      count: friends.filter((f: Friend) => f.status === "BLOCKED").length,
-    },
+    // {
+    //   id: "blocked",
+    //   label: "Blocked",
+    //   icon: Ban,
+    //   count: friends.filter((f: Friend) => f.status === "BLOCKED").length,
+    // },
     { id: "add", label: "Add", icon: UserPlus, count: 0 },
   ];
 
