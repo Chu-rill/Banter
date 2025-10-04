@@ -53,6 +53,7 @@ export class RoomMessageService {
     );
 
     return {
+      id: data.id,
       room: data.roomId,
       user: data.user.username,
       content: data.content,

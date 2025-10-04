@@ -211,7 +211,8 @@ export class RoomMessageGateway
       // Send confirmation to sender
       client.emit('message-sent', savedMessage);
 
-      this.server.to(roomSocketId).emit('new-message', savedMessage);
+      // Broadcast to all users in the room
+      this.server.to(roomId).emit('new-message', savedMessage);
     } catch (error) {
       this.logger.error('Error handling room message:', error);
       client.emit('dm:error', {

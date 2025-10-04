@@ -6,7 +6,6 @@ import { MessageWithUser, Room, SendMessage, TypingUser } from "@/types";
 
 export function useChat(roomId: string) {
   const [messages, setMessages] = useState<MessageWithUser[]>([]);
-  const [room, setRoom] = useState<Room | null>(null);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -24,7 +23,7 @@ export function useChat(roomId: string) {
 
     socket.on("room-joined", (msg) => {
       console.log("room-joined:", msg);
-      setMessages((prev) => [...prev, msg]);
+      setMessages((prev) => [...prev, msg.message]);
       // setMessages((prev) => [...prev, msg]);
     });
 
