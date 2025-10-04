@@ -227,6 +227,18 @@ export class RoomMessageGateway
     }
   }
 
+  @SubscribeMessage('get-user-rooms')
+  async handleGetUserRooms(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: any,
+  ): Promise<string[]> {
+    const userId = client.userId!;
+    if (!userId) return [];
+
+    const rooms = await this.roomRedis.getUserRooms(userId);
+    return rooms;
+  }
+
   @SubscribeMessage('join-room')
   async handleJoinRoom(
     @MessageBody() data: RoomConnectionDto,
@@ -246,7 +258,7 @@ export class RoomMessageGateway
 
     client.join(roomId); // Join the socket.io room
     if (roomSocketId) {
-      client.to(roomSocketId).emit('user-joined-room', result);
+      client.to(roomId).emit('user-joined-room', result);
       client.emit('room-joined', result);
     }
   }

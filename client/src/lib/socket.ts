@@ -15,6 +15,18 @@ class SocketService {
       autoConnect: true,
     });
     // console.log("Connected to room messages socket:", this.roomMessageSocket);
+
+    // Handle reconnect
+    this.roomMessageSocket.on("connect", async () => {
+      console.log("Room messages socket connected");
+
+      // Ask backend for all rooms this user is in
+      this.roomMessageSocket?.emit("get-user-rooms", {}, (rooms: string[]) => {
+        rooms.forEach((roomId) => {
+          this.roomMessageSocket?.emit("join-room", { roomId });
+        });
+      });
+    });
   }
 
   connectDirectMessages(token: string) {

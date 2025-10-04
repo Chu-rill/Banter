@@ -41,6 +41,9 @@ export class RoomService {
       mode,
     );
 
+    // Automatically add the creator to the room in Redis
+    await this.roomRedis.addUserToRoom(creatorId, room.id);
+
     return {
       statusCode: HttpStatus.CREATED,
       success: true,

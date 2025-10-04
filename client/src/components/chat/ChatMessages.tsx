@@ -36,11 +36,16 @@ ChatMessagesProps) {
     );
   }
 
-  const filteredMessages = messages.filter(
-    (m) =>
-      !searchQuery ||
-      (m.content || "").toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMessages = messages
+    .filter(
+      (m) =>
+        !searchQuery ||
+        (m.content || "").toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
 
   return (
     <div

@@ -15,8 +15,17 @@ export function useChat(roomId: string) {
 
     setIsLoading(true);
 
-    // Join room
-    socket.emit("joinRoom", { roomId });
+    // Listen to joining room
+    socket.on("user-joined-room", (msg) => {
+      console.log("Joined room:", msg);
+      setMessages((prev) => [...prev, msg]);
+    });
+
+    socket.on("room-joined", (msg) => {
+      console.log("room-joined:", msg);
+      setMessages((prev) => [...prev, msg]);
+      // setMessages((prev) => [...prev, msg]);
+    });
 
     // Load initial messages
     socket.emit("get-messages", { roomId }, (msgs: MessageWithUser[]) => {
@@ -25,7 +34,7 @@ export function useChat(roomId: string) {
     });
 
     socket.on("messages", ({ roomId, messages }) => {
-      console.log("Loaded messages:", messages);
+      // console.log("Loaded messages:", messages);
       setMessages(messages);
       setIsLoading(false);
     });
@@ -59,6 +68,12 @@ export function useChat(roomId: string) {
     socket.emit("send-message", { roomId, ...data });
   };
 
+  const joinRoomWs = (roomId: string) => {
+    const socket = socketService.getRoomMessageSocket();
+    if (!socket) return;
+    socket.emit("join-room", { roomId });
+  };
+
   const startTyping = () => {
     socketService.getRoomMessageSocket()?.emit("startTyping", { roomId });
   };
@@ -72,6 +87,7 @@ export function useChat(roomId: string) {
     typingUsers,
     isLoading,
     sendMessage,
+    joinRoomWs,
     startTyping,
     stopTyping,
   };

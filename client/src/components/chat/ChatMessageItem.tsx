@@ -14,11 +14,41 @@ interface ChatMessageItemProps {
 export default function ChatMessageItem({ message }: ChatMessageItemProps) {
   const { user } = useAuth();
   const isOwn = message.isOwn || message.userId === user?.id;
-  const showAvatar = !isOwn;
+  const isSystem = message.type === "SYSTEM";
+  const showAvatar = !isOwn && !isSystem;
   const [imageError, setImageError] = useState(false);
+
   useEffect(() => {
     setImageError(false);
   }, [message.user.avatar]);
+  if (isSystem) {
+    if (!message.content) return null;
+
+    let displayContent = message.content;
+    if (isOwn) {
+      if (message.content.includes("joined the room")) {
+        displayContent = "You joined the room";
+      } else if (message.content.includes("left the room")) {
+        displayContent = "You left the room";
+      }
+    }
+
+    return (
+      <div className="flex justify-center my-4 ">
+        {/* System message */}
+        <div className="mx-3 px-4 py-1.5 rounded-full bg-gray-200/80 text-gray-700 text-xs italic shadow-sm flex items-center gap-2">
+          <span>{displayContent}</span>
+          <span className="text-[10px] text-gray-500">
+            {new Date(message.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(

@@ -11,6 +11,7 @@ import RoomGrid from "./RoomGrid";
 import { cn } from "@/lib/utils";
 import { useRooms } from "@/contexts/RoomsContext";
 import toast from "react-hot-toast";
+import { useChat } from "@/hooks/useRoomChat";
 
 interface JoinRoomProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export default function JoinRoom({
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { loadRooms } = useRooms();
+  const { joinRoomWs } = useChat("");
 
   useEffect(() => {
     if (isOpen) loadAvailableRooms();
@@ -99,7 +101,7 @@ export default function JoinRoom({
   const handleJoinRoom = async (room: RoomWithStatus) => {
     try {
       setJoiningRoomId(room.id);
-      await roomApi.joinRoom(room.id);
+      await joinRoomWs(room.id);
       setAvailableRooms((prev) =>
         prev.map((r) => (r.id === room.id ? { ...r, isMember: true } : r))
       );
