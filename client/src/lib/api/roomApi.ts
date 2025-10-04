@@ -1,6 +1,7 @@
 import { Room, RoomResponse, RoomsResponse } from "@/types";
 import api from "../api";
 import { useState } from "react";
+import { roomSocketApi } from "@/lib/socket/roomSocketApi";
 
 export const roomApi = {
   getRooms: async (): Promise<Room[]> => {
@@ -29,9 +30,9 @@ export const roomApi = {
     type: "PUBLIC" | "PRIVATE";
     mode: "CHAT" | "VIDEO" | "BOTH";
     maxParticipants?: number;
-  }): Promise<RoomResponse> => {
-    const { data } = await api.post("/rooms", roomData);
-    return data;
+  }): Promise<Room> => {
+    const socket = roomSocketApi.createRoom(roomData);
+    return socket;
   },
 
   joinRoom: async (roomId: string): Promise<void> => {

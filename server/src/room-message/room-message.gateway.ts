@@ -14,7 +14,7 @@ import { SendRoomMessageDto } from './validation';
 import { RoomRedisService } from 'src/redis/room.redis';
 import { RoomService } from 'src/room/room.service';
 import { JwtService } from '@nestjs/jwt';
-import { RoomConnectionDto } from 'src/room/validation';
+import { CreateRoomDto, RoomConnectionDto } from 'src/room/validation';
 import { UserRedisService } from 'src/redis/user.redis';
 import { FriendshipService } from 'src/friendship/friendship.service';
 import { UserService } from 'src/user/user.service';
@@ -117,6 +117,36 @@ export class RoomMessageGateway
     } catch (error) {
       this.logger.error('Authentication error:', error);
       return null;
+    }
+  }
+
+  @SubscribeMessage('create-room')
+  async handleCreateRoom(
+    @MessageBody() data: CreateRoomDto,
+    @ConnectedSocket() client: AuthenticatedSocket,
+  ) {
+    // const { roomId, content, mediaUrl, type, mediaType } = data;
+    const senderId = client.userId || client.data.userId;
+    if (!senderId) {
+      this.logger.error('No senderId found');
+      client.emit('dm:error', { message: 'Not authenticated' });
+      return;
+    }
+
+    try {
+      const room = await this.roomService.createRoom(data, senderId);
+
+      await this.roomRedis.addUserToRoom(senderId, room.data.id, client.id);
+
+      // Send confirmation to sender
+      client.emit('room-created', room);
+    } catch (error) {
+      this.logger.error('Error handling creating room :', error);
+      client.emit('create:error', {
+        message: 'Failed to create room',
+        userId: client.id,
+        error: error.message,
+      });
     }
   }
 

@@ -64,13 +64,8 @@ export default function CreateRoom({
       setIsSubmitting(true);
 
       const room = await roomApi.createRoom(data);
-      const created = Array.isArray(room.data)
-        ? room.data[0]
-        : "rooms" in room.data
-        ? room.data
-        : room.data;
 
-      onRoomCreated(created);
+      onRoomCreated(room);
       toast.success("Room Created!");
       reset();
       onClose();

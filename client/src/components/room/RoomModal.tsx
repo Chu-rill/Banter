@@ -81,36 +81,36 @@ export default function CreateRoomModal({
   const watchType = watch("type");
   const watchMode = watch("mode");
 
-  const onSubmit = async (data: CreateRoomFormData) => {
-    try {
-      setError("");
-      setIsSubmitting(true);
+  // const onSubmit = async (data: CreateRoomFormData) => {
+  //   try {
+  //     setError("");
+  //     setIsSubmitting(true);
 
-      const room = await roomApi.createRoom({
-        name: data.name,
-        description: data.description,
-        type: data.type,
-        mode: data.mode,
-        maxParticipants: data.maxParticipants,
-      });
+  //     const room = await roomApi.createRoom({
+  //       name: data.name,
+  //       description: data.description,
+  //       type: data.type,
+  //       mode: data.mode,
+  //       maxParticipants: data.maxParticipants,
+  //     });
 
-      // Ensure only a single Room object is passed
-      if (Array.isArray(room.data)) {
-        onRoomCreated(room.data[0]);
-      } else if ("rooms" in room.data && Array.isArray(room.data.rooms)) {
-        onRoomCreated(room.data.rooms[0]);
-      }
-      reset();
-      onClose();
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to create room. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //     // Ensure only a single Room object is passed
+  //     if (Array.isArray(room.data)) {
+  //       onRoomCreated(room.data[0]);
+  //     } else if ("rooms" in room.data && Array.isArray(room.data.rooms)) {
+  //       onRoomCreated(room.data.rooms[0]);
+  //     }
+  //     reset();
+  //     onClose();
+  //   } catch (err: any) {
+  //     setError(
+  //       err.response?.data?.message ||
+  //         "Failed to create room. Please try again."
+  //     );
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   const handleClose = () => {
     reset();
