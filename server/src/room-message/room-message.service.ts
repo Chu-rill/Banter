@@ -58,6 +58,7 @@ export class RoomMessageService {
       user: data.user.username,
       content: data.content,
       timestamp: data.createdAt,
+      type: data.type,
     };
   }
 

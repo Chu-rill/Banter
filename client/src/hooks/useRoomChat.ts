@@ -15,26 +15,28 @@ export function useChat(roomId: string) {
 
     setIsLoading(true);
 
+    // Join the Socket.IO room first
+    socket.emit("join-room", { roomId });
+
     // Listen to joining room
     socket.on("user-joined-room", (msg) => {
       console.log("Joined room:", msg);
-      setMessages((prev) => [...prev, msg]);
+      if (msg.message) {
+        setMessages((prev) => [...prev, msg.message]);
+      }
     });
 
-    socket.on("room-joined", (msg) => {
-      console.log("room-joined:", msg);
-      setMessages((prev) => [...prev, msg.message]);
-      // setMessages((prev) => [...prev, msg]);
-    });
+    // socket.on("room-joined", (msg) => {
+    //   console.log("room-joined:", msg);
+    //   if (msg.message) {
+    //     setMessages((prev) => [...prev, msg.message]);
+    //   }
+    // });
 
     // Load initial messages
-    socket.emit("get-messages", { roomId }, (msgs: MessageWithUser[]) => {
-      // setMessages(msgs);
-      // setIsLoading(false);
-    });
+    socket.emit("get-messages", { roomId });
 
     socket.on("messages", ({ roomId, messages }) => {
-      // console.log("Loaded messages:", messages);
       setMessages(messages);
       setIsLoading(false);
     });
@@ -53,9 +55,12 @@ export function useChat(roomId: string) {
       setTypingUsers((prev) => prev.filter((u) => u.userId !== userId));
     });
 
-    // Cleanup
+    // Cleanup - just remove listeners, don't leave the room
+    // Users should remain members even when navigating away
     return () => {
-      socket.emit("leaveRoom", { roomId });
+      socket.off("user-joined-room");
+      socket.off("room-joined");
+      socket.off("messages");
       socket.off("new-message");
       socket.off("userTyping");
       socket.off("userStoppedTyping");

@@ -126,16 +126,26 @@ export class RoomService {
       throw new BadRequestException('Room is full');
     }
 
+    // Check if user is already a member
+    const isAlreadyMember = await this.roomRepository.isRoomMember(
+      roomId,
+      userId,
+    );
+
     const [newMember, user] = await Promise.all([
       this.roomRepository.joinRoom(roomId, userId),
       this.userRepository.getUserById(userId),
     ]);
 
-    const systemMessage = await this.roomMessageService.sendSystemMessage(
-      roomId,
-      `User ${user.username} joined the room`,
-      userId,
-    );
+    // Only send system message if user is a new member
+    let systemMessage: any = null;
+    if (!isAlreadyMember) {
+      systemMessage = await this.roomMessageService.sendSystemMessage(
+        roomId,
+        `User ${user.username} joined the room`,
+        userId,
+      );
+    }
 
     return {
       statusCode: HttpStatus.OK,
