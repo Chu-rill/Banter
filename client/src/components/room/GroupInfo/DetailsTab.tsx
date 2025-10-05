@@ -18,6 +18,7 @@ import {
 import { roomApi } from "@/lib/api/roomApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRooms } from "@/contexts/RoomsContext";
+import { useChat } from "@/hooks/useRoomChat";
 
 interface DetailsTabProps {
   room: Room;
@@ -37,7 +38,7 @@ export default function DetailsTab({
   const [loading, setLoading] = useState(false);
   const isCreator = user?.id === room.creatorId;
   const isParticipant = room.participants?.some((p) => p.id === user?.id);
-
+  const { leaveRoomWs } = useChat("");
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function DetailsTab({
   const handleLeave = async () => {
     try {
       setLoading(true);
-      await roomApi.leaveRoom(room.id);
+      await leaveRoomWs(room.id);
       loadRooms();
       toast.success("Left Room!");
       onLeaveRoom?.();

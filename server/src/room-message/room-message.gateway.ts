@@ -301,21 +301,21 @@ export class RoomMessageGateway
   ) {
     const userId = client.userId!;
     const { roomId } = data;
-    // Pass client.id as socketId
+
+    // Broadcast to room BEFORE removing user
     const result = await this.roomService.leaveRoom(roomId, userId);
 
+    // Notify other users in the room
+    client.to(roomId).emit('user-left-room', result);
+
+    // Notify the leaving user
+    // client.emit('room-left', result);
+
+    // Leave the Socket.IO room
+    client.leave(roomId);
+
+    // Clean up Redis
     await this.roomRedis.removeUserFromRoom(userId, roomId);
-
-    const roomSocketId = await this.roomRedis.getUsersocketByRoomId(
-      userId,
-      roomId,
-    );
-
-    client.join(data.roomId); // Join the socket.io room
-    if (roomSocketId) {
-      client.to(roomSocketId).emit('user-left-room', result);
-      client.emit('room-left', result);
-    }
   }
 
   @SubscribeMessage('typing-start')

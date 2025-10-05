@@ -142,7 +142,7 @@ export class RoomService {
     if (!isAlreadyMember) {
       systemMessage = await this.roomMessageService.sendSystemMessage(
         roomId,
-        `User ${user.username} joined the room`,
+        `${user.username} joined the room`,
         userId,
       );
     }
@@ -177,7 +177,7 @@ export class RoomService {
 
     const systemMessage = await this.roomMessageService.sendSystemMessage(
       roomId,
-      `User ${user.username} left the room`,
+      `${user.username} left the room`,
       userId,
     );
 

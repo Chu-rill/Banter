@@ -26,12 +26,12 @@ export function useChat(roomId: string) {
       }
     });
 
-    // socket.on("room-joined", (msg) => {
-    //   console.log("room-joined:", msg);
-    //   if (msg.message) {
-    //     setMessages((prev) => [...prev, msg.message]);
-    //   }
-    // });
+    socket.on("user-left-room", (msg) => {
+      console.log("Left room:", msg);
+      if (msg.message) {
+        setMessages((prev) => [...prev, msg.message]);
+      }
+    });
 
     // Load initial messages
     socket.emit("get-messages", { roomId });
@@ -79,6 +79,13 @@ export function useChat(roomId: string) {
     socket.emit("join-room", { roomId });
   };
 
+  const leaveRoomWs = (roomId: string) => {
+    console.log("Leaving room via WS:", roomId);
+    const socket = socketService.getRoomMessageSocket();
+    if (!socket) return;
+    socket.emit("leave-room", { roomId });
+  };
+
   const startTyping = () => {
     socketService.getRoomMessageSocket()?.emit("startTyping", { roomId });
   };
@@ -95,5 +102,6 @@ export function useChat(roomId: string) {
     joinRoomWs,
     startTyping,
     stopTyping,
+    leaveRoomWs,
   };
 }
