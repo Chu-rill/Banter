@@ -89,7 +89,12 @@ export default function FriendCard({
           </Button>
         ) : (
           <>
-            <Button size="sm" variant="ghost" onClick={() => onMessage(friend)}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className=" hover:cursor-pointer"
+              onClick={() => onMessage(friend)}
+            >
               <MessageCircle size={16} />
             </Button>
             <Button

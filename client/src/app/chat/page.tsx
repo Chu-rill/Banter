@@ -10,10 +10,11 @@ import {
   useNotifications,
 } from "../../components/ui/NotificationSystem";
 import ThemeCustomizer from "../../components/ui/ThemeCustomizer";
-import { Room } from "@/types";
+import { Room, User } from "@/types";
 
 function ChatPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<User | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showThemeCustomizer, setShowThemeCustomizer] = useState(false);
@@ -21,6 +22,16 @@ function ChatPage() {
 
   const { notifications, addNotification, removeNotification } =
     useNotifications();
+
+  const handleSelectRoom = (room: Room) => {
+    setSelectedRoom(room);
+    setSelectedFriend(null); // Clear friend selection
+  };
+
+  const handleSelectFriend = (friend: User) => {
+    setSelectedFriend(friend);
+    setSelectedRoom(null); // Clear room selection
+  };
 
   return (
     <div className="h-screen bg-background flex overflow-hidden relative">
@@ -35,7 +46,9 @@ function ChatPage() {
       {/* Sidebar */}
       <ChatSidebar
         selectedRoom={selectedRoom}
-        onSelectRoom={setSelectedRoom}
+        selectedFriend={selectedFriend}
+        onSelectRoom={handleSelectRoom}
+        onSelectFriend={handleSelectFriend}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
         onShowProfile={() => setShowProfile(true)}
@@ -43,11 +56,15 @@ function ChatPage() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {selectedRoom ? (
+        {selectedRoom || selectedFriend ? (
           <ChatWindow
-            room={selectedRoom}
+            room={selectedRoom || undefined}
+            friend={selectedFriend || undefined}
             onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-            onLeaveRoom={() => setSelectedRoom(null)}
+            onLeaveRoom={() => {
+              setSelectedRoom(null);
+              setSelectedFriend(null);
+            }}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center">

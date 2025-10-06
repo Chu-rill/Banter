@@ -140,6 +140,8 @@ export interface ErrorResponse {
 export interface MessageWithUser extends Message {
   user: User;
   isOwn?: boolean;
+  senderId: User;
+  receiverId: User;
 }
 
 export interface TypingUser {

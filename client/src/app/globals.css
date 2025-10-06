@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
 @layer base {
@@ -29,6 +31,10 @@
     --message-bubble-own-foreground: 0 0% 98%;
     --online-indicator: 120 100% 25%;
     --typing-indicator: 240 3.8% 46.1%;
+
+    /* font */
+    --font-sans: "Manrope", system-ui, sans-serif;
+    --font-mono: "DM Mono", monospace;
   }
 
   .dark {
@@ -70,7 +76,7 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
-    font-family: var(--font-inter), system-ui, sans-serif;
+    font-family: var(--font-sans);
     margin: 0;
     padding: 0;
     min-height: 100vh;
@@ -82,6 +88,9 @@
 }
 
 @layer components {
+  .fontStyle {
+    font-family: var(--font-mono);
+  }
   /* Custom scrollbar for chat areas */
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -138,6 +147,15 @@
   }
 
   /* Message bubble styles - Discord/Slack inspired */
+  .message-bubble span.timestamp {
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .message-bubble:hover span.timestamp {
+    opacity: 1;
+  }
+
   .message-bubble {
     border-radius: 1rem;
     padding: 0.5rem 1rem;

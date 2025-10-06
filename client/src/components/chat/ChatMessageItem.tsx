@@ -13,7 +13,7 @@ interface ChatMessageItemProps {
 
 export default function ChatMessageItem({ message }: ChatMessageItemProps) {
   const { user } = useAuth();
-  const isOwn = message.isOwn || message.userId === user?.id;
+  const isOwn = message.isOwn || message.user.id === user?.id;
   const isSystem = message.type === "SYSTEM";
   const showAvatar = !isOwn && !isSystem;
   const [imageError, setImageError] = useState(false);
@@ -21,6 +21,8 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
   useEffect(() => {
     setImageError(false);
   }, [message.user.avatar]);
+
+  // 🟢 System messages
   if (isSystem) {
     if (!message.content) return null;
 
@@ -34,25 +36,19 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
     }
 
     return (
-      <div className="flex justify-center my-4 ">
-        {/* System message */}
-        <div className="mx-3 px-4 py-1.5 rounded-full bg-gray-200/80 text-gray-700 text-xs italic shadow-sm flex items-center gap-2">
-          <span>{displayContent}</span>
-          <span className="text-[10px] text-gray-500">
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </span>
+      <div className="flex justify-center my-3">
+        <div className="font-mono px-4 py-1.5 rounded-full bg-gray-200/80 text-gray-700 text-xs italic shadow-sm">
+          {displayContent}
         </div>
       </div>
     );
   }
 
+  // 🟣 Normal messages
   return (
     <div
       className={cn(
-        "flex items-end mb-3",
+        "flex items-end mb-2 px-2",
         isOwn ? "justify-end" : "justify-start"
       )}
     >
@@ -77,33 +73,30 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
       {/* Message bubble */}
       <div
         className={cn(
-          "flex flex-col max-w-[75%]",
-          isOwn ? "items-end" : "items-start"
+          "relative flex flex-col max-w-[80%] rounded-2xl px-3 py-2 shadow-sm",
+          isOwn
+            ? "bg-green-500 text-white rounded-tr-none"
+            : "bg-gray-500 text-black rounded-tl-none"
         )}
       >
+        {/* Username (only for others) */}
         {!isOwn && (
-          <span className="text-xs text-muted-foreground mb-1 px-1">
+          <span className="text-xs text-black mb-0.5 font-medium">
             {message.user.username}
           </span>
         )}
 
-        <div
-          className={cn(
-            "px-3 py-2 rounded-lg shadow-sm break-words",
-            isOwn
-              ? "bg-green-500 text-white rounded-tr-none"
-              : "bg-gray-200 text-black rounded-tl-none"
-          )}
-        >
-          {message.type === "TEXT" ? (
-            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-          ) : message.type === "MEDIA" ? (
+        {/* Message content */}
+        <div className="text-sm leading-relaxed whitespace-pre-wrap break-words pr-10">
+          {message.type === "TEXT" && <p>{message.content}</p>}
+
+          {message.type === "MEDIA" && (
             <div className="space-y-2">
               {message.mediaType === "IMAGE" && (
                 <img
                   src={message.mediaUrl}
                   alt="Shared image"
-                  className="max-w-64 rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                  className="max-w-[220px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => window.open(message.mediaUrl, "_blank")}
                 />
               )}
@@ -111,24 +104,26 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
                 <video
                   src={message.mediaUrl}
                   controls
-                  className="max-w-64 rounded-lg"
+                  className="max-w-[220px] rounded-lg"
                 />
               )}
               {message.mediaType === "AUDIO" && (
-                <audio src={message.mediaUrl} controls className="max-w-64" />
+                <audio
+                  src={message.mediaUrl}
+                  controls
+                  className="max-w-[220px]"
+                />
               )}
-              {message.content && <p className="text-sm">{message.content}</p>}
+              {message.content && <p>{message.content}</p>}
             </div>
-          ) : (
-            <p className="text-sm italic">{message.content}</p>
           )}
         </div>
 
-        {/* Time */}
+        {/* Timestamp (bottom right corner) */}
         <span
           className={cn(
-            "text-xs text-muted-foreground mt-1 px-1",
-            isOwn ? "text-right" : "text-left"
+            "absolute bottom-1 right-2 text-[10px] font-mono opacity-80",
+            isOwn ? "text-white/80" : "text-black"
           )}
         >
           {formatTimeAgo(message.createdAt)}

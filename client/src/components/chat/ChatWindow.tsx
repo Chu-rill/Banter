@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Room } from "@/types";
+import { Room, User } from "@/types";
 import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
@@ -10,27 +10,33 @@ import VideoCall from "./VideoCall";
 import FileUpload from "./FileUpload";
 import GroupInfo from "../room/GroupInfo/GroupInfo";
 import { useChat } from "@/hooks/useRoomChat";
+import { useDirectChat } from "@/hooks/useDirectChat";
 import ChatSearch from "./ChatSearch";
 
 interface ChatWindowProps {
-  room: Room;
+  room?: Room;
+  friend?: User;
   onToggleSidebar: () => void;
   onLeaveRoom?: () => void;
 }
 
 export default function ChatWindow({
   room,
+  friend,
   onToggleSidebar,
   onLeaveRoom,
 }: ChatWindowProps) {
-  const {
-    messages,
-    typingUsers,
-    isLoading,
-    sendMessage,
-    startTyping,
-    stopTyping,
-  } = useChat(room.id);
+  // Use room chat or direct chat based on what's provided
+  const roomChat = useChat(room?.id || "");
+  const directChat = useDirectChat(friend?.id || "");
+
+  const isRoomChat = !!room;
+  const { messages, isLoading, sendMessage, startTyping, stopTyping } =
+    isRoomChat ? roomChat : directChat;
+
+  // For room chat, get typing users
+  const typingUsers = isRoomChat ? roomChat.typingUsers : [];
+  const isTyping = !isRoomChat ? directChat.isTyping : false;
 
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
@@ -53,6 +59,7 @@ export default function ChatWindow({
     <div className="flex-1 flex flex-col h-full min-w-0">
       <ChatHeader
         room={room}
+        friend={friend}
         onToggleSidebar={onToggleSidebar}
         onStartVideoCall={handleStartVideoCall}
         onStartVoiceCall={handleStartVoiceCall}
@@ -69,12 +76,21 @@ export default function ChatWindow({
         typingUsers={typingUsers}
         isLoading={isLoading}
         searchQuery={searchQuery}
-        // onAddReaction={addReaction}
+        isTyping={isTyping}
       />
 
       <ChatInput
-        roomId={room.id}
-        onSendMessage={sendMessage}
+        roomId={room?.id}
+        friendId={friend?.id}
+        onSendMessage={(message) => {
+          // Only allow "TEXT" or "MEDIA" types and ensure type is defined
+          if (message.type === "TEXT" || message.type === "MEDIA") {
+            sendMessage({
+              ...message,
+              type: message.type, // explicitly set type to satisfy type checker
+            });
+          }
+        }}
         onStartTyping={startTyping}
         onStopTyping={stopTyping}
         onOpenFileUpload={() => setShowFileUpload(true)}
@@ -91,7 +107,7 @@ export default function ChatWindow({
 
       {showFileUpload && (
         <FileUpload
-          roomId={room.id}
+          roomId={room?.id || friend?.id || ""}
           onFileUploaded={(file) => {
             // Map file.type to allowed mediaType values
             const getMediaType = (
@@ -114,7 +130,7 @@ export default function ChatWindow({
         />
       )}
 
-      {showRoomDetails && (
+      {showRoomDetails && room && (
         <GroupInfo
           room={room}
           onClose={() => setShowRoomDetails(false)}

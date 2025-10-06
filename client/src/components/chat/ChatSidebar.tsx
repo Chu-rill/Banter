@@ -24,13 +24,15 @@ import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";
 import CreateRoomModal from "../room/RoomModal";
 import FriendsPanel from "../user/Friends/FriendsPanel";
-import { Room } from "@/types";
+import { Room, User } from "@/types";
 import RoomList from "../room/RoomList";
 import { useRooms } from "@/contexts/RoomsContext";
 
 interface ChatSidebarProps {
   selectedRoom: Room | null;
+  selectedFriend: User | null;
   onSelectRoom: (room: Room) => void;
+  onSelectFriend: (friend: User) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
   onShowProfile: () => void;
@@ -38,7 +40,9 @@ interface ChatSidebarProps {
 
 export default function ChatSidebar({
   selectedRoom,
+  selectedFriend,
   onSelectRoom,
+  onSelectFriend,
   collapsed,
   onToggleCollapse,
   onShowProfile,
@@ -266,12 +270,7 @@ export default function ChatSidebar({
         )}
 
         {activeTab === "friends" && (
-          <FriendsPanel
-          // onStartDirectMessage={(friend) => {
-          //   // TODO: Create direct message room or navigate to existing DM
-          //   console.log("Start DM with:", friend.username);
-          // }}
-          />
+          <FriendsPanel onSelectFriend={onSelectFriend} />
         )}
       </div>
 

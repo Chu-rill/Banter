@@ -19,7 +19,11 @@ import toast from "react-hot-toast";
 
 export type FriendsTab = "all" | "pending" | "blocked" | "add";
 
-export default function FriendsPanel() {
+interface FriendsPanelProps {
+  onSelectFriend?: (friend: User) => void;
+}
+
+export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
   const { user } = useAuth();
   const { friends, listFriends, pending, listPendingRequests } = useFriends(); // use context
   const [activeTab, setActiveTab] = useState<FriendsTab>("all");
@@ -260,7 +264,7 @@ export default function FriendsPanel() {
             currentUser={user}
             onRespond={handleRespond}
             onRemove={handleRemove}
-            onMessage={(friend) => console.log("Message", friend)}
+            onMessage={(friend) => onSelectFriend?.(friend)}
           />
         ))}
       </div>

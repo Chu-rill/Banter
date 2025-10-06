@@ -1,14 +1,23 @@
 // components/chat/ChatHeader.tsx
 "use client";
 
-import { Room } from "@/types";
+import { Room, User } from "@/types";
 import { Button } from "@/components/ui/Button";
-import { Menu, Users, Phone, Video, Search, Settings } from "lucide-react";
+import {
+  Menu,
+  Users,
+  Phone,
+  Video,
+  Search,
+  Settings,
+  UserCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 interface ChatHeaderProps {
-  room: Room;
+  room?: Room;
+  friend?: User;
   onToggleSidebar: () => void;
   onStartVideoCall: () => void;
   onStartVoiceCall: () => void;
@@ -18,6 +27,7 @@ interface ChatHeaderProps {
 
 export default function ChatHeader({
   room,
+  friend,
   onToggleSidebar,
   onStartVideoCall,
   onStartVoiceCall,
@@ -25,6 +35,10 @@ export default function ChatHeader({
   onShowDetails,
 }: ChatHeaderProps) {
   const [imageError, setImageError] = useState(false);
+  const isDirectMessage = !!friend;
+  const displayName = isDirectMessage ? friend.username : room?.name;
+  const displayImage = isDirectMessage ? friend.avatar : room?.profilePicture;
+
   return (
     <div className="p-4 border-b border-border bg-card/50 backdrop-blur-sm">
       <div className="flex items-center justify-between">
@@ -40,19 +54,23 @@ export default function ChatHeader({
           </Button>
 
           <div>
-            {imageError || !room?.profilePicture ? (
+            {imageError || !displayImage ? (
               <div
                 className={cn(
                   "w-10 h-10 rounded-lg flex items-center justify-center",
                   "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
                 )}
               >
-                <Users className="w-6 h-6 text-muted-foreground" />
+                {isDirectMessage ? (
+                  <UserCircle className="w-6 h-6 text-muted-foreground" />
+                ) : (
+                  <Users className="w-6 h-6 text-muted-foreground" />
+                )}
               </div>
             ) : (
               <img
-                src={room.profilePicture}
-                alt={room.name || "Room"}
+                src={displayImage}
+                alt={displayName || "Chat"}
                 className="w-11 h-11 rounded-xl object-cover shadow-md"
                 onError={() => setImageError(true)}
               />
@@ -61,15 +79,21 @@ export default function ChatHeader({
 
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-semibold text-foreground truncate">
-              {room.name}
+              {displayName}
             </h2>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Users className="w-4 h-4" />
-              <span>{room.participants.length} members</span>
-              {room.isActive && (
+              {isDirectMessage ? (
+                <span></span>
+              ) : (
                 <>
-                  <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  <span>Active</span>
+                  <Users className="w-4 h-4" />
+                  <span>{room?.participants.length} members</span>
+                  {room?.isActive && (
+                    <>
+                      <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      <span>Active</span>
+                    </>
+                  )}
                 </>
               )}
             </div>

@@ -11,8 +11,8 @@ export class DirectMessageRepository {
     receiverId: string,
     content?: string,
     type: MessageType = MessageType.TEXT,
-    mediaUrl?: string,
     mediaType?: MediaType,
+    mediaUrl?: string,
   ) {
     return this.prisma.directMessage.create({
       data: { senderId, receiverId, content, type, mediaUrl, mediaType },
@@ -30,6 +30,10 @@ export class DirectMessageRepository {
           { senderId: userId, receiverId: friendId },
           { senderId: friendId, receiverId: userId },
         ],
+      },
+      include: {
+        sender: { select: { id: true, username: true, avatar: true } },
+        receiver: { select: { id: true, username: true, avatar: true } },
       },
       orderBy: { createdAt: 'asc' },
       take: limit,

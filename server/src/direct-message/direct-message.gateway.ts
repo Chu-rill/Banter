@@ -138,7 +138,7 @@ export class DirectMessageGateway
     @WsUser() senderId: string,
   ) {
     const { receiverId, content, mediaUrl, type, mediaType } = data;
-
+    console.log('Received direct message data:', data);
     if (!senderId) {
       this.logger.error('No senderId found');
       client.emit('dm:error', { message: 'Not authenticated' });
@@ -172,17 +172,17 @@ export class DirectMessageGateway
 
       const receiverSocketId = await this.userRedis.getUserSocket(receiverId);
 
-      // Send confirmation to sender
+      // Send confirmation to sender - they should see their own message
       client.emit('dm:sent', savedMessage);
+      client.emit('dm:new', savedMessage);
 
       if (receiverSocketId) {
-        // Receiver is online - send to and receiver
+        // Receiver is online - send to receiver's socket
         this.server.to(receiverSocketId).emit('dm:new', savedMessage);
         this.logger.log(`Message delivered to online user ${receiverId}`);
       } else {
         // Receiver is offline - store message for later delivery
         await this.userRedis.storeOfflineMessage(receiverId, savedMessage);
-        client.emit('dm:new', savedMessage);
         client.emit('dm:recipient_offline', {
           receiverId,
           messageId: savedMessage.id,
@@ -219,6 +219,33 @@ export class DirectMessageGateway
       }
     } catch (error) {
       this.logger.error('Error handling typing indicator:', error);
+    }
+  }
+
+  // Get conversation history
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('dm:get_messages')
+  async handleGetMessages(
+    @MessageBody() data: { friendId: string; limit?: number },
+    @ConnectedSocket() client: Socket,
+    @WsUser() userId: string,
+  ) {
+    try {
+      const messages = await this.service.getChat(
+        userId,
+        data.friendId,
+        data.limit || 50,
+      );
+
+      client.emit('dm:messages', {
+        friendId: data.friendId,
+        messages,
+      });
+    } catch (error) {
+      this.logger.error('Error fetching DM history:', error);
+      client.emit('dm:error', {
+        message: 'Failed to fetch message history',
+      });
     }
   }
 

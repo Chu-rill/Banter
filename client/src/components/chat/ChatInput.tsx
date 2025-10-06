@@ -10,7 +10,8 @@ import { debounce } from "@/lib/utils";
 import { SendMessage } from "@/types";
 
 interface ChatInputProps {
-  roomId: string;
+  roomId?: string;
+  friendId?: string;
   onSendMessage: (message: Partial<SendMessage>) => void;
   onStartTyping: () => void;
   onStopTyping: () => void;
@@ -19,6 +20,7 @@ interface ChatInputProps {
 
 export default function ChatInput({
   roomId,
+  friendId,
   onSendMessage,
   onStartTyping,
   onStopTyping,

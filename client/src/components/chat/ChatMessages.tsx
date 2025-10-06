@@ -12,6 +12,7 @@ interface ChatMessagesProps {
   typingUsers: TypingUser[];
   isLoading: boolean;
   searchQuery: string;
+  isTyping?: boolean; // For DM typing indicator
   // onAddReaction: (messageId: string, emoji: string) => void;
 }
 
@@ -20,6 +21,7 @@ export default function ChatMessages({
   typingUsers,
   isLoading,
   searchQuery,
+  isTyping = false,
 }: // onAddReaction,
 ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -81,6 +83,11 @@ ChatMessagesProps) {
           ))}
           {typingUsers.length > 0 && (
             <ChatTypingIndicator typingUsers={typingUsers} />
+          )}
+          {isTyping && typingUsers.length === 0 && (
+            <div className="text-sm text-muted-foreground italic px-4">
+              Typing...
+            </div>
           )}
         </>
       )}
