@@ -7,6 +7,7 @@ const SOCKET_URL =
 class SocketService {
   private roomMessageSocket: Socket | null = null;
   private directMessageSocket: Socket | null = null;
+  private callSocket: Socket | null = null;
 
   connectRoomMessages(token: string) {
     // console.log("Connecting to room messages socket...");
@@ -36,6 +37,18 @@ class SocketService {
     });
   }
 
+  connectCall(token: string) {
+    const CALL_URL = process.env.NEXT_PUBLIC_CALL_URL || "http://localhost:5002";
+    this.callSocket = io(`${CALL_URL}/call`, {
+      auth: { token },
+      autoConnect: true,
+    });
+
+    this.callSocket.on("connect", () => {
+      console.log("Call socket connected");
+    });
+  }
+
   getRoomMessageSocket() {
     return this.roomMessageSocket;
   }
@@ -44,9 +57,14 @@ class SocketService {
     return this.directMessageSocket;
   }
 
+  getCallSocket() {
+    return this.callSocket;
+  }
+
   disconnect() {
     this.roomMessageSocket?.disconnect();
     this.directMessageSocket?.disconnect();
+    this.callSocket?.disconnect();
   }
 }
 

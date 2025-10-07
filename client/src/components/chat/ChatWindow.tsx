@@ -99,6 +99,7 @@ export default function ChatWindow({
       {showVideoCall && (
         <VideoCall
           room={room}
+          friend={friend}
           isOpen={showVideoCall}
           onClose={() => setShowVideoCall(false)}
           isVideoCall={isVideoCallMode}

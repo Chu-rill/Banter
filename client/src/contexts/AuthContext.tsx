@@ -100,7 +100,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Connect to socket services
       socketService.connectRoomMessages(wsToken);
       socketService.connectDirectMessages(wsToken);
-      // socketService.connectToCall();
+      socketService.connectCall(wsToken);
     } else {
       // Disconnect sockets when not authenticated
       socketService.disconnect();
