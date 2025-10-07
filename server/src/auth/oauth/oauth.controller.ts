@@ -35,7 +35,7 @@ export class OauthController {
       // Log the incoming request for debugging
       // this.logger.log('Google OAuth callback received');
 
-      // Validate OAuth login and get result with token
+      // Validate OAuth login and get result with tokens
       const result = await this.oauthService.validateOAuthGoogleLogin(req);
 
       if (!result || !result.token) {
@@ -44,15 +44,15 @@ export class OauthController {
 
       // Get frontend URL from config
       const frontendUrl =
-        this.configService.get<string>('FRONTEND_URL') ||
+        this.configService.get<string>('FRONTEND_URL')?.replace(/\/$/, '') ||
         'http://localhost:3000';
 
-      // Construct redirect URL with token
-      const redirectUrl = `${frontendUrl}/oauth-redirect?token=${encodeURIComponent(result.token)}`;
+      // Construct redirect URL with both tokens
+      let redirectUrl = `${frontendUrl}/oauth-redirect?token=${encodeURIComponent(result.token)}&refreshToken=${encodeURIComponent(result.refreshToken)}`;
 
       // this.logger.log(`Redirecting to: ${redirectUrl}`);
 
-      // Redirect to frontend with token
+      // Redirect to frontend with tokens
       return res.redirect(redirectUrl);
     } catch (error) {
       this.logger.error('Google OAuth callback error:', error);

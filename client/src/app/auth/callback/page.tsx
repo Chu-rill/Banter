@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import Cookies from "js-cookie";
 
 export default function AuthCallback() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -15,6 +14,7 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       const token = searchParams.get("token");
+      const refreshToken = searchParams.get("refreshToken");
       const error = searchParams.get("error");
 
       if (error) {
@@ -28,8 +28,8 @@ export default function AuthCallback() {
 
       if (token) {
         try {
-          await handleOAuthCallback(token);
-          
+          await handleOAuthCallback(token, refreshToken || undefined);
+
           setStatus("success");
           setMessage("Authentication successful! Redirecting...");
         } catch (error) {

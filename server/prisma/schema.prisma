@@ -33,6 +33,7 @@ model User {
   sentFriendRequests     Friendship[]    @relation("Requester")
   receivedFriendRequests Friendship[]    @relation("Receiver")
   notifications          Notification[]
+  refreshTokens          RefreshToken[]
   credits                Int             @default(0)
 }
 
@@ -212,4 +213,17 @@ enum TxType {
   ROOM_ACCESS
   SUBSCRIPTION
   OTHER
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  isRevoked Boolean  @default(false)
+
+  @@index([userId])
+  @@index([token])
 }

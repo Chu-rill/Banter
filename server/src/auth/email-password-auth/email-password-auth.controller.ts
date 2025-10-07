@@ -10,6 +10,7 @@ import {
   Query,
   UsePipes,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './email-password-auth.service';
@@ -98,9 +99,13 @@ export class AuthController {
   async verifyEmail(@Query() dto: VerifyEmailDto, @Res() res: Response) {
     const result = await this.authService.confirmEmailAddress(dto);
 
-    const redirectUrl = `${this.configService.get<string>(
+    let redirectUrl = `${this.configService.get<string>(
       'VERIFY_URL_CLIENT',
     )}?token=${result.token}`;
+
+    if (result.refreshToken) {
+      redirectUrl += `&refreshToken=${result.refreshToken}`;
+    }
 
     return res.redirect(redirectUrl);
   }
@@ -139,5 +144,28 @@ export class AuthController {
   })
   async resetPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required');
+    }
+
+    const tokens = await this.authService.refreshAccessToken(refreshToken);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Token refreshed successfully',
+      data: {
+        token: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      },
+    };
   }
 }

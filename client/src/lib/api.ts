@@ -29,9 +29,23 @@ export const TokenStorage = {
     }
   },
 
+  getRefreshToken: () => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("refreshToken");
+    }
+    return null;
+  },
+
+  setRefreshToken: (token: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("refreshToken", token);
+    }
+  },
+
   removeToken: () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("userData");
     }
   },
@@ -59,17 +73,83 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle auth errors
+// Flag to prevent multiple refresh requests
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onTokenRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
+// Response interceptor to handle auth errors and auto-refresh
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      TokenStorage.removeToken();
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If error is 401 and we haven't tried to refresh yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Wait for the token to be refreshed
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((token: string) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const refreshToken = TokenStorage.getRefreshToken();
+
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+
+        // Call refresh endpoint
+        const { data } = await axios.post(
+          `${API_BASE_URL}/auth/refresh`,
+          { refreshToken },
+          { headers: { "Content-Type": "application/json" } }
+        );
+
+        if (data?.data?.token && data?.data?.refreshToken) {
+          TokenStorage.setToken(data.data.token);
+          TokenStorage.setRefreshToken(data.data.refreshToken);
+
+          // Update authorization header
+          api.defaults.headers.common["Authorization"] = `Bearer ${data.data.token}`;
+          originalRequest.headers.Authorization = `Bearer ${data.data.token}`;
+
+          // Notify all waiting requests
+          onTokenRefreshed(data.data.token);
+
+          isRefreshing = false;
+
+          // Retry original request
+          return api(originalRequest);
+        }
+      } catch (refreshError) {
+        isRefreshing = false;
+        refreshSubscribers = [];
+
+        // Refresh failed, redirect to login
+        TokenStorage.removeToken();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        return Promise.reject(refreshError);
       }
     }
+
     return Promise.reject(error);
   }
 );
@@ -84,6 +164,9 @@ export const authApi = {
 
     if (data.token) {
       TokenStorage.setToken(data.token);
+    }
+    if (data.refreshToken) {
+      TokenStorage.setRefreshToken(data.refreshToken);
     }
     return data;
   },
@@ -126,10 +209,13 @@ export const authApi = {
     return data;
   },
 
-  refreshToken: async () => {
-    const { data } = await api.post("/auth/refresh");
-    if (data.token) {
-      TokenStorage.setToken(data.token);
+  refreshToken: async (refreshToken: string) => {
+    const { data } = await api.post("/auth/refresh", { refreshToken });
+    if (data?.data?.token) {
+      TokenStorage.setToken(data.data.token);
+    }
+    if (data?.data?.refreshToken) {
+      TokenStorage.setRefreshToken(data.data.refreshToken);
     }
     return data;
   },

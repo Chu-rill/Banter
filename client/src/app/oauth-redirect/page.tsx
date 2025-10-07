@@ -25,6 +25,7 @@ export default function OAuthCallbackPage() {
 
       // Get token from URL
       const token = searchParams.get("token");
+      const refreshToken = searchParams.get("refreshToken");
       const error = searchParams.get("error");
 
       // Check for OAuth error from backend
@@ -41,11 +42,17 @@ export default function OAuthCallbackPage() {
         return;
       }
 
+      if (!refreshToken) {
+        setStatus("error");
+        setErrorMessage("No authentication refreshToken received");
+        return;
+      }
+
       try {
         setStatus("loading");
 
         // Process the OAuth callback
-        const userData = await handleOAuthCallback(token);
+        const userData = await handleOAuthCallback(token, refreshToken);
 
         if (!userData) {
           throw new Error("No user data received");

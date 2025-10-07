@@ -229,4 +229,45 @@ export class UserRepository {
 
     return { users, total };
   }
+
+  // Refresh Token Methods
+  async createRefreshToken(userId: string, token: string, expiresAt: Date) {
+    return await this.prisma.refreshToken.create({
+      data: {
+        userId,
+        token,
+        expiresAt,
+      },
+    });
+  }
+
+  async findRefreshToken(token: string) {
+    return await this.prisma.refreshToken.findUnique({
+      where: { token },
+    });
+  }
+
+  async revokeRefreshToken(token: string) {
+    return await this.prisma.refreshToken.update({
+      where: { token },
+      data: { isRevoked: true },
+    });
+  }
+
+  async revokeAllUserRefreshTokens(userId: string) {
+    return await this.prisma.refreshToken.updateMany({
+      where: { userId, isRevoked: false },
+      data: { isRevoked: true },
+    });
+  }
+
+  async cleanupExpiredRefreshTokens() {
+    return await this.prisma.refreshToken.deleteMany({
+      where: {
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+    });
+  }
 }

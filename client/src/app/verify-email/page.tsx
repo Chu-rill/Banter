@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
-import { authApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 type VerificationState = "loading" | "success" | "error" | "invalid";
@@ -20,6 +19,7 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const { handleEmailVerification } = useAuth();
   const token = searchParams.get("token");
+  const refreshToken = searchParams.get("refreshToken");
 
   useEffect(() => {
     // Only run once and if we haven't already verified
@@ -35,15 +35,15 @@ export default function VerifyEmailPage() {
 
     // Mark as verified to prevent re-runs
     hasVerified.current = true;
-    verifyEmail(token);
-  }, [token]); // Remove handleEmailVerification from dependencies
+    verifyEmail(token, refreshToken);
+  }, [token, refreshToken]); // Remove handleEmailVerification from dependencies
 
-  const verifyEmail = async (token: string) => {
+  const verifyEmail = async (token: string, refreshToken: string | null) => {
     try {
       setVerificationState("loading");
 
-      // If verification includes a token (auto-login), handle it
-      await handleEmailVerification(token);
+      // If verification includes tokens (auto-login), handle it
+      await handleEmailVerification(token, refreshToken || undefined);
 
       setVerificationState("success");
 

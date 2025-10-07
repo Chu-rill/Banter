@@ -77,6 +77,7 @@ export interface AuthResponse {
   message: string;
   data: User;
   token?: string;
+  refreshToken?: string;
 }
 
 export interface UserResponse {

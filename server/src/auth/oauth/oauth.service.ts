@@ -53,10 +53,11 @@ export class OauthService {
       ]);
     }
 
-    const [, , token] = await Promise.all([
+    const [, , accessToken, refreshToken] = await Promise.all([
       this.userService.updateOnlineStatus(user.id, true),
       this.messageGateway.broadcastUserStatus(user.id, true),
       this.authService.generateAuthToken(user.id),
+      this.authService.generateRefreshToken(user.id),
     ]);
 
     return {
@@ -70,7 +71,8 @@ export class OauthService {
         isOnline: user.isOnline,
         isVerified: user.isVerified,
       },
-      token: token,
+      token: accessToken,
+      refreshToken: refreshToken,
     };
   }
 }

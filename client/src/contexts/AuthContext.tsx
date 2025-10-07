@@ -26,7 +26,10 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
   refreshUser: () => Promise<void>;
-  handleOAuthCallback: (token: string) => Promise<User | null>;
+  handleOAuthCallback: (
+    token: string,
+    refreshToken: string
+  ) => Promise<User | null>;
   handleEmailVerification: (token: string) => Promise<void>;
 }
 
@@ -51,9 +54,23 @@ const TokenStorage = {
     }
   },
 
+  getRefreshToken: () => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("refreshToken");
+    }
+    return null;
+  },
+
+  setRefreshToken: (token: string) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("refreshToken", token);
+    }
+  },
+
   removeToken: () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("userData");
     }
   },
@@ -113,8 +130,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await authApi.login(email, password);
 
       if (response.data && response.token) {
-        // Store token first
+        // Store tokens
         TokenStorage.setToken(response.token);
+        if (response.refreshToken) {
+          TokenStorage.setRefreshToken(response.refreshToken);
+        }
         // Then set user
         console.log("Login response data:", response.data);
         setUser(response.data);
@@ -182,11 +202,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const handleOAuthCallback = async (token: string) => {
+  const handleOAuthCallback = async (token: string, refreshToken?: string) => {
     try {
       setIsLoading(true);
-      // Store the token
+      // Store the tokens
       TokenStorage.setToken(token);
+      if (refreshToken) TokenStorage.setRefreshToken(refreshToken);
 
       // Get user data
       const { data } = await authApi.getCurrentUser();
@@ -203,28 +224,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const handleEmailVerification = useCallback(async (token: string) => {
-    try {
-      setIsLoading(true);
-      // Store the token
-      TokenStorage.setToken(token);
+  const handleEmailVerification = useCallback(
+    async (token: string, refreshToken?: string) => {
+      try {
+        setIsLoading(true);
+        // Store the tokens
+        TokenStorage.setToken(token);
+        if (refreshToken) {
+          TokenStorage.setRefreshToken(refreshToken);
+        }
 
-      // Get user data
-      const { data } = await authApi.getCurrentUser();
-      const userData = data as User;
-      setUser(userData);
+        // Get user data
+        const { data } = await authApi.getCurrentUser();
+        const userData = data as User;
+        setUser(userData);
 
-      // Don't navigate here - let the verify page handle it
-      // router.push("/chat");
-    } catch (error) {
-      console.error("Email verification failed:", error);
-      // Clear invalid token
-      TokenStorage.removeToken();
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        // Don't navigate here - let the verify page handle it
+        // router.push("/chat");
+      } catch (error) {
+        console.error("Email verification failed:", error);
+        // Clear invalid token
+        TokenStorage.removeToken();
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
   const value: AuthContextType = {
     user,

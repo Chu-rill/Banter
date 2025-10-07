@@ -154,14 +154,15 @@ export class AuthService {
         );
       }
 
-      // Update online status and generate token concurrently
+      // Update online status and generate tokens concurrently
       this.logger.debug(
-        `Updating online status and generating token for user: ${user.id}`,
+        `Updating online status and generating tokens for user: ${user.id}`,
       );
-      const [, , token] = await Promise.all([
+      const [, , accessToken, refreshToken] = await Promise.all([
         this.userService.updateOnlineStatus(user.id, true),
         this.messageGateway.broadcastUserStatus(user.id, true),
         this.generateAuthToken(user.id),
+        this.generateRefreshToken(user.id),
       ]);
 
       this.logger.log(`Login successful for user: ${user.id}`);
@@ -178,7 +179,8 @@ export class AuthService {
           isOnline: user.isOnline,
           avatar: user.avatar,
         },
-        token: token,
+        token: accessToken,
+        refreshToken: refreshToken,
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
@@ -197,6 +199,7 @@ export class AuthService {
       await Promise.all([
         this.userService.updateOnlineStatus(userId, false),
         this.messageGateway.broadcastUserStatus(userId, true),
+        this.userRepository.revokeAllUserRefreshTokens(userId), // Revoke all refresh tokens
       ]);
       this.logger.log(`User logged out successfully: ${userId}`);
 
@@ -248,13 +251,14 @@ export class AuthService {
         throw new BadRequestException('Email is already verified');
       }
 
-      // Mark user as verified, generate auth token, and update online status concurrently
+      // Mark user as verified, generate tokens, and update online status concurrently
       this.logger.debug(
         `Confirming user and updating status for user: ${user.id}`,
       );
-      const [, authToken] = await Promise.all([
+      const [, accessToken, refreshToken] = await Promise.all([
         this.userRepository.markUserAsVerified(user.id),
         this.generateAuthToken(user.id),
+        this.generateRefreshToken(user.id),
         this.userService.updateOnlineStatus(user.id, true),
       ]);
 
@@ -269,7 +273,8 @@ export class AuthService {
           email: user.email,
           isVerified: true,
         },
-        token: authToken,
+        token: accessToken,
+        refreshToken: refreshToken,
       };
     } catch (error) {
       if (
@@ -449,7 +454,7 @@ export class AuthService {
   async generateAuthToken(userId: string): Promise<string> {
     try {
       this.logger.debug(`Generating auth token for user: ${userId}`);
-      return await this.jwtService.signAsync({ userId });
+      return await this.jwtService.signAsync({ userId }, { expiresIn: '15m' });
     } catch (error) {
       this.logger.error(
         `Failed to generate auth token for user ${userId}:`,
@@ -458,6 +463,82 @@ export class AuthService {
       throw new InternalServerErrorException(
         'Failed to generate authentication token',
       );
+    }
+  }
+
+  async generateRefreshToken(userId: string): Promise<string> {
+    try {
+      this.logger.debug(`Generating refresh token for user: ${userId}`);
+
+      // Generate secure random token
+      const token = crypto.randomBytes(64).toString('hex');
+
+      // Set expiry to 7 days from now
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      // Store refresh token in database
+      await this.userRepository.createRefreshToken(userId, token, expiresAt);
+
+      return token;
+    } catch (error) {
+      this.logger.error(
+        `Failed to generate refresh token for user ${userId}:`,
+        error.stack,
+      );
+      throw new InternalServerErrorException(
+        'Failed to generate refresh token',
+      );
+    }
+  }
+
+  async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+    try {
+      this.logger.debug('Processing refresh token request');
+
+      // Find refresh token in database
+      const tokenRecord = await this.userRepository.findRefreshToken(refreshToken);
+
+      if (!tokenRecord) {
+        this.logger.warn('Refresh token not found');
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      // Check if token is revoked
+      if (tokenRecord.isRevoked) {
+        this.logger.warn(`Refresh token is revoked for user: ${tokenRecord.userId}`);
+        throw new UnauthorizedException('Refresh token has been revoked');
+      }
+
+      // Check if token is expired
+      if (tokenRecord.expiresAt < new Date()) {
+        this.logger.warn(`Refresh token expired for user: ${tokenRecord.userId}`);
+        await this.userRepository.revokeRefreshToken(refreshToken);
+        throw new UnauthorizedException('Refresh token has expired');
+      }
+
+      // Generate new access token
+      const accessToken = await this.generateAuthToken(tokenRecord.userId);
+
+      // Generate new refresh token (token rotation)
+      const newRefreshToken = await this.generateRefreshToken(tokenRecord.userId);
+
+      // Revoke old refresh token
+      await this.userRepository.revokeRefreshToken(refreshToken);
+
+      this.logger.log(`Tokens refreshed successfully for user: ${tokenRecord.userId}`);
+
+      return {
+        accessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      this.logger.error('Failed to refresh access token:', error.stack);
+      throw new InternalServerErrorException('Failed to refresh access token');
     }
   }
 
