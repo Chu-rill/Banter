@@ -1,4 +1,3 @@
-// components/chat/ChatHeader.tsx
 "use client";
 
 import { Room, User } from "@/types";
@@ -11,6 +10,7 @@ import {
   Search,
   Settings,
   UserCircle,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -35,111 +35,105 @@ export default function ChatHeader({
   onShowDetails,
 }: ChatHeaderProps) {
   const [imageError, setImageError] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const isDirectMessage = !!friend;
   const displayName = isDirectMessage ? friend.username : room?.name;
   const displayImage = isDirectMessage ? friend.avatar : room?.profilePicture;
 
   return (
-    <div className="p-4 border-b border-border bg-card/50 backdrop-blur-sm">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2 md:space-x-3 flex-1 min-w-0">
+    <header className="p-3 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-20">
+      <div className="flex items-center justify-between w-full">
+        {/* Left: Sidebar toggle & avatar */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggleSidebar}
             className="md:hidden flex-shrink-0"
-            aria-label="Toggle sidebar"
           >
             <Menu className="w-5 h-5" />
           </Button>
 
-          <div>
-            {imageError || !displayImage ? (
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center",
-                  "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
-                )}
-              >
-                {isDirectMessage ? (
-                  <UserCircle className="w-6 h-6 text-muted-foreground" />
-                ) : (
-                  <Users className="w-6 h-6 text-muted-foreground" />
-                )}
-              </div>
-            ) : (
-              <img
-                src={displayImage}
-                alt={displayName || "Chat"}
-                className="w-11 h-11 rounded-xl object-cover shadow-md"
-                onError={() => setImageError(true)}
-              />
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold text-foreground truncate">
-              {displayName}
-            </h2>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+          {imageError || !displayImage ? (
+            <div
+              className={cn(
+                "w-9 h-9 rounded-full flex items-center justify-center",
+                "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400"
+              )}
+            >
               {isDirectMessage ? (
-                <span></span>
+                <UserCircle className="w-5 h-5" />
               ) : (
-                <>
-                  <Users className="w-4 h-4" />
-                  <span>{room?.participants.length} members</span>
-                  {room?.isActive && (
-                    <>
-                      <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      <span>Active</span>
-                    </>
-                  )}
-                </>
+                <Users className="w-5 h-5" />
               )}
             </div>
+          ) : (
+            <img
+              src={displayImage}
+              alt={displayName || "Chat"}
+              className="w-9 h-9 rounded-full object-cover shadow-sm"
+              onError={() => setImageError(true)}
+            />
+          )}
+
+          <div className="min-w-0">
+            <h2 className="text-sm md:text-base font-semibold truncate text-foreground">
+              {displayName}
+            </h2>
+            {!isDirectMessage && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Users className="w-3 h-3" />
+                <span>{room?.participants.length} members</span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center space-x-1 md:space-x-2 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onStartVoiceCall}
-            className="hidden sm:flex"
-            aria-label="Start voice call"
-          >
+        {/* Right: Actions */}
+        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+          <Button variant="ghost" size="icon" onClick={onStartVoiceCall}>
             <Phone className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onStartVideoCall}
-            aria-label="Start video call"
-          >
+          <Button variant="ghost" size="icon" onClick={onStartVideoCall}>
             <Video className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Search messages"
-            onClick={onToggleSearch}
-            className="hidden sm:flex"
-          >
+          <Button variant="ghost" size="icon" onClick={onToggleSearch}>
             <Search className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Room settings"
-            onClick={onShowDetails}
-          >
+          <Button variant="ghost" size="icon" onClick={onShowDetails}>
             <Settings className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
         </div>
+
+        {/* Mobile: Collapsed menu */}
+        <div className="flex sm:hidden relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <MoreVertical className="w-5 h-5" />
+          </Button>
+
+          {mobileMenuOpen && (
+            <div className="absolute right-0 top-10 bg-card border rounded-lg shadow-lg p-2 flex flex-col space-y-1 z-30 bg-black">
+              <Button variant="ghost" onClick={onStartVoiceCall}>
+                <Phone className="w-4 h-4 mr-2" /> Voice
+              </Button>
+              <Button variant="ghost" onClick={onStartVideoCall}>
+                <Video className="w-4 h-4 mr-2" /> Video
+              </Button>
+              <Button variant="ghost" onClick={onToggleSearch}>
+                <Search className="w-4 h-4 mr-2" /> Search
+              </Button>
+              <Button variant="ghost" onClick={onShowDetails}>
+                <Settings className="w-4 h-4 mr-2" /> Details
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </header>
   );
 }

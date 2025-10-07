@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { withAuth } from "@/contexts/AuthContext";
 import ChatSidebar from "../../components/chat/ChatSidebar";
 import ChatWindow from "../../components/chat/ChatWindow";
@@ -16,7 +16,8 @@ function ChatPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<User | null>(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Start with sidebar collapsed on mobile (will be expanded on desktop via CSS)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showThemeCustomizer, setShowThemeCustomizer] = useState(false);
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
 
@@ -26,17 +27,41 @@ function ChatPage() {
   const handleSelectRoom = (room: Room) => {
     setSelectedRoom(room);
     setSelectedFriend(null); // Clear friend selection
+    // Auto-collapse sidebar on mobile when selecting a chat
+    if (window.innerWidth < 768) {
+      setSidebarCollapsed(true);
+    }
   };
 
   const handleSelectFriend = (friend: User) => {
     setSelectedFriend(friend);
     setSelectedRoom(null); // Clear room selection
+    // Auto-collapse sidebar on mobile when selecting a chat
+    if (window.innerWidth < 768) {
+      setSidebarCollapsed(true);
+    }
   };
+
+  // Handle window resize for responsive behavior
+  useEffect(() => {
+    const handleResize = () => {
+      // On desktop (md breakpoint), keep sidebar open
+      if (window.innerWidth >= 768) {
+        setSidebarCollapsed(false);
+      }
+    };
+
+    // Set initial state
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div className="h-screen bg-background flex overflow-hidden relative">
-      {/* Mobile backdrop */}
-      {!sidebarCollapsed && (
+      {/* Mobile backdrop - show when sidebar is open (NOT collapsed) on mobile */}
+      {!sidebarCollapsed && (selectedRoom || selectedFriend) && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setSidebarCollapsed(true)}

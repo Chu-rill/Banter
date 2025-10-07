@@ -176,12 +176,16 @@ export default function ChatSidebar({
   return (
     <div
       className={cn(
-        "bg-secondary/30 border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out backdrop-blur-sm",
-        "w-80 md:w-80",
-        collapsed ? "w-16" : "w-80",
+        "border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out bg-black",
+        // Mobile: solid background
+        // "bg-background md:bg-secondary/30 md:backdrop-blur-sm",
+        // Desktop: always visible, can be collapsed to narrow
         "md:relative md:translate-x-0",
-        "sm:absolute sm:inset-y-0 sm:left-0 sm:z-50",
-        collapsed && "sm:-translate-x-full"
+        collapsed ? "md:w-16" : "md:w-80",
+        // Mobile: full-width sidebar that slides in/out
+        "fixed inset-y-0 left-0 z-50 w-80",
+        "md:static",
+        collapsed && "-translate-x-full md:translate-x-0"
       )}
     >
       {/* Header */}
@@ -222,14 +226,14 @@ export default function ChatSidebar({
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-secondary/20 border-b border-border/50">
+      <div className="flex bg-background md:bg-secondary/20 border-b border-border/50">
         <button
           onClick={() => setActiveTab("rooms")}
           className={cn(
             "flex-1 py-3 px-4 text-sm font-medium transition-all relative overflow-hidden",
             activeTab === "rooms"
-              ? "text-purple-600 bg-background/50"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
+              ? "text-purple-600 bg-secondary/80 md:bg-background/50"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 md:hover:bg-secondary/30"
           )}
         >
           {activeTab === "rooms" && (
@@ -243,8 +247,8 @@ export default function ChatSidebar({
           className={cn(
             "flex-1 py-3 px-4 text-sm font-medium transition-all relative overflow-hidden",
             activeTab === "friends"
-              ? "text-purple-600 bg-background/50"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
+              ? "text-purple-600 bg-secondary/80 md:bg-background/50"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 md:hover:bg-secondary/30"
           )}
         >
           {activeTab === "friends" && (
@@ -256,7 +260,7 @@ export default function ChatSidebar({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin ">
+      <div className="flex-1 overflow-y-auto scrollbar-thin  ">
         {activeTab === "rooms" && (
           <RoomList
             rooms={rooms}

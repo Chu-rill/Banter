@@ -110,7 +110,7 @@ export default function DetailsTab({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-black">
       {/* Room Info */}
       <div className="flex items-center space-x-4">
         {imageError || !room.profilePicture ? (
