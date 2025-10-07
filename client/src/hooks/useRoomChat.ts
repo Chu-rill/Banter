@@ -44,6 +44,16 @@ export function useChat(roomId: string) {
     // New incoming message
     socket.on("new-message", (msg: MessageWithUser) => {
       setMessages((prev) => [...prev, msg]);
+
+      // Play notification sound for new messages
+      try {
+        const sound = new Audio("/sounds/notification.mp3");
+        sound.play().catch((error) => {
+          console.log("Could not play notification sound:", error);
+        });
+      } catch (error) {
+        console.log("Error creating notification sound:", error);
+      }
     });
 
     // Typing indicators

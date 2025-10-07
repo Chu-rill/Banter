@@ -34,10 +34,11 @@ export function useDirectChat(friendId: string) {
 
     // Listen for new messages
     socket.on("dm:new", (msg: any) => {
-      console.log("Direct message received:", msg);
+      // console.log("Direct message received:", msg);
       // Check if message is from/to the current friend
       const isSender = msg.senderId === friendId || msg.sender?.id === friendId;
-      const isReceiver = msg.receiverId === friendId || msg.receiver?.id === friendId;
+      const isReceiver =
+        msg.receiverId === friendId || msg.receiver?.id === friendId;
 
       if (isSender || isReceiver) {
         // Transform the message to match MessageWithUser format
@@ -48,12 +49,24 @@ export function useDirectChat(friendId: string) {
           user: msg.sender || { id: msg.senderId },
         };
         setMessages((prev) => [...prev, transformedMsg]);
+
+        // Play notification sound for new messages (only if from the friend, not own messages)
+        if (isSender && msg.sender?.id === friendId) {
+          try {
+            const sound = new Audio("/sounds/notification.mp3");
+            sound.play().catch((error) => {
+              console.log("Could not play notification sound:", error);
+            });
+          } catch (error) {
+            console.log("Error creating notification sound:", error);
+          }
+        }
       }
     });
 
     // Listen for sent messages (confirmation) - but dm:new already handles this
     socket.on("dm:sent", (msg: any) => {
-      console.log("Direct message sent confirmation:", msg);
+      // console.log("Direct message sent confirmation:", msg);
     });
 
     // Listen for typing indicators
@@ -85,7 +98,7 @@ export function useDirectChat(friendId: string) {
       receiverId: friendId,
       ...data,
     });
-    console.log("Direct message sent:", data);
+    // console.log("Direct message sent:", data);
   };
 
   const startTyping = () => {
