@@ -1,10 +1,14 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './validation';
 import { UserRepository } from './user.repository';
+import { SupabaseService } from 'src/file/file.service';
 
 @Injectable()
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(
+    private userRepository: UserRepository,
+    private readonly supabaseService: SupabaseService,
+  ) {}
 
   async getUserById(id: string) {
     const user = await this.userRepository.getUserById(id);
@@ -64,6 +68,18 @@ export class UserService {
     } catch (error) {
       throw new NotFoundException('User not found');
     }
+  }
+
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    // Step 1: upload file to Supabase
+    const fileUrl = await this.supabaseService.uploadFile(file, 'avatars');
+
+    // Step 2: update user record in DB
+    const user = await this.userRepository.updateUser(userId, {
+      avatarUrl: fileUrl,
+    });
+
+    return user;
   }
 
   async getAllUsers(page: number = 1, limit: number = 10) {

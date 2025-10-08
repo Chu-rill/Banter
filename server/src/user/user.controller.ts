@@ -9,6 +9,9 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  Post,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../guards/auth.guard';
@@ -25,6 +28,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('User')
 @ApiBearerAuth('JWT-auth')
@@ -47,6 +51,15 @@ export class UserController {
   @ApiBody({ type: UpdateUserDtoSwagger })
   async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.updateUser(req.user.id, updateUserDto);
+  }
+
+  @Post('me/avatar')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateAvatar(
+    @Param('id') userId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.userService.updateAvatar(userId, file);
   }
 
   @Get(':id')

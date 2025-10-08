@@ -15,6 +15,7 @@ import { FriendshipModule } from './friendship/friendship.module';
 import { DirectMessageModule } from './direct-message/direct-message.module';
 import { RedisModule } from './redis/redis.module';
 import { OauthModule } from './auth/oauth/oauth.module';
+import { FileModule } from './file/file.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { OauthModule } from './auth/oauth/oauth.module';
     DirectMessageModule,
     RedisModule,
     OauthModule,
+    FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
