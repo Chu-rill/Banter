@@ -28,9 +28,9 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   handleOAuthCallback: (
     token: string,
-    refreshToken: string
+    refreshToken?: string
   ) => Promise<User | null>;
-  handleEmailVerification: (token: string) => Promise<void>;
+  handleEmailVerification: (token: string, refreshToken?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -90,19 +90,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const initializeAuth = async () => {
     const token = TokenStorage.getToken();
+    const refreshToken = TokenStorage.getRefreshToken();
 
-    if (!token) {
+    // If no tokens at all, user is not authenticated
+    if (!token && !refreshToken) {
       setIsLoading(false);
       return;
     }
 
     try {
+      // Try to get current user - if access token is expired, interceptor will refresh it
       const response = await authApi.getCurrentUser();
       const userData = response.data as User;
       setUser(userData);
     } catch (error) {
       console.error("Auth initialization failed:", error);
-      // Clear invalid token
+      // If getCurrentUser fails after refresh attempt, clear tokens
       TokenStorage.removeToken();
     } finally {
       setIsLoading(false);

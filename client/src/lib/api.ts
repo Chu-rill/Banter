@@ -92,65 +92,86 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and we haven't tried to refresh yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // Wait for the token to be refreshed
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((token: string) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
-          });
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const refreshToken = TokenStorage.getRefreshToken();
-
-        if (!refreshToken) {
-          throw new Error("No refresh token available");
-        }
-
-        // Call refresh endpoint
-        const { data } = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
-          { refreshToken },
-          { headers: { "Content-Type": "application/json" } }
-        );
-
-        if (data?.data?.token && data?.data?.refreshToken) {
-          TokenStorage.setToken(data.data.token);
-          TokenStorage.setRefreshToken(data.data.refreshToken);
-
-          // Update authorization header
-          api.defaults.headers.common["Authorization"] = `Bearer ${data.data.token}`;
-          originalRequest.headers.Authorization = `Bearer ${data.data.token}`;
-
-          // Notify all waiting requests
-          onTokenRefreshed(data.data.token);
-
-          isRefreshing = false;
-
-          // Retry original request
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        isRefreshing = false;
-        refreshSubscribers = [];
-
-        // Refresh failed, redirect to login
+    // Don't try to refresh if this IS the refresh request or if we've already retried
+    if (
+      originalRequest.url?.includes("/auth/refresh") ||
+      originalRequest._retry ||
+      error.response?.status !== 401
+    ) {
+      // If it's a 401 and not a refresh request, clear tokens and redirect
+      if (error.response?.status === 401 && !originalRequest.url?.includes("/auth/refresh")) {
         TokenStorage.removeToken();
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
           window.location.href = "/login";
         }
-        return Promise.reject(refreshError);
       }
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    // If already refreshing, queue this request
+    if (isRefreshing) {
+      return new Promise((resolve) => {
+        subscribeTokenRefresh((token: string) => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          resolve(api(originalRequest));
+        });
+      });
+    }
+
+    originalRequest._retry = true;
+    isRefreshing = true;
+
+    try {
+      const refreshToken = TokenStorage.getRefreshToken();
+
+      if (!refreshToken) {
+        throw new Error("No refresh token available");
+      }
+
+      console.log("Attempting to refresh access token...");
+
+      // Call refresh endpoint using base axios (not the intercepted instance)
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/refresh`,
+        { refreshToken },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      console.log("Refresh response:", response.data);
+
+      const { data } = response;
+
+      if (data?.data?.token && data?.data?.refreshToken) {
+        console.log("Token refreshed successfully");
+        TokenStorage.setToken(data.data.token);
+        TokenStorage.setRefreshToken(data.data.refreshToken);
+
+        // Update authorization header
+        api.defaults.headers.common["Authorization"] = `Bearer ${data.data.token}`;
+        originalRequest.headers.Authorization = `Bearer ${data.data.token}`;
+
+        // Notify all waiting requests
+        onTokenRefreshed(data.data.token);
+
+        isRefreshing = false;
+
+        // Retry original request
+        return api(originalRequest);
+      } else {
+        throw new Error("Invalid refresh response");
+      }
+    } catch (refreshError) {
+      console.error("Token refresh failed:", refreshError);
+      isRefreshing = false;
+      refreshSubscribers = [];
+
+      // Refresh failed, redirect to login
+      TokenStorage.removeToken();
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
+      return Promise.reject(refreshError);
+    }
   }
 );
 
