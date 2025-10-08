@@ -55,11 +55,23 @@ export class RoomAdminGuard implements CanActivate {
     }
 
     // Room admin authorization logic
-    const roomId = request.params.id || request.body.roomId;
+    let roomId = request.params.id || request.body?.roomId;
 
-    if (!roomId) {
-      throw new ForbiddenException('Room ID is required');
+    if (!roomId && request.params.requestId) {
+      const joinRequest = await this.prisma.roomJoinRequest.findUnique({
+        where: { id: request.params.requestId },
+        select: { roomId: true },
+      });
+
+      if (!joinRequest)
+        throw new NotFoundException(
+          `Join request ${request.params.requestId} not found`,
+        );
+
+      roomId = joinRequest.roomId;
     }
+
+    if (!roomId) throw new ForbiddenException('Room ID is required');
 
     // Find room
     const room = await this.prisma.room.findUnique({

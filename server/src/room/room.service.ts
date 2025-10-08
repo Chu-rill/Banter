@@ -126,6 +126,34 @@ export class RoomService {
       throw new BadRequestException('Room is full');
     }
 
+    // If room is private, check if user has an approved join request
+    if (room.type === 'PRIVATE') {
+      const isCreator = room.creatorId === userId;
+
+      if (!isCreator) {
+        const joinRequest = await this.roomRepository.getJoinRequest(
+          roomId,
+          userId,
+        );
+
+        if (!joinRequest) {
+          throw new BadRequestException(
+            'You need to request to join this private room',
+          );
+        }
+
+        if (joinRequest.status === 'PENDING') {
+          throw new BadRequestException(
+            'Your join request is pending approval',
+          );
+        }
+
+        if (joinRequest.status === 'DENIED') {
+          throw new BadRequestException('Your join request was denied');
+        }
+      }
+    }
+
     // Check if user is already a member
     const isAlreadyMember = await this.roomRepository.isRoomMember(
       roomId,
@@ -212,6 +240,188 @@ export class RoomService {
       statusCode: HttpStatus.OK,
       success: true,
       message: 'Room deleted successfully',
+    };
+  }
+
+  // Room Join Request Methods
+  async requestToJoinRoom(roomId: string, userId: string) {
+    const room = await this.roomRepository.getRoomById(roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    if (room.type !== 'PRIVATE') {
+      throw new BadRequestException(
+        'This room is public, you can join directly',
+      );
+    }
+
+    // Check if user is already a member
+    const isAlreadyMember = await this.roomRepository.isRoomMember(
+      roomId,
+      userId,
+    );
+    if (isAlreadyMember) {
+      throw new BadRequestException('You are already a member of this room');
+    }
+
+    // Check if user is the creator
+    if (room.creatorId === userId) {
+      throw new BadRequestException('You are the creator of this room');
+    }
+
+    // Check if request already exists
+    const existingRequest = await this.roomRepository.getJoinRequest(
+      roomId,
+      userId,
+    );
+    if (existingRequest) {
+      if (existingRequest.status === 'PENDING') {
+        throw new BadRequestException(
+          'You already have a pending join request',
+        );
+      }
+      if (existingRequest.status === 'APPROVED') {
+        throw new BadRequestException('Your request was already approved');
+      }
+      // If denied, allow creating a new request
+      await this.roomRepository.deleteJoinRequest(existingRequest.id);
+    }
+
+    const joinRequest = await this.roomRepository.createJoinRequest(
+      roomId,
+      userId,
+    );
+    const user = await this.userRepository.getUserById(userId);
+
+    // TODO: Notify room creator via WebSocket when gateway method is available
+    // this.gateway.notifyRoomCreator(room.creatorId, {
+    //   type: 'ROOM_JOIN_REQUEST',
+    //   roomId,
+    //   roomName: room.name,
+    //   userId,
+    //   username: user.username,
+    //   avatar: user.avatar,
+    //   requestId: joinRequest.id,
+    // });
+
+    return {
+      statusCode: HttpStatus.CREATED,
+      success: true,
+      message: 'Join request sent successfully',
+      data: joinRequest,
+    };
+  }
+
+  async getPendingJoinRequests(roomId: string, userId: string) {
+    const room = await this.roomRepository.getRoomById(roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    if (room.creatorId !== userId) {
+      throw new BadRequestException(
+        'Only the room creator can view join requests',
+      );
+    }
+
+    const requests = await this.roomRepository.getPendingJoinRequests(roomId);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Join requests retrieved successfully',
+      data: requests,
+    };
+  }
+
+  async approveJoinRequest(requestId: string, userId: string) {
+    const request = await this.roomRepository.getJoinRequestById(requestId);
+
+    if (!request) throw new NotFoundException('Join request not found');
+
+    const room = await this.roomRepository.getRoomById(request.roomId);
+
+    if (!room) throw new NotFoundException('Room not found');
+
+    if (room.creatorId !== userId) {
+      throw new BadRequestException(
+        'Only the room creator can approve join requests',
+      );
+    }
+
+    const updatedRequest = await this.roomRepository.updateJoinRequestStatus(
+      requestId,
+      'APPROVED',
+    );
+
+    await this.joinRoom(request.roomId, request.userId);
+
+    // ✅ Add to Redis (so socket can be tracked)
+    const socketId = await this.roomRedis.getSocketIdByUserId(request.userId);
+    if (socketId) {
+      await this.roomRedis.addUserToRoom(
+        request.userId,
+        request.roomId,
+        socketId,
+      );
+
+      // ✅ Emit "user-joined-room" to notify others in the room
+      this.gateway.server
+        .to(request.roomId)
+        .emit('user-joined-room', {
+          userId: request.userId,
+          roomId: request.roomId,
+        });
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Join request approved',
+      data: updatedRequest,
+    };
+  }
+
+  async denyJoinRequest(requestId: string, userId: string) {
+    const request = await this.roomRepository.getJoinRequestById(requestId);
+
+    if (!request) {
+      throw new NotFoundException('Join request not found');
+    }
+
+    const room = await this.roomRepository.getRoomById(request.roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    if (room.creatorId !== userId) {
+      throw new BadRequestException(
+        'Only the room creator can deny join requests',
+      );
+    }
+
+    const updatedRequest = await this.roomRepository.updateJoinRequestStatus(
+      requestId,
+      'DENIED',
+    );
+
+    // TODO: Notify the requester via WebSocket when gateway method is available
+    // this.gateway.notifyUser(request.userId, {
+    //   type: 'ROOM_JOIN_DENIED',
+    //   roomId: request.roomId,
+    //   roomName: room.name,
+    //   requestId,
+    // });
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Join request denied',
+      data: updatedRequest,
     };
   }
 }

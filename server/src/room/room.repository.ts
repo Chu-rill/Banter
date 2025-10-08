@@ -158,4 +158,80 @@ export class RoomRepository {
       where: { id },
     });
   }
+
+  // Room Join Request Methods
+  async createJoinRequest(roomId: string, userId: string) {
+    return this.prisma.roomJoinRequest.create({
+      data: {
+        roomId,
+        userId,
+      },
+      include: {
+        user: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+      },
+    });
+  }
+
+  async getJoinRequest(roomId: string, userId: string) {
+    return this.prisma.roomJoinRequest.findUnique({
+      where: {
+        roomId_userId: {
+          roomId,
+          userId,
+        },
+      },
+    });
+  }
+
+  async getJoinRequestById(id: string) {
+    return this.prisma.roomJoinRequest.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+        room: {
+          select: { id: true, name: true, creatorId: true },
+        },
+      },
+    });
+  }
+
+  async getPendingJoinRequests(roomId: string) {
+    console.log('fetching for roomId:', roomId);
+    return this.prisma.roomJoinRequest.findMany({
+      where: {
+        roomId,
+        status: 'PENDING',
+      },
+      include: {
+        user: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+  }
+
+  async updateJoinRequestStatus(id: string, status: 'APPROVED' | 'DENIED') {
+    return this.prisma.roomJoinRequest.update({
+      where: { id },
+      data: { status },
+      include: {
+        user: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+      },
+    });
+  }
+
+  async deleteJoinRequest(id: string) {
+    return this.prisma.roomJoinRequest.delete({
+      where: { id },
+    });
+  }
 }

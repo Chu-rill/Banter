@@ -4,6 +4,7 @@ import { Plus, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import RoomListItem from "./RoomListItem";
 import { Room, User } from "@/types";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface RoomListProps {
   rooms: Room[];
@@ -34,7 +35,7 @@ export default function RoomList({
       <div className="flex-1 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <LoadingSpinner size="lg" />
           </div>
         ) : memberRooms.length === 0 ? (
           <div className="text-center py-8">

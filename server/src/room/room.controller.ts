@@ -125,4 +125,42 @@ export class RoomController {
     // const parsed = RoomConnectionSchema.parse(dto);
     return this.roomService.leaveRoom(roomId, userId);
   }
+
+  // Room Join Request Endpoints
+  @Post(':id/request-join')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Request to join a private room' })
+  @ApiParam({ name: 'id', type: String, description: 'Room ID' })
+  @ApiResponse({ status: 201, description: 'Join request sent successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request' })
+  async requestToJoinRoom(@Param('id') roomId: string, @Request() req) {
+    return this.roomService.requestToJoinRoom(roomId, req.user.id);
+  }
+
+  @Get(':id/join-requests')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get pending join requests for a room (creator only)' })
+  @ApiParam({ name: 'id', type: String, description: 'Room ID' })
+  @ApiResponse({ status: 200, description: 'Join requests retrieved successfully' })
+  async getPendingJoinRequests(@Param('id') roomId: string, @Request() req) {
+    return this.roomService.getPendingJoinRequests(roomId, req.user.id);
+  }
+
+  @Post('join-requests/:requestId/approve')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Approve a join request (creator only)' })
+  @ApiParam({ name: 'requestId', type: String, description: 'Join Request ID' })
+  @ApiResponse({ status: 200, description: 'Join request approved' })
+  async approveJoinRequest(@Param('requestId') requestId: string, @Request() req) {
+    return this.roomService.approveJoinRequest(requestId, req.user.id);
+  }
+
+  @Post('join-requests/:requestId/deny')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Deny a join request (creator only)' })
+  @ApiParam({ name: 'requestId', type: String, description: 'Join Request ID' })
+  @ApiResponse({ status: 200, description: 'Join request denied' })
+  async denyJoinRequest(@Param('requestId') requestId: string, @Request() req) {
+    return this.roomService.denyJoinRequest(requestId, req.user.id);
+  }
 }

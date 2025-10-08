@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
 import { socketService } from "@/lib/socket";
 import { AuthResponse, User } from "@/types/index";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface AuthContextType {
   user: User | null;
@@ -295,7 +296,7 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
     if (isLoading) {
       return (
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+          <LoadingSpinner size="xl" />
         </div>
       );
     }

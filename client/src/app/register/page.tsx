@@ -194,15 +194,6 @@ export default function RegisterPage() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
               Create your account
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link
-                href="/login"
-                className="font-medium text-purple-600 hover:text-purple-500"
-              >
-                Sign in here
-              </Link>
-            </p>
           </div>
 
           <div className="mt-8">
@@ -377,7 +368,15 @@ export default function RegisterPage() {
                   )}
                 </div>
               </div>
-
+              <p className="mt-2 text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="font-medium text-purple-600 hover:text-purple-500"
+                >
+                  Sign in here
+                </Link>
+              </p>
               {/* Terms Checkbox */}
               <div className="flex items-start space-x-3">
                 <input
@@ -437,10 +436,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="mt-6">
-                  <GoogleOAuthButton 
-                    mode="register" 
-                    disabled={isSubmitting} 
-                  />
+                  <GoogleOAuthButton mode="register" disabled={isSubmitting} />
                 </div>
               </div>
             </form>

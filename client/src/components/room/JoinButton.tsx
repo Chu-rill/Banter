@@ -10,6 +10,7 @@ interface RoomJoinButtonProps {
   onJoin: (room: RoomWithStatus) => void;
   isJoining: boolean;
   isRoomFull: boolean;
+  label: string;
 }
 
 export default function RoomJoinButton({

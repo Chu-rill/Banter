@@ -11,6 +11,7 @@ import {
   Body,
   Put,
   Patch,
+  Get,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/auth.guard';
 import { RoomAdminGuard } from '../guards/room.admin.guard';
@@ -25,6 +26,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
+  ApiParam,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -63,5 +65,40 @@ export class RoomAdminController {
   async deleteRoom(@Param('id') roomId: string, @Request() req) {
     // Only room creator can delete the room
     return this.roomService.deleteRoom(roomId, req.user.id);
+  }
+
+  @Get(':id/join-requests')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get pending join requests for a room (creator only)',
+  })
+  @ApiParam({ name: 'id', type: String, description: 'Room ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Join requests retrieved successfully',
+  })
+  async getPendingJoinRequests(@Param('id') roomId: string, @Request() req) {
+    return this.roomService.getPendingJoinRequests(roomId, req.user.id);
+  }
+
+  @Post('join-requests/:requestId/approve')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Approve a join request (creator only)' })
+  @ApiParam({ name: 'requestId', type: String, description: 'Join Request ID' })
+  @ApiResponse({ status: 200, description: 'Join request approved' })
+  async approveJoinRequest(
+    @Param('requestId') requestId: string,
+    @Request() req,
+  ) {
+    return this.roomService.approveJoinRequest(requestId, req.user.id);
+  }
+
+  @Post('join-requests/:requestId/deny')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Deny a join request (creator only)' })
+  @ApiParam({ name: 'requestId', type: String, description: 'Join Request ID' })
+  @ApiResponse({ status: 200, description: 'Join request denied' })
+  async denyJoinRequest(@Param('requestId') requestId: string, @Request() req) {
+    return this.roomService.denyJoinRequest(requestId, req.user.id);
   }
 }

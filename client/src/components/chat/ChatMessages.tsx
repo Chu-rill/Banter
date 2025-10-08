@@ -6,6 +6,7 @@ import { Users } from "lucide-react";
 import ChatMessageItem from "./ChatMessageItem";
 import ChatTypingIndicator from "./ChatTypingIndicator";
 import { MessageWithUser, TypingUser } from "@/types";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface ChatMessagesProps {
   messages: MessageWithUser[];
@@ -33,7 +34,7 @@ ChatMessagesProps) {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <LoadingSpinner size="lg" />
       </div>
     );
   }

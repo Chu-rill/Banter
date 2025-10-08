@@ -4,38 +4,39 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id                     String          @id @default(cuid())
-  username               String          @unique
-  email                  String          @unique
+  id                     String            @id @default(cuid())
+  username               String            @unique
+  email                  String            @unique
   password               String?
   avatar                 String?
-  isOnline               Boolean         @default(false)
-  lastSeen               DateTime        @default(now())
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
-  isVerified             Boolean         @default(false)
-  actionToken            String?         @unique
+  isOnline               Boolean           @default(false)
+  lastSeen               DateTime          @default(now())
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  isVerified             Boolean           @default(false)
+  actionToken            String?           @unique
   actionTokenExpiry      DateTime?
-  rooms                  Room[]          @relation("RoomParticipants")
-  createdRooms           Room[]          @relation("RoomCreator")
+  rooms                  Room[]            @relation("RoomParticipants")
+  createdRooms           Room[]            @relation("RoomCreator")
   subscriptions          Subscription[]
   callSessions           CallSession[]
   transactions           Transaction[]
   messages               Message[]
   messageReads           MessageRead[] // New relation
-  sentMessages           DirectMessage[] @relation("SentMessages")
-  receivedMessages       DirectMessage[] @relation("ReceivedMessages")
-  sentFriendRequests     Friendship[]    @relation("Requester")
-  receivedFriendRequests Friendship[]    @relation("Receiver")
+  sentMessages           DirectMessage[]   @relation("SentMessages")
+  receivedMessages       DirectMessage[]   @relation("ReceivedMessages")
+  sentFriendRequests     Friendship[]      @relation("Requester")
+  receivedFriendRequests Friendship[]      @relation("Receiver")
   notifications          Notification[]
   refreshTokens          RefreshToken[]
-  credits                Int             @default(0)
+  roomJoinRequests       RoomJoinRequest[]
+  credits                Int               @default(0)
 }
 
 model Friendship {
@@ -115,8 +116,30 @@ model Room {
   updatedAt       DateTime @updatedAt
 
   // Relations
-  messages     Message[]     @relation("RoomMessages")
-  callSessions CallSession[] @relation("RoomCallSessions")
+  messages     Message[]         @relation("RoomMessages")
+  callSessions CallSession[]     @relation("RoomCallSessions")
+  joinRequests RoomJoinRequest[]
+}
+
+model RoomJoinRequest {
+  id        String         @id @default(cuid())
+  roomId    String
+  room      Room           @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    RoomJoinStatus @default(PENDING)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([roomId, userId])
+  @@index([roomId, status])
+  @@index([userId])
+}
+
+enum RoomJoinStatus {
+  PENDING
+  APPROVED
+  DENIED
 }
 
 enum RoomType {

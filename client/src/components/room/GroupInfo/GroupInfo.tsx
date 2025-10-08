@@ -17,12 +17,14 @@ import {
   Settings,
   UserPlus,
   LogOut,
+  UserCheck,
 } from "lucide-react";
 import { roomApi } from "@/lib/api/roomApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRooms } from "@/contexts/RoomsContext";
 import MembersTab from "./MembersTab";
 import DetailsTab from "./DetailsTab";
+import JoinRequestsPanel from "../JoinRequestsPanel";
 
 interface RoomDetailsProps {
   room: Room;
@@ -39,7 +41,10 @@ export default function GroupInfo({
   onUpdated,
   onLeaveRoom,
 }: RoomDetailsProps) {
-  const [activeTab, setActiveTab] = useState<"details" | "members">("details");
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<"details" | "members" | "requests">("details");
+  const isCreator = user?.id === room.creatorId;
+  const isPrivateRoom = room.type === "PRIVATE";
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -82,6 +87,20 @@ export default function GroupInfo({
           >
             Members ({room.participants?.length || 0})
           </button>
+          {isCreator && isPrivateRoom && (
+            <button
+              className={cn(
+                "flex-1 px-4 py-3 text-sm font-medium transition-colors",
+                activeTab === "requests"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setActiveTab("requests")}
+            >
+              <UserCheck className="w-4 h-4 inline mr-1" />
+              Requests
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -94,8 +113,10 @@ export default function GroupInfo({
               // onJoined={onJoined}
               // onUpdated={onUpdated}
             />
-          ) : (
+          ) : activeTab === "members" ? (
             <MembersTab room={room} />
+          ) : (
+            <JoinRequestsPanel roomId={room.id} />
           )}
         </div>
       </div>

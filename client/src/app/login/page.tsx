@@ -124,15 +124,6 @@ export default function LoginPage() {
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
               Sign in to your account
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Or{" "}
-              <Link
-                href="/register"
-                className="font-medium text-purple-600 hover:text-purple-500"
-              >
-                create a new account
-              </Link>
-            </p>
           </div>
 
           <div className="mt-8">
@@ -212,7 +203,14 @@ export default function LoginPage() {
                   )}
                 </div>
               </div>
-
+              <p className="mt-2 text-sm text-muted-foreground">
+                <Link
+                  href="/register"
+                  className="font-medium text-purple-600 hover:text-purple-500"
+                >
+                  create a new account
+                </Link>
+              </p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <input
@@ -263,10 +261,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="mt-6">
-                  <GoogleOAuthButton 
-                    mode="login" 
-                    disabled={isSubmitting} 
-                  />
+                  <GoogleOAuthButton mode="login" disabled={isSubmitting} />
                 </div>
               </div>
             </form>

@@ -82,6 +82,7 @@ export default function RoomCard({ room, onJoin, isJoining }: RoomCardProps) {
         onJoin={onJoin}
         isJoining={isJoining}
         isRoomFull={isRoomFull}
+        label={room.isPending ? "Pending Approval" : "Join Room"}
       />
     </div>
   );

@@ -1,4 +1,10 @@
-import { Room, RoomResponse, RoomsResponse } from "@/types";
+import {
+  JoinRequest,
+  JoinRequestResponse,
+  Room,
+  RoomResponse,
+  RoomsResponse,
+} from "@/types";
 import api from "../api";
 import { useState } from "react";
 import { roomSocketApi } from "@/lib/socket/roomSocketApi";
@@ -53,5 +59,23 @@ export const roomApi = {
 
   deleteRoom: async (roomId: string): Promise<void> => {
     await api.delete(`/rooms/admin/${roomId}`);
+  },
+
+  loadJoinRequests: async (roomId: string): Promise<JoinRequestResponse> => {
+    const { data } = await api.get(`/rooms/admin/${roomId}/join-requests`);
+    // console.log("Join requests response:", data);
+    return data;
+  },
+
+  approveJoinRequest: async (requestId: string): Promise<void> => {
+    await api.post(`/rooms/admin/join-requests/${requestId}/approve`);
+  },
+
+  denyJoinRequest: async (requestId: string): Promise<void> => {
+    await api.post(`/rooms/admin/join-requests/${requestId}/deny`);
+  },
+
+  requestToJoinRoom: async (roomId: string): Promise<void> => {
+    await api.post(`/rooms/${roomId}/request-join`);
   },
 };

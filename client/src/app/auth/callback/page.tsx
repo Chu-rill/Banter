@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function AuthCallback() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -57,13 +58,15 @@ export default function AuthCallback() {
       <div className="max-w-md w-full mx-auto text-center">
         <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
           {status === "loading" && (
-            <>
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Completing Authentication
-              </h2>
-              <p className="text-muted-foreground">Please wait...</p>
-            </>
+            <div className="flex flex-col items-center gap-4">
+              <LoadingSpinner size="xl" />
+              <div>
+                <h2 className="text-xl font-semibold text-foreground mb-2">
+                  Completing Authentication
+                </h2>
+                <p className="text-muted-foreground">Please wait...</p>
+              </div>
+            </div>
           )}
 
           {status === "success" && (

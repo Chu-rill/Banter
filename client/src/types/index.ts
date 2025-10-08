@@ -49,6 +49,20 @@ export interface Friend {
   createdAt: string;
 }
 
+export interface JoinRequest {
+  id: string;
+  roomId: string;
+  userId: string;
+  status: string;
+  createdAt: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    avatar?: string;
+  };
+}
+
 export interface FriendEntry {
   friendshipId: string;
   status: "PENDING" | "ACCEPTED" | "BLOCKED" | "DECLINED";
@@ -92,6 +106,13 @@ export interface RoomResponse {
   success: boolean;
   message: string;
   data: Room;
+}
+
+export interface JoinRequestResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: JoinRequest[];
 }
 export interface RoomsResponse {
   statusCode: number;

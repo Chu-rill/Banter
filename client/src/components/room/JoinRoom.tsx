@@ -101,18 +101,31 @@ export default function JoinRoom({
   const handleJoinRoom = async (room: RoomWithStatus) => {
     try {
       setJoiningRoomId(room.id);
-      await joinRoomWs(room.id);
-      setAvailableRooms((prev) =>
-        prev.map((r) => (r.id === room.id ? { ...r, isMember: true } : r))
-      );
-      setTimeout(() => {
-        setJoiningRoomId(null);
+      setError(null);
+
+      if (room.type === "PRIVATE") {
+        // 🔒 Private room → send join request instead
+        await roomApi.requestToJoinRoom(room.id);
+        setAvailableRooms((prev) =>
+          prev.map((r) => (r.id === room.id ? { ...r, isPending: true } : r))
+        );
+        toast.success("Join request sent!");
+      } else {
+        // 🌍 Public room → join immediately through WebSocket
+        await joinRoomWs(room.id);
+        setAvailableRooms((prev) =>
+          prev.map((r) => (r.id === room.id ? { ...r, isMember: true } : r))
+        );
         toast.success("Room Joined!");
-        onClose();
-        loadRooms();
-      }, 1000);
+        setTimeout(() => {
+          onClose();
+          loadRooms();
+        }, 1000);
+      }
     } catch (err: any) {
+      console.error("Join room failed:", err);
       setError(err.response?.data?.message || "Failed to join room");
+    } finally {
       setJoiningRoomId(null);
     }
   };

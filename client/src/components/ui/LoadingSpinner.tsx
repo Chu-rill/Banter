@@ -51,4 +51,72 @@ const LoadingSpinner = React.forwardRef<HTMLDivElement, LoadingSpinnerProps>(
 
 LoadingSpinner.displayName = 'LoadingSpinner';
 
+// Loading Overlay - Full screen loading
+interface LoadingOverlayProps {
+  text?: string;
+  transparent?: boolean;
+  size?: VariantProps<typeof spinnerVariants>['size'];
+}
+
+export function LoadingOverlay({
+  text,
+  transparent = false,
+  size = 'xl'
+}: LoadingOverlayProps) {
+  return (
+    <div
+      className={cn(
+        "fixed inset-0 z-50 flex items-center justify-center",
+        transparent ? "bg-black/30 backdrop-blur-sm" : "bg-background/80"
+      )}
+    >
+      <div className="bg-card border border-border rounded-xl p-8 shadow-2xl">
+        <div className="flex flex-col items-center gap-4">
+          <LoadingSpinner size={size} />
+          {text && (
+            <p className="text-sm text-muted-foreground animate-pulse">{text}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Loading Card - Centered loading in a container
+interface LoadingCardProps {
+  text?: string;
+  className?: string;
+  size?: VariantProps<typeof spinnerVariants>['size'];
+}
+
+export function LoadingCard({
+  text = "Loading...",
+  className,
+  size = 'lg'
+}: LoadingCardProps) {
+  return (
+    <div className={cn("flex flex-col items-center justify-center gap-4 p-8", className)}>
+      <LoadingSpinner size={size} />
+      {text && (
+        <p className="text-sm text-muted-foreground">{text}</p>
+      )}
+    </div>
+  );
+}
+
+// Inline Loading - Small inline loader
+interface InlineLoadingProps {
+  text?: string;
+  className?: string;
+}
+
+export function InlineLoading({ text, className }: InlineLoadingProps) {
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <LoadingSpinner size="sm" />
+      {text && <span className="text-sm text-muted-foreground">{text}</span>}
+    </div>
+  );
+}
+
 export { LoadingSpinner, spinnerVariants };
