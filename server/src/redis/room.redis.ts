@@ -65,28 +65,6 @@ export class RoomRedisService {
     }
   }
 
-  async getUserSocketId(userId: string): Promise<string | null> {
-    try {
-      return await this.redisService.get(`ws:user_socket:${userId}`);
-    } catch (error) {
-      this.logger.error(`Error getting user socket ID:`, error);
-      return null;
-    }
-  }
-
-  async setUserSocketId(userId: string, socketId: string): Promise<void> {
-    try {
-      await this.redisService.set(
-        `ws:user_socket:${userId}`,
-        socketId,
-        'EX',
-        24 * 60 * 60,
-      ); // 24 hours TTL
-    } catch (error) {
-      this.logger.error(`Error setting user socket ID:`, error);
-    }
-  }
-
   // Get a single room that a user belongs to, filtered by a specific roomId (returns socketId if user is in the room, else null)
   async getUsersocketByRoomId(
     userId: string,

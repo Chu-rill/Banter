@@ -20,10 +20,14 @@ export function useChat(roomId: string) {
 
     // Listen to joining room
     socket.on("user-joined-room", (msg) => {
-      console.log("Joined room:", msg);
+      // console.log("Joined room:", msg);
       if (msg.message) {
         setMessages((prev) => [...prev, msg.message]);
       }
+    });
+
+    socket.on("room-join-approved", ({ roomId }) => {
+      joinRoomWs(roomId);
     });
 
     socket.on("user-left-room", (msg) => {

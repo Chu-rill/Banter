@@ -17,6 +17,7 @@ import { RoomMessageService } from 'src/room-message/room-message.service';
 import { UserRepository } from 'src/user/user.repository';
 import { AppGateway } from 'src/gateway/app.gateway';
 import { RoomRedisService } from 'src/redis/room.redis';
+import { UserRedisService } from 'src/redis/user.redis';
 
 @Injectable()
 export class RoomService {
@@ -26,7 +27,8 @@ export class RoomService {
     private userRepository: UserRepository,
     private gateway: AppGateway,
     private roomMessageService: RoomMessageService,
-    private roomRedis: RoomRedisService, // Inject RoomRedisService
+    private roomRedis: RoomRedisService,
+    private userRedis: UserRedisService,
   ) {}
 
   async createRoom(createRoomDto: CreateRoomDto, creatorId: string) {
@@ -360,7 +362,7 @@ export class RoomService {
     await this.joinRoom(request.roomId, request.userId);
 
     // ✅ Add to Redis (so socket can be tracked)
-    const socketId = await this.roomRedis.getSocketIdByUserId(request.userId);
+    const socketId = await this.userRedis.getUserSocket(request.userId);
     if (socketId) {
       await this.roomRedis.addUserToRoom(
         request.userId,
@@ -369,12 +371,10 @@ export class RoomService {
       );
 
       // ✅ Emit "user-joined-room" to notify others in the room
-      this.gateway.server
-        .to(request.roomId)
-        .emit('user-joined-room', {
-          userId: request.userId,
-          roomId: request.roomId,
-        });
+      this.gateway.server.to(socketId).emit('room-join-approved', {
+        userId: request.userId,
+        roomId: request.roomId,
+      });
     }
 
     return {
