@@ -122,7 +122,7 @@ export default function UserProfile({
     try {
       setIsUploading(true);
       setError("");
-
+      console.log("Uploading avatar:", file);
       const response = await uploadApi.uploadAvatar(file);
       updateUser({ avatar: response.url });
       setSuccess("Avatar updated successfully!");

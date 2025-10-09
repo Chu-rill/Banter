@@ -99,9 +99,15 @@ api.interceptors.response.use(
       error.response?.status !== 401
     ) {
       // If it's a 401 and not a refresh request, clear tokens and redirect
-      if (error.response?.status === 401 && !originalRequest.url?.includes("/auth/refresh")) {
+      if (
+        error.response?.status === 401 &&
+        !originalRequest.url?.includes("/auth/refresh")
+      ) {
         TokenStorage.removeToken();
-        if (typeof window !== "undefined" && !window.location.pathname.includes("/login")) {
+        if (
+          typeof window !== "undefined" &&
+          !window.location.pathname.includes("/login")
+        ) {
           window.location.href = "/login";
         }
       }
@@ -147,7 +153,9 @@ api.interceptors.response.use(
         TokenStorage.setRefreshToken(data.data.refreshToken);
 
         // Update authorization header
-        api.defaults.headers.common["Authorization"] = `Bearer ${data.data.token}`;
+        api.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${data.data.token}`;
         originalRequest.headers.Authorization = `Bearer ${data.data.token}`;
 
         // Notify all waiting requests
@@ -337,9 +345,10 @@ export const uploadApi = {
     const formData = new FormData();
     formData.append("avatar", file);
 
-    const { data } = await api.post("/upload/avatar", formData, {
+    const { data } = await api.post("/users/me/avatar", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+    console.log("uploadAvatar response:", data);
     return data;
   },
 

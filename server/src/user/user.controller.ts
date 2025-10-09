@@ -12,6 +12,7 @@ import {
   Post,
   UseInterceptors,
   UploadedFile,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from '../guards/auth.guard';
@@ -29,6 +30,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthRequest } from 'src/types/auth.request';
 
 @ApiTags('User')
 @ApiBearerAuth('JWT-auth')
@@ -54,11 +56,12 @@ export class UserController {
   }
 
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('avatar'))
   async updateAvatar(
-    @Param('id') userId: string,
+    @Req() req: AuthRequest,
     @UploadedFile() file: Express.Multer.File,
   ) {
+    const userId = req.user.id;
     return this.userService.updateAvatar(userId, file);
   }
 

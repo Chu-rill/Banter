@@ -208,6 +208,30 @@ export class UserRepository {
     }
   }
 
+  async updateAvatar(id: string, avatarUrl: string) {
+    try {
+      const user = await this.prisma.user.update({
+        where: { id },
+        data: {
+          avatar: avatarUrl,
+        },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          avatar: true,
+          isOnline: true,
+          lastSeen: true,
+          updatedAt: true,
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
   async getAllUsers(page: number = 1, limit: number) {
     const skip = (page - 1) * limit;
     const [users, total] = await Promise.all([
