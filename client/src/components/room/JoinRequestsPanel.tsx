@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { roomApi } from "@/lib/api/roomApi";
 import { JoinRequest } from "@/types";
+import { socketService } from "@/lib/socket";
 
 interface JoinRequestsPanelProps {
   roomId: string;
@@ -26,6 +27,24 @@ export default function JoinRequestsPanel({
 
   useEffect(() => {
     loadJoinRequests();
+  }, [roomId]);
+
+  // Listen for room join approvals to refresh the list
+  useEffect(() => {
+    const socket = socketService.getRoomMessageSocket();
+    if (!socket) return;
+
+    const handleMemberChange = () => {
+      loadJoinRequests(); // Refresh the list when members change
+    };
+
+    socket.on("user-joined-room", handleMemberChange);
+    socket.on("room-join-approved", handleMemberChange);
+
+    return () => {
+      socket.off("user-joined-room", handleMemberChange);
+      socket.off("room-join-approved", handleMemberChange);
+    };
   }, [roomId]);
 
   const loadJoinRequests = async () => {

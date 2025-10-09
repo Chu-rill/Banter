@@ -11,6 +11,8 @@ import {
 } from "../../components/ui/NotificationSystem";
 import ThemeCustomizer from "../../components/ui/ThemeCustomizer";
 import { Room, User } from "@/types";
+import { socketService } from "@/lib/socket";
+import { roomApi } from "@/lib/api/roomApi";
 
 function ChatPage() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -23,6 +25,34 @@ function ChatPage() {
 
   const { notifications, addNotification, removeNotification } =
     useNotifications();
+
+  // Listen for room member changes via WebSocket and refetch room data
+  useEffect(() => {
+    if (!selectedRoom) return;
+
+    const socket = socketService.getRoomMessageSocket();
+    if (!socket) return;
+
+    const refreshRoomData = async () => {
+      try {
+        const response = await roomApi.getRoom(selectedRoom.id);
+        if (response.data) {
+          setSelectedRoom(response.data as Room);
+        }
+      } catch (error) {
+        console.error("Failed to refresh room data:", error);
+      }
+    };
+
+    // Listen for member changes
+    socket.on("user-removed-from-room", refreshRoomData);
+    socket.on("user-joined-room", refreshRoomData);
+
+    return () => {
+      socket.off("user-removed-from-room", refreshRoomData);
+      socket.off("user-joined-room", refreshRoomData);
+    };
+  }, [selectedRoom?.id]);
 
   const handleSelectRoom = (room: Room) => {
     setSelectedRoom(room);
