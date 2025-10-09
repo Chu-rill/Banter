@@ -185,16 +185,22 @@ export class RoomMessageGateway
         });
         return;
       }
-
+      console.log(
+        `roomId ${roomId},
+        senderId ${senderId},
+        content ${content},
+        mediaUrl ${mediaUrl},
+        type ${type},
+        mediaType ${mediaType}`,
+      );
       const savedMessage = await this.messageService.sendMessage(
         roomId,
         senderId,
         content,
-        mediaUrl,
         type,
+        mediaUrl,
         mediaType,
       );
-
       const roomSocketId = await this.roomRedis.getUsersocketByRoomId(
         senderId,
         roomId,

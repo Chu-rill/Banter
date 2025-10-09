@@ -12,6 +12,7 @@ import GroupInfo from "../room/GroupInfo/GroupInfo";
 import { useChat } from "@/hooks/useRoomChat";
 import { useDirectChat } from "@/hooks/useDirectChat";
 import ChatSearch from "./ChatSearch";
+import UserDetails from "../user/UserDetails";
 
 interface ChatWindowProps {
   room?: Room;
@@ -41,6 +42,7 @@ export default function ChatWindow({
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
+  const [showUserDetails, setShowUserDetails] = useState(false);
   const [isVideoCallMode, setIsVideoCallMode] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,7 +66,13 @@ export default function ChatWindow({
         onStartVideoCall={handleStartVideoCall}
         onStartVoiceCall={handleStartVoiceCall}
         onToggleSearch={() => setShowSearch(!showSearch)}
-        onShowDetails={() => setShowRoomDetails(true)}
+        onShowDetails={() => {
+          if (isRoomChat) {
+            setShowRoomDetails(true);
+          } else {
+            setShowUserDetails(true);
+          }
+        }}
       />
 
       {showSearch && (
@@ -108,22 +116,14 @@ export default function ChatWindow({
 
       {showFileUpload && (
         <FileUpload
-          roomId={room?.id || friend?.id || ""}
           onFileUploaded={(file) => {
+            console.log("onFileUploaded file:", file);
             // Map file.type to allowed mediaType values
-            const getMediaType = (
-              type: string
-            ): "IMAGE" | "VIDEO" | "AUDIO" | "FILE" => {
-              if (type.startsWith("image/")) return "IMAGE";
-              if (type.startsWith("video/")) return "VIDEO";
-              if (type.startsWith("audio/")) return "AUDIO";
-              return "FILE";
-            };
 
             sendMessage({
               type: "MEDIA",
               mediaUrl: file.url,
-              mediaType: getMediaType(file.type),
+              mediaType: file.type,
             });
             setShowFileUpload(false);
           }}
@@ -136,6 +136,15 @@ export default function ChatWindow({
           room={room}
           onClose={() => setShowRoomDetails(false)}
           onLeaveRoom={onLeaveRoom}
+        />
+      )}
+
+      {showUserDetails && friend && (
+        <UserDetails
+          friend={friend}
+          onClose={() => setShowUserDetails(false)}
+          onStartVideoCall={handleStartVideoCall}
+          onStartVoiceCall={handleStartVoiceCall}
         />
       )}
     </div>

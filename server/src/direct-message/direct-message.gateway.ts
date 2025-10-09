@@ -165,8 +165,8 @@ export class DirectMessageGateway
         senderId,
         receiverId,
         content,
-        mediaUrl,
         type,
+        mediaUrl,
         mediaType,
       );
 

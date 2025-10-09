@@ -72,12 +72,12 @@ export class UserService {
 
   async updateAvatar(userId: string, file: Express.Multer.File) {
     // Step 1: upload file to Supabase
-    const fileUrl = await this.supabaseService.uploadFile(file, 'avatars');
+    const fileUrl = await this.supabaseService.uploadAvatar(file, 'uploads');
     const avatarUrl = fileUrl;
-    console.log('userId:', userId);
+
     // Step 2: update user record in DB
     const user = await this.userRepository.updateAvatar(userId, avatarUrl);
-    console.log('Updated user:', user);
+
     return user;
   }
 

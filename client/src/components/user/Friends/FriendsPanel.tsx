@@ -70,9 +70,34 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
     if (activeTab !== "add") {
       setSearchTerm("");
       setSearchResults([]);
+    } else if (activeTab === "add" && defaultUsers.length === 0) {
+      loadDefaultUsers();
     }
     setError(""); // Clear any errors when switching tabs
   }, [activeTab]);
+
+  const loadDefaultUsers = async () => {
+    setLoadingDefaults(true);
+    try {
+      const users = await friendApi.getRandomUsers(20);
+      // Filter out current user and existing friends
+      interface ExistingFriend {
+        requesterId: string;
+        receiverId: string;
+      }
+      const existingFriendIds: string[] = friends.map((f: ExistingFriend) =>
+        f.requesterId === user?.id ? f.receiverId : f.requesterId
+      );
+      const filteredUsers = users.filter(
+        (u) => u.id !== user?.id && !existingFriendIds.includes(u.id)
+      );
+      setDefaultUsers(filteredUsers);
+    } catch (error) {
+      console.error("Failed to load default users:", error);
+    } finally {
+      setLoadingDefaults(false);
+    }
+  };
 
   // Auto-search when search term changes
   useEffect(() => {

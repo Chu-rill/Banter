@@ -330,14 +330,14 @@ export const callApi = {
 
 // Upload API
 export const uploadApi = {
-  uploadFile: async (file: File, roomId?: string) => {
+  uploadFile: async (file: File) => {
     const formData = new FormData();
-    formData.append("file", file);
-    if (roomId) formData.append("roomId", roomId);
+    formData.append("images", file);
 
-    const { data } = await api.post("/upload/file", formData, {
+    const { data } = await api.post("/files/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
+
     return data;
   },
 

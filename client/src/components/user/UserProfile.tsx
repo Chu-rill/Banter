@@ -59,7 +59,7 @@ export default function UserProfile({
   onClose,
   onOpenThemeCustomizer,
 }: UserProfileProps) {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser, logout, refreshUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<ProfileTab>("profile");
   const [isEditing, setIsEditing] = useState(false);
@@ -124,7 +124,8 @@ export default function UserProfile({
       setError("");
       console.log("Uploading avatar:", file);
       const response = await uploadApi.uploadAvatar(file);
-      updateUser({ avatar: response.url });
+      // Refresh user data from server to get the updated avatar
+      await refreshUser();
       setSuccess("Avatar updated successfully!");
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to upload avatar");

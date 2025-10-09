@@ -76,7 +76,8 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
           "relative flex flex-col max-w-[80%] rounded-2xl px-3 py-2 shadow-sm",
           isOwn
             ? "bg-green-500 text-white rounded-tr-none"
-            : "bg-gray-500 text-black rounded-tl-none"
+            : "bg-gray-500 text-black rounded-tl-none",
+          message.type === "MEDIA" ? "bg-transparent shadow-none p-0" : ""
         )}
       >
         {/* Username (only for others) */}

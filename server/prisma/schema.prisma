@@ -13,6 +13,7 @@ model User {
   id                     String            @id @default(cuid())
   username               String            @unique
   email                  String            @unique
+  bio                    String?           @default("Hey there! I'm using Banter.")
   password               String?
   avatar                 String?
   isOnline               Boolean           @default(false)
