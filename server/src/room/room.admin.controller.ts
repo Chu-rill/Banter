@@ -12,7 +12,10 @@ import {
   Put,
   Patch,
   Get,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../guards/auth.guard';
 import { RoomAdminGuard } from '../guards/room.admin.guard';
 import { RoomService } from './room.service';
@@ -100,5 +103,19 @@ export class RoomAdminController {
   @ApiResponse({ status: 200, description: 'Join request denied' })
   async denyJoinRequest(@Param('requestId') requestId: string, @Request() req) {
     return this.roomService.denyJoinRequest(requestId, req.user.id);
+  }
+
+  @Post(':id/profile-picture')
+  @UseInterceptors(FileInterceptor('profilePicture'))
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update room profile picture (creator only)' })
+  @ApiParam({ name: 'id', type: String, description: 'Room ID' })
+  @ApiResponse({ status: 200, description: 'Profile picture updated successfully' })
+  async updateRoomProfilePicture(
+    @Param('id') roomId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req,
+  ) {
+    return this.roomService.updateRoomProfilePicture(roomId, file, req.user.id);
   }
 }

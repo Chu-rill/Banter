@@ -82,4 +82,14 @@ export const roomApi = {
   requestToJoinRoom: async (roomId: string): Promise<void> => {
     await api.post(`/rooms/${roomId}/request-join`);
   },
+
+  updateRoomProfilePicture: async (roomId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("profilePicture", file);
+
+    const { data } = await api.post(`/rooms/admin/${roomId}/profile-picture`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  },
 };

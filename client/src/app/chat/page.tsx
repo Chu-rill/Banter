@@ -44,13 +44,15 @@ function ChatPage() {
       }
     };
 
-    // Listen for member changes
+    // Listen for member changes and room updates
     socket.on("user-removed-from-room", refreshRoomData);
     socket.on("user-joined-room", refreshRoomData);
+    socket.on("room-updated", refreshRoomData);
 
     return () => {
       socket.off("user-removed-from-room", refreshRoomData);
       socket.off("user-joined-room", refreshRoomData);
+      socket.off("room-updated", refreshRoomData);
     };
   }, [selectedRoom?.id]);
 

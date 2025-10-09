@@ -18,6 +18,7 @@ import { UserRepository } from 'src/user/user.repository';
 import { AppGateway } from 'src/gateway/app.gateway';
 import { RoomRedisService } from 'src/redis/room.redis';
 import { UserRedisService } from 'src/redis/user.redis';
+import { SupabaseService } from 'src/file/file.service';
 
 @Injectable()
 export class RoomService {
@@ -29,6 +30,7 @@ export class RoomService {
     private roomMessageService: RoomMessageService,
     private roomRedis: RoomRedisService,
     private userRedis: UserRedisService,
+    private supabaseService: SupabaseService,
   ) {}
 
   async createRoom(createRoomDto: CreateRoomDto, creatorId: string) {
@@ -460,6 +462,48 @@ export class RoomService {
       success: true,
       message: 'Join request denied',
       data: updatedRequest,
+    };
+  }
+
+  async updateRoomProfilePicture(
+    roomId: string,
+    file: Express.Multer.File,
+    userId: string,
+  ) {
+    const room = await this.roomRepository.getRoomById(roomId);
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    if (room.creatorId !== userId) {
+      throw new BadRequestException(
+        'Only the room creator can update the profile picture',
+      );
+    }
+
+    // Upload to Supabase
+    const profilePictureUrl = await this.supabaseService.uploadImages(
+      file,
+      'uploads',
+    );
+
+    // Update room in database
+    const updatedRoom = await this.roomRepository.updateRoom(roomId, {
+      profilePicture: profilePictureUrl,
+    });
+
+    // Emit WebSocket event to notify all clients in the room
+    this.gateway.server.to(roomId).emit('room-updated', {
+      roomId,
+      profilePicture: profilePictureUrl,
+    });
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Profile picture updated successfully',
+      data: updatedRoom,
     };
   }
 }

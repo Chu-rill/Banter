@@ -9,8 +9,8 @@ export class DirectMessageService {
     senderId: string,
     receiverId: string,
     content?: string,
-    mediaUrl?,
     type?,
+    mediaUrl?,
     mediaType?,
   ) {
     // business logic: check if they are friends before sending

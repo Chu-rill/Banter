@@ -19,13 +19,19 @@ export class SupabaseService {
     file: Express.Multer.File,
     bucket = 'uploads',
   ): Promise<string> {
-    const filePath = `images/${Date.now()}-${file.originalname}`;
+    // Generate unique filename with timestamp and random string
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const fileExtension = file.originalname.split('.').pop();
+    const baseFilename = file.originalname.replace(/\.[^/.]+$/, ''); // Remove extension
+    const filePath = `images/${timestamp}-${randomString}-${baseFilename}.${fileExtension}`;
+
     console.log('Uploading file to Supabase:', filePath);
     const { data, error } = await this.supabase.storage
       .from(bucket)
       .upload(filePath, file.buffer, {
         contentType: file.mimetype,
-        upsert: true,
+        upsert: false, // Don't overwrite - create new version
       });
 
     if (error) throw error;
@@ -41,13 +47,19 @@ export class SupabaseService {
     file: Express.Multer.File,
     bucket = 'uploads',
   ): Promise<string> {
-    const filePath = `avatars/${Date.now()}-${file.originalname}`;
+    // Generate unique filename with timestamp and random string
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const fileExtension = file.originalname.split('.').pop();
+    const baseFilename = file.originalname.replace(/\.[^/.]+$/, ''); // Remove extension
+    const filePath = `avatars/${timestamp}-${randomString}-${baseFilename}.${fileExtension}`;
+
     console.log('Uploading file to Supabase:', filePath);
     const { data, error } = await this.supabase.storage
       .from(bucket)
       .upload(filePath, file.buffer, {
         contentType: file.mimetype,
-        upsert: true,
+        upsert: false, // Don't overwrite - create new version
       });
 
     if (error) throw error;

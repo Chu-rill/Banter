@@ -8,6 +8,7 @@ import { RoomMessageModule } from 'src/room-message/room-message.module';
 import { UserModule } from 'src/user/user.module';
 import { GatewayModule } from 'src/gateway/gateway.module';
 import { RedisModule } from 'src/redis/redis.module';
+import { FileModule } from 'src/file/file.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RedisModule } from 'src/redis/redis.module';
     UserModule,
     GatewayModule,
     RedisModule,
+    FileModule,
   ],
   providers: [RoomService, RoomRepository],
   controllers: [RoomController, RoomAdminController],

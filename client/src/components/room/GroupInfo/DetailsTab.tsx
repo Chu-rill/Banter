@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Room } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -14,6 +14,7 @@ import {
   LogOut,
   UserPlus,
   Trash,
+  Camera,
 } from "lucide-react";
 import { roomApi } from "@/lib/api/roomApi";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +41,8 @@ export default function DetailsTab({
   const isParticipant = room.participants?.some((p) => p.id === user?.id);
   const { leaveRoomWs } = useChat("");
   const [imageError, setImageError] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setImageError(false);
@@ -109,22 +112,80 @@ export default function DetailsTab({
     }
   };
 
+  const handleProfilePictureUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+      const response = await roomApi.updateRoomProfilePicture(room.id, file);
+      toast.success("Profile picture updated successfully!");
+      loadRooms();
+      // Update local state
+      setEditedRoom({ ...editedRoom, profilePicture: response.data.profilePicture });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to upload profile picture");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   return (
     <div className="space-y-6 bg-black">
       {/* Room Info */}
       <div className="flex items-center space-x-4">
-        {imageError || !room.profilePicture ? (
-          <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-md">
-            <Users className="w-10 h-10 text-white" />
-          </div>
-        ) : (
-          <img
-            src={room.profilePicture}
-            alt={room.name}
-            className="w-20 h-20 rounded-xl object-cover shadow-md"
-            onError={() => setImageError(true)}
-          />
-        )}
+        <div className="relative">
+          {imageError || !room.profilePicture ? (
+            <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-md">
+              <Users className="w-10 h-10 text-white" />
+            </div>
+          ) : (
+            <img
+              src={room.profilePicture}
+              alt={room.name}
+              className="w-20 h-20 rounded-xl object-cover shadow-md"
+              onError={() => setImageError(true)}
+            />
+          )}
+
+          {isCreator && (
+            <>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingImage}
+                className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg"
+              >
+                {isUploadingImage ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                ) : (
+                  <Camera className="w-4 h-4" />
+                )}
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePictureUpload}
+                className="hidden"
+              />
+            </>
+          )}
+        </div>
         <div className="flex-1">
           {isEditing ? (
             <Input
