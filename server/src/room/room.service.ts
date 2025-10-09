@@ -245,6 +245,44 @@ export class RoomService {
     };
   }
 
+  async removeMember(roomId: string, userId: string) {
+    const room = await this.roomRepository.getRoomById(roomId);
+    if (!room) throw new NotFoundException('Room not found');
+
+    const isParticipant = this.roomRepository.isRoomMember(roomId, userId);
+    if (!isParticipant)
+      throw new BadRequestException('User is not a participant of this room');
+
+    const [removedMember, user] = await Promise.all([
+      this.roomRepository.removeMember(roomId, userId),
+      this.userRepository.getUserById(userId),
+    ]);
+
+    const systemMessage = await this.roomMessageService.sendSystemMessage(
+      roomId,
+      `${user.username} was removed from the room`,
+      userId,
+    );
+
+    // ✅ Remove from Redis
+    const socketId = await this.userRedis.getUserSocket(userId);
+    if (socketId) {
+      await this.roomRedis.removeUserFromRoom(userId, roomId);
+
+      // ✅ Emit "user-removed-from-room" to notify others in the room
+      this.gateway.server
+        .to(roomId)
+        .emit('user-removed-from-room', systemMessage);
+    }
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: systemMessage,
+      data: { ...removedMember, timestamp: new Date() },
+    };
+  }
+
   // Room Join Request Methods
   async requestToJoinRoom(roomId: string, userId: string) {
     const room = await this.roomRepository.getRoomById(roomId);

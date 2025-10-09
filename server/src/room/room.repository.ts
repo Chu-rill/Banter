@@ -127,6 +127,18 @@ export class RoomRepository {
     });
   }
 
+  async removeMember(roomId: string, userId: string) {
+    return this.prisma.room.update({
+      where: { id: roomId },
+      data: { participants: { disconnect: { id: userId } } },
+      include: {
+        participants: {
+          select: { id: true, username: true, email: true, avatar: true },
+        },
+      },
+    });
+  }
+
   // Check if a user is a member of a room
   async isRoomMember(roomId: string, userId: string): Promise<boolean> {
     const room = await this.prisma.room.findFirst({

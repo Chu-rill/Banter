@@ -45,7 +45,7 @@ export class RoomAdminController {
     @Request() req,
   ) {
     // Only room creator can kick members
-    // return this.roomService.kickMember(roomId, req.user.id, userId);
+    return this.roomService.removeMember(roomId, userId);
   }
 
   @Patch(':id')

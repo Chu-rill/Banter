@@ -26,6 +26,13 @@ export function useChat(roomId: string) {
       }
     });
 
+    socket.on("user-removed-from-room", (msg) => {
+      console.log("user removed:", msg);
+      if (msg.message) {
+        setMessages((prev) => [...prev, msg.message]);
+      }
+    });
+
     socket.on("room-join-approved", ({ roomId }) => {
       joinRoomWs(roomId);
     });

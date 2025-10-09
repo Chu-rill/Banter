@@ -7,10 +7,22 @@ import { UserIcon, UserPlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { roomApi } from "@/lib/api/roomApi";
+import toast from "react-hot-toast";
 
 interface RoomMembersTabProps {
   room: Room;
 }
+
+const removeUserFromRoom = async (roomId: string, userId: string) => {
+  try {
+    await roomApi.removeMember(roomId, userId);
+    toast.success("Member removed");
+    console.log(`Removed user ${userId} from room ${roomId}`);
+  } catch (error) {
+    console.error("Failed to remove member:", error);
+  }
+};
 
 export default function MembersTab({ room }: RoomMembersTabProps) {
   const { user } = useAuth();
@@ -23,7 +35,7 @@ export default function MembersTab({ room }: RoomMembersTabProps) {
   }, [room?.participants]);
 
   const handleImageError = (participantId: string) => {
-    setImageErrors(prev => ({ ...prev, [participantId]: true }));
+    setImageErrors((prev) => ({ ...prev, [participantId]: true }));
   };
 
   return (
@@ -61,6 +73,7 @@ export default function MembersTab({ room }: RoomMembersTabProps) {
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => removeUserFromRoom(room.id, participant.id)}
                 className=" bg-red-500 hover:bg-red-600 hover:cursor-pointer"
               >
                 Remove

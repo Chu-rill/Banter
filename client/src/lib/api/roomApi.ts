@@ -61,6 +61,10 @@ export const roomApi = {
     await api.delete(`/rooms/admin/${roomId}`);
   },
 
+  removeMember: async (roomId: string, userId: string): Promise<void> => {
+    await api.post(`/rooms/admin/${roomId}/kick/${userId}`);
+  },
+
   loadJoinRequests: async (roomId: string): Promise<JoinRequestResponse> => {
     const { data } = await api.get(`/rooms/admin/${roomId}/join-requests`);
     // console.log("Join requests response:", data);
