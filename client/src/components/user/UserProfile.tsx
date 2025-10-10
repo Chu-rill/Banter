@@ -7,22 +7,17 @@ import { z } from "zod";
 import {
   X,
   User,
-  Mail,
-  Settings,
-  Bell,
-  Moon,
-  Sun,
-  Volume2,
   Camera,
   Edit3,
   Save,
   AlertCircle,
   Check,
   LogOut,
-  Shield,
   Palette,
+  Shield,
   Globe,
-  UserIcon,
+  Bell,
+  Volume2,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -47,10 +42,7 @@ const profileSchema = z.object({
       /^[a-zA-Z0-9_]+$/,
       "Username can only contain letters, numbers, and underscores"
     ),
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
+  email: z.string().min(1, "Email is required").email(),
   bio: z.string().max(200, "Bio must be less than 200 characters").optional(),
 });
 
@@ -68,6 +60,8 @@ export default function UserProfile({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageError, setImageError] = useState(false);
+  const [avatarKey, setAvatarKey] = useState(Date.now());
 
   const {
     register,
@@ -83,35 +77,33 @@ export default function UserProfile({
     },
   });
 
-  // Update form values when user data changes
   useEffect(() => {
     reset({
       username: user?.username || "",
       email: user?.email || "",
       bio: user?.bio || "",
     });
+    setImageError(false);
+    setAvatarKey(Date.now());
   }, [user, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
       setError("");
       setSuccess("");
-
-      // Update user profile via API
       await updateUser({
         username: data.username,
         email: data.email,
         bio: data.bio,
       });
-
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
-    } catch (error: unknown) {
-      const err = error as {
+    } catch (err: unknown) {
+      const e = err as {
         response?: { data?: { message?: string } };
         message?: string;
       };
-      setError(err.response?.data?.message || "Failed to update profile");
+      setError(e.response?.data?.message || "Failed to update profile");
     }
   };
 
@@ -121,32 +113,23 @@ export default function UserProfile({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Image must be less than 5MB");
-      return;
-    }
+    if (!file.type.startsWith("image/"))
+      return setError("Please select an image file");
+    if (file.size > 5 * 1024 * 1024)
+      return setError("Image must be less than 5MB");
 
     try {
       setIsUploading(true);
       setError("");
-      console.log("Uploading avatar:", file);
-      const response = await uploadApi.uploadAvatar(file);
-      // Refresh user data from server to get the updated avatar
+      await uploadApi.uploadAvatar(file);
       await refreshUser();
       setSuccess("Avatar updated successfully!");
-    } catch (error: unknown) {
-      const err = error as {
+    } catch (err: unknown) {
+      const e = err as {
         response?: { data?: { message?: string } };
         message?: string;
       };
-      setError(err.response?.data?.message || "Failed to upload avatar");
+      setError(e.response?.data?.message || "Failed to upload avatar");
     } finally {
       setIsUploading(false);
     }
@@ -165,33 +148,21 @@ export default function UserProfile({
 
   const tabs = [
     { id: "profile", label: "Profile", icon: User },
-    // { id: "settings", label: "Settings", icon: Settings },
+    // { id: "settings", label: "Settings", icon: Palette },
     // { id: "notifications", label: "Notifications", icon: Bell },
   ];
 
-  const [imageError, setImageError] = useState(false);
-  const [avatarKey, setAvatarKey] = useState(Date.now());
-
-  useEffect(() => {
-    setImageError(false);
-    setAvatarKey(Date.now()); // Force image reload when avatar changes
-  }, [user?.avatar]);
-
   return (
     <>
-      {/* Mobile backdrop */}
-      <div className="fixed inset-0 bg-black z-40 " onClick={onClose} />
+      <div className="fixed inset-0 bg-black z-40" onClick={onClose} />
 
-      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-96 md:w-80 bg-card border-l border-border flex flex-col max-h-screen shadow-2xl">
+      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-96 md:w-80 bg-card border-l border-border flex flex-col max-h-screen shadow-2xl text-white">
         {/* Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between bg-background/50 backdrop-blur-sm">
-          <h2 className="text-lg font-semibold">User Profile</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="flex-shrink-0"
-          >
+        <div className="p-4 border-b border-border flex items-center justify-between bg-background">
+          <h2 className="text-lg font-semibold text-foreground">
+            User Profile
+          </h2>
+          <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -205,7 +176,7 @@ export default function UserProfile({
               className={cn(
                 "flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center justify-center space-x-2",
                 activeTab === tab.id
-                  ? "border-purple-600 text-purple-600"
+                  ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               )}
             >
@@ -220,7 +191,6 @@ export default function UserProfile({
           {/* Profile Tab */}
           {activeTab === "profile" && (
             <div className="p-4 space-y-6">
-              {/* Status Messages */}
               {error && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-center space-x-2">
                   <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0" />
@@ -230,37 +200,37 @@ export default function UserProfile({
 
               {success && (
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-3 flex items-center space-x-2">
-                  <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  <Check className="w-4 h-4 text-green-600 dark:text-green-500 flex-shrink-0" />
                   <p className="text-sm text-green-700 dark:text-green-400">
                     {success}
                   </p>
                 </div>
               )}
 
-              {/* Avatar Section */}
+              {/* Avatar */}
               <div className="text-center">
                 <div className="relative inline-block">
-                  <div className="relative">
-                    {imageError || !user?.avatar ? (
-                      <div className="bg-gray-500 w-24 h-24 rounded-full flex items-center justify-center text-white font-medium">
-                        <UserIcon className="w-8 h-8 text-white" />
-                      </div>
-                    ) : (
-                      <img
-                        key={avatarKey}
-                        src={`${user?.avatar}${user?.avatar.includes('?') ? '&' : '?'}t=${avatarKey}`}
-                        alt={user?.username}
-                        className="w-24 h-24 rounded-full object-cover border-4 border-border"
-                        onError={() => setImageError(true)}
-                      />
-                    )}
+                  {imageError || !user?.avatar ? (
+                    <div className="w-24 h-24 rounded-full flex items-center justify-center bg-muted">
+                      <User className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <img
+                      key={avatarKey}
+                      src={`${user?.avatar}${
+                        user?.avatar.includes("?") ? "&" : "?"
+                      }t=${avatarKey}`}
+                      alt={user?.username}
+                      className="w-24 h-24 rounded-full object-cover border-4 border-border"
+                      onError={() => setImageError(true)}
+                    />
+                  )}
 
-                    {isUploading && (
-                      <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                      </div>
-                    )}
-                  </div>
+                  {isUploading && (
+                    <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => fileInputRef.current?.click()}
@@ -298,9 +268,9 @@ export default function UserProfile({
                 </div>
               </div>
 
-              {/* Profile Form */}
+              {/* Form */}
               <div className="space-y-4">
-                <div className="flex  items-center justify-between">
+                <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium text-foreground">
                     Account Information
                   </h4>
@@ -309,7 +279,7 @@ export default function UserProfile({
                       variant="outline"
                       size="sm"
                       onClick={() => setIsEditing(true)}
-                      className="flex items-center space-x-1 bg-orange-500 hover:bg-orange-600 text-white hover:cursor-pointer"
+                      className="flex items-center space-x-1"
                     >
                       <Edit3 className="w-3 h-3" />
                       <span>Edit</span>
@@ -320,7 +290,6 @@ export default function UserProfile({
                         variant="outline"
                         size="sm"
                         onClick={handleCancel}
-                        className="bg-red-500 hover:bg-red-600 text-white hover:cursor-pointer"
                         disabled={isSubmitting}
                       >
                         Cancel
@@ -330,9 +299,8 @@ export default function UserProfile({
                         size="sm"
                         onClick={handleSubmit(onSubmit)}
                         disabled={isSubmitting}
-                        className="flex items-center space-x-1 bg-green-500 hover:bg-green-600 text-white hover:cursor-pointer"
                       >
-                        <Save className="w-3 h-3" />
+                        <Save className="w-3 h-3 mr-1" />
                         <span>Save</span>
                       </Button>
                     </div>
@@ -340,31 +308,21 @@ export default function UserProfile({
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  <div>
-                    <Input
-                      {...register("username")}
-                      label="Username"
-                      disabled={!isEditing}
-                      error={errors.username?.message}
-                      className={cn(
-                        !isEditing && "bg-muted cursor-not-allowed"
-                      )}
-                    />
-                  </div>
-
-                  <div>
-                    <Input
-                      {...register("email")}
-                      type="email"
-                      label="Email Address"
-                      disabled={!isEditing}
-                      error={errors.email?.message}
-                      className={cn(
-                        !isEditing && "bg-muted cursor-not-allowed"
-                      )}
-                    />
-                  </div>
-
+                  <Input
+                    {...register("username")}
+                    label="Username"
+                    disabled={!isEditing}
+                    error={errors.username?.message}
+                    className={cn(!isEditing && "bg-muted cursor-not-allowed")}
+                  />
+                  <Input
+                    {...register("email")}
+                    label="Email Address"
+                    type="email"
+                    disabled={!isEditing}
+                    error={errors.email?.message}
+                    className={cn(!isEditing && "bg-muted cursor-not-allowed")}
+                  />
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
                       Bio
@@ -376,20 +334,20 @@ export default function UserProfile({
                       maxLength={200}
                       placeholder="Tell us about yourself..."
                       className={cn(
-                        "w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors resize-none",
+                        "w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors resize-none",
                         !isEditing && "bg-muted cursor-not-allowed"
                       )}
                     />
                     {errors.bio && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className="mt-1 text-sm text-destructive">
                         {errors.bio.message}
                       </p>
                     )}
                     {isEditing && (
                       <p className="mt-1 text-xs text-muted-foreground text-right">
                         {200 -
-                          (register("bio") as unknown as { value: string })
-                            ?.value?.length || 200}{" "}
+                          ((register("bio") as unknown as { value: string })
+                            ?.value?.length || 0)}{" "}
                         characters remaining
                       </p>
                     )}
@@ -401,208 +359,35 @@ export default function UserProfile({
 
           {/* Settings Tab */}
           {activeTab === "settings" && (
-            <div className="p-4 space-y-6">
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-foreground">
-                  Appearance
-                </h4>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
-                        <Palette className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          Theme & Appearance
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Customize colors and accessibility
-                        </p>
-                      </div>
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={onOpenThemeCustomizer}
-                    >
-                      Customize
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-foreground">
-                  Privacy & Security
-                </h4>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
-                        <Shield className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          Two-Factor Authentication
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Add extra security to your account
-                        </p>
-                      </div>
-                    </div>
-
-                    <Button variant="outline" size="sm">
-                      Enable
-                    </Button>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
-                        <Globe className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Online Status</p>
-                        <p className="text-xs text-muted-foreground">
-                          Show when you&apos;re online
-                        </p>
-                      </div>
-                    </div>
-
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        defaultChecked={user?.isOnline}
-                        className="sr-only"
-                      />
-                      <div className="relative">
-                        <div className="w-10 h-6 bg-muted rounded-full shadow-inner"></div>
-                        <div className="absolute w-4 h-4 bg-white rounded-full shadow top-1 left-1 transition-transform duration-300 ease-in-out"></div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-foreground">
-                  Account Actions
-                </h4>
-
-                <div className="space-y-3">
-                  <Button
-                    variant="destructive"
-                    onClick={logout}
-                    className="w-full flex items-center space-x-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
-                  </Button>
-                </div>
-              </div>
+            <div className="p-4 space-y-4 text-foreground">
+              <p>
+                Theme settings, privacy settings, and other preferences go here.
+              </p>
+              <Button onClick={onOpenThemeCustomizer} className="w-full">
+                Customize Theme
+              </Button>
             </div>
           )}
 
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
-            <div className="p-4 space-y-6">
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-foreground">
-                  Push Notifications
-                </h4>
-
-                <div className="space-y-3">
-                  {[
-                    {
-                      label: "New Messages",
-                      desc: "Get notified when you receive messages",
-                    },
-                    {
-                      label: "Friend Requests",
-                      desc: "Get notified about friend requests",
-                    },
-                    {
-                      label: "Call Invitations",
-                      desc: "Get notified when someone calls you",
-                    },
-                    {
-                      label: "Room Invites",
-                      desc: "Get notified when invited to rooms",
-                    },
-                  ].map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-muted rounded-lg">
-                          <Bell className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{item.label}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </div>
-
-                      <label className="flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          defaultChecked={true}
-                          className="sr-only"
-                        />
-                        <div className="relative">
-                          <div className="w-10 h-6 bg-primary rounded-full shadow-inner"></div>
-                          <div className="absolute w-4 h-4 bg-white rounded-full shadow top-1 left-5 transition-transform duration-300 ease-in-out"></div>
-                        </div>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-foreground">
-                  Sound & Vibration
-                </h4>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 bg-muted rounded-lg">
-                        <Volume2 className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">
-                          Notification Sounds
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Play sounds for notifications
-                        </p>
-                      </div>
-                    </div>
-
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        defaultChecked={true}
-                        className="sr-only"
-                      />
-                      <div className="relative">
-                        <div className="w-10 h-6 bg-primary rounded-full shadow-inner"></div>
-                        <div className="absolute w-4 h-4 bg-white rounded-full shadow top-1 left-5 transition-transform duration-300 ease-in-out"></div>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              </div>
+            <div className="p-4 space-y-4 text-foreground">
+              <p>Manage notification preferences here.</p>
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-border bg-background">
+          <Button
+            variant="destructive"
+            size="sm"
+            className="w-full flex items-center justify-center space-x-2"
+            onClick={logout}
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
+          </Button>
         </div>
       </div>
     </>

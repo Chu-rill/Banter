@@ -43,8 +43,8 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
   const peerConnectionsRef = useRef<Map<string, PeerConnection>>(new Map());
   const localStreamRef = useRef<MediaStream | null>(null);
 
-  // Initialize local media
-  const initializeMedia = useCallback(async () => {
+  // Initialize local media with optional device ID
+  const initializeMedia = useCallback(async (audioDeviceId?: string) => {
     try {
       const constraints: MediaStreamConstraints = {
         video: mediaState.video
@@ -56,6 +56,7 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
           : false,
         audio: mediaState.audio
           ? {
+              deviceId: audioDeviceId ? { exact: audioDeviceId } : undefined,
               echoCancellation: true,
               noiseSuppression: true,
               autoGainControl: true,
@@ -375,6 +376,50 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
     };
   }, [roomId, createPeerConnection]);
 
+  // Change audio device
+  const changeAudioDevice = useCallback(async (deviceId: string) => {
+    if (!localStreamRef.current) return;
+
+    try {
+      // Stop the current audio track
+      const audioTrack = localStreamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.stop();
+      }
+
+      // Get new audio stream with selected device
+      const newAudioStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: { exact: deviceId },
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      const newAudioTrack = newAudioStream.getAudioTracks()[0];
+
+      // Replace audio track in local stream
+      if (audioTrack) {
+        localStreamRef.current.removeTrack(audioTrack);
+      }
+      localStreamRef.current.addTrack(newAudioTrack);
+
+      // Update peer connections with new audio track
+      peerConnectionsRef.current.forEach(({ connection }) => {
+        const sender = connection.getSenders().find(s => s.track?.kind === 'audio');
+        if (sender) {
+          sender.replaceTrack(newAudioTrack);
+        }
+      });
+
+      setLocalStream(localStreamRef.current);
+      console.log("Audio device changed to:", deviceId);
+    } catch (error) {
+      console.error("Failed to change audio device:", error);
+    }
+  }, []);
+
   return {
     participants,
     localStream,
@@ -385,5 +430,6 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
     leaveCall,
     toggleVideo,
     toggleAudio,
+    changeAudioDevice,
   };
 }

@@ -92,7 +92,7 @@ export default function ChatSidebar({
 
   if (collapsed) {
     return (
-      <div className="w-16 bg-card border-r border-border flex flex-col">
+      <div className="w-16 bg-card border-r border-border flex flex-col text-white">
         <div className="p-3 border-b border-border">
           <Button
             variant="ghost"
@@ -176,9 +176,8 @@ export default function ChatSidebar({
   return (
     <div
       className={cn(
-        "border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out bg-black",
+        "border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out bg-card",
         // Mobile: solid background
-        // "bg-background md:bg-secondary/30 md:backdrop-blur-sm",
         // Desktop: always visible, can be collapsed to narrow
         "md:relative md:translate-x-0",
         collapsed ? "md:w-16" : "md:w-80",

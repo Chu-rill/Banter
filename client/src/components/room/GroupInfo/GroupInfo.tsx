@@ -42,15 +42,17 @@ export default function GroupInfo({
   onLeaveRoom,
 }: RoomDetailsProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"details" | "members" | "requests">("details");
+  const [activeTab, setActiveTab] = useState<
+    "details" | "members" | "requests"
+  >("details");
   const isCreator = user?.id === room.creatorId;
   const isPrivateRoom = room.type === "PRIVATE";
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-xl sm:rounded-2xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 text-white">
+      <div className="bg-card rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border">
         {/* Header */}
-        <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between sticky top-0 bg-black z-10">
+        <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between sticky top-0 bg-card z-10">
           <h2 className="text-lg sm:text-xl font-semibold">Room Settings</h2>
           <Button
             variant="ghost"
@@ -64,7 +66,7 @@ export default function GroupInfo({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border bg-black">
+        <div className="flex border-b border-border bg-card">
           <button
             className={cn(
               "flex-1 px-4 py-3 text-sm font-medium transition-colors",
@@ -104,7 +106,7 @@ export default function GroupInfo({
         </div>
 
         {/* Content */}
-        <div className="p-6 bg-black">
+        <div className="p-6 bg-background">
           {activeTab === "details" ? (
             <DetailsTab
               room={room}

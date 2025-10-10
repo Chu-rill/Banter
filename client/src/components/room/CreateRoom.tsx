@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,12 +15,9 @@ import toast from "react-hot-toast";
 const createRoomSchema = z.object({
   name: z
     .string()
-    .min(3, "Room name must be at least 3 characters")
-    .max(50, "Room name must be less than 50 characters")
-    .regex(
-      /^[a-zA-Z0-9\s\-_]+$/,
-      "Only letters, numbers, spaces, - and _ allowed"
-    ),
+    .min(3)
+    .max(50)
+    .regex(/^[a-zA-Z0-9\s\-_]+$/),
   description: z.string().max(200).optional(),
   type: z.enum(["PUBLIC", "PRIVATE"]),
   mode: z.enum(["CHAT", "VIDEO", "BOTH"]),
@@ -49,11 +47,7 @@ export default function CreateRoom({
     formState: { errors },
   } = useForm<CreateRoomFormData>({
     resolver: zodResolver(createRoomSchema),
-    defaultValues: {
-      type: "PUBLIC",
-      mode: "BOTH",
-      maxParticipants: 10,
-    },
+    defaultValues: { type: "PUBLIC", mode: "BOTH", maxParticipants: 10 },
   });
 
   const watchType = watch("type");
@@ -62,16 +56,13 @@ export default function CreateRoom({
     try {
       setError("");
       setIsSubmitting(true);
-
       const room = await roomApi.createRoom(data);
-
       onRoomCreated(room);
       toast.success("Room Created!");
       reset();
       onClose();
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || "Failed to create room.");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to create room.");
     } finally {
       setIsSubmitting(false);
     }
@@ -80,15 +71,16 @@ export default function CreateRoom({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
       {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center space-x-2">
-          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
+        <div className="flex items-center space-x-2 p-4 border rounded-lg bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
-      {/* Room Name */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Room Name</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+          Room Name
+        </label>
         <Input
           {...register("name")}
           placeholder="Enter room name"
@@ -96,9 +88,10 @@ export default function CreateRoom({
         />
       </div>
 
-      {/* Description */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Description (Optional)</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+          Description (Optional)
+        </label>
         <Input
           {...register("description")}
           placeholder="What's this room about?"
@@ -106,9 +99,10 @@ export default function CreateRoom({
         />
       </div>
 
-      {/* Room Type */}
       <div className="space-y-3">
-        <label className="text-sm font-medium">Room Type</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+          Room Type
+        </label>
         <div className="grid grid-cols-2 gap-3">
           {(["PUBLIC", "PRIVATE"] as const).map((type) => (
             <button
@@ -141,7 +135,7 @@ export default function CreateRoom({
                   <p className="font-medium text-sm">
                     {type === "PUBLIC" ? "Public" : "Private"}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {type === "PUBLIC" ? "Anyone can join" : "Invite only"}
                   </p>
                 </div>
@@ -154,13 +148,14 @@ export default function CreateRoom({
         </div>
       </div>
 
-      {/* Max Participants */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Max Participants</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+          Max Participants
+        </label>
         <select
           {...register("maxParticipants", { valueAsNumber: true })}
           defaultValue={10}
-          className="w-[180px] rounded-md border p-2 text-sm"
+          className="w-[180px] rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           {Array.from({ length: 99 }, (_, i) => i + 2).map((num) => (
             <option key={num} value={num}>
@@ -170,7 +165,6 @@ export default function CreateRoom({
         </select>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center justify-end gap-3 pt-4">
         <Button
           type="button"
@@ -183,8 +177,8 @@ export default function CreateRoom({
         <Button
           type="submit"
           loading={isSubmitting}
-          disabled={isSubmitting}
           className="bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+          disabled={isSubmitting}
         >
           Create Room
         </Button>

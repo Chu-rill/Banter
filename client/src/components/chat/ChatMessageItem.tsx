@@ -15,15 +15,18 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
   const { user } = useAuth();
 
   // For direct messages, check senderId. For room messages, check user.id
-  const senderId = typeof message.senderId === 'object' && message.senderId !== null
-    ? message.senderId.id
-    : message.senderId;
-  const isOwn = message.isOwn || senderId === user?.id || message.user?.id === user?.id;
+  const senderId =
+    typeof message.senderId === "object" && message.senderId !== null
+      ? message.senderId.id
+      : message.senderId;
+  const isOwn =
+    message.isOwn || senderId === user?.id || message.user?.id === user?.id;
 
   // Get the display user (for avatar/username) - use senderId for DMs, user for room messages
-  const displayUser = message.senderId && typeof message.senderId === 'object'
-    ? message.senderId
-    : message.user;
+  const displayUser =
+    message.senderId && typeof message.senderId === "object"
+      ? message.senderId
+      : message.user;
 
   const isSystem = message.type === "SYSTEM";
   const showAvatar = !isOwn && !isSystem;
@@ -48,7 +51,7 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
 
     return (
       <div className="flex justify-center my-3">
-        <div className="font-mono px-4 py-1.5 rounded-full bg-gray-200/80 text-gray-700 text-xs italic shadow-sm">
+        <div className="font-mono px-4 py-1.5 rounded-full bg-muted/80 text-muted-foreground text-xs italic shadow-sm">
           {displayContent}
         </div>
       </div>
@@ -67,8 +70,8 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
       {showAvatar && displayUser && (
         <div className="mr-2 flex-shrink-0">
           {imageError || !displayUser.avatar ? (
-            <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
-              <UserIcon className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+              <UserIcon className="w-5 h-5 text-muted-foreground" />
             </div>
           ) : (
             <img
@@ -85,15 +88,17 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
       <div
         className={cn(
           "relative flex flex-col max-w-[80%] rounded-2xl px-3 py-2 shadow-sm",
-          isOwn
-            ? "bg-green-500 text-white rounded-tr-none"
-            : "bg-gray-500 text-black rounded-tl-none",
-          message.type === "MEDIA" ? "bg-transparent shadow-none p-0" : ""
+          // Only apply bubble background for TEXT messages
+          message.type === "TEXT"
+            ? isOwn
+              ? "bg-green-500 dark:bg-green-600 text-white rounded-tr-none"
+              : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-tl-none"
+            : "bg-transparent shadow-none p-0"
         )}
       >
         {/* Username (only for others) */}
         {!isOwn && displayUser && (
-          <span className="text-xs text-black mb-0.5 font-medium">
+          <span className="text-xs text-gray-600 dark:text-gray-400 mb-0.5 font-medium">
             {displayUser.username}
           </span>
         )}
@@ -134,8 +139,8 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
         {/* Timestamp (bottom right corner) */}
         <span
           className={cn(
-            "absolute bottom-1 right-2 text-[10px] font-mono opacity-80",
-            isOwn ? "text-white/80" : "text-black"
+            "absolute bottom-1 right-2 text-[10px] font-mono opacity-70",
+            isOwn ? "text-white" : "text-gray-600 dark:text-gray-400"
           )}
         >
           {formatTimeAgo(message.createdAt)}

@@ -136,17 +136,22 @@ export default function DetailsTab({
       toast.success("Profile picture updated successfully!");
       loadRooms();
       // Update local state
-      setEditedRoom({ ...editedRoom, profilePicture: response.data.profilePicture });
+      setEditedRoom({
+        ...editedRoom,
+        profilePicture: response.data.profilePicture,
+      });
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || "Failed to upload profile picture");
+      toast.error(
+        error.response?.data?.message || "Failed to upload profile picture"
+      );
     } finally {
       setIsUploadingImage(false);
     }
   };
 
   return (
-    <div className="space-y-6 bg-black">
+    <div className="space-y-6 text-white">
       {/* Room Info */}
       <div className="flex items-center space-x-4">
         <div className="relative">

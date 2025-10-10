@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { Room } from "@/types";
 import { roomApi } from "@/lib/api/roomApi";
@@ -7,11 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Search, Loader2 } from "lucide-react";
 import RoomCard from "./RoomCard";
-import RoomGrid from "./RoomGrid";
 import { cn } from "@/lib/utils";
 import { useRooms } from "@/contexts/RoomsContext";
 import toast from "react-hot-toast";
 import { useChat } from "@/hooks/useRoomChat";
+// import { RoomFilter, RoomSort, RoomWithStatus } from "./JoinRoom";
 
 interface JoinRoomProps {
   isOpen: boolean;
@@ -41,6 +40,7 @@ export default function JoinRoom({
   const [isLoading, setIsLoading] = useState(false);
   const [joiningRoomId, setJoiningRoomId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   const { loadRooms } = useRooms();
   const { joinRoomWs } = useChat("");
 
@@ -70,31 +70,20 @@ export default function JoinRoom({
   };
 
   const filteredRooms = availableRooms
-    .filter((room) => {
-      // Search filter
-      if (searchQuery) {
-        return room.name.toLowerCase().includes(searchQuery.toLowerCase());
-      }
-      return true;
-    })
-    .filter((room) => {
-      // Room type filter
-      if (filter === "ALL") return true;
-      return room.type === filter;
-    })
+    .filter((room) =>
+      searchQuery
+        ? room.name.toLowerCase().includes(searchQuery.toLowerCase())
+        : true
+    )
+    .filter((room) => (filter === "ALL" ? true : room.type === filter))
     .sort((a, b) => {
-      // Sorting logic
-      if (sortBy === "NEWEST") {
+      if (sortBy === "NEWEST")
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-      }
-      if (sortBy === "POPULAR") {
+      if (sortBy === "POPULAR")
         return (b.participants?.length || 0) - (a.participants?.length || 0);
-      }
-      if (sortBy === "ALPHABETICAL") {
-        return a.name.localeCompare(b.name);
-      }
+      if (sortBy === "ALPHABETICAL") return a.name.localeCompare(b.name);
       return 0;
     });
 
@@ -104,14 +93,12 @@ export default function JoinRoom({
       setError(null);
 
       if (room.type === "PRIVATE") {
-        // 🔒 Private room → send join request instead
         await roomApi.requestToJoinRoom(room.id);
         setAvailableRooms((prev) =>
           prev.map((r) => (r.id === room.id ? { ...r, isPending: true } : r))
         );
         toast.success("Join request sent!");
       } else {
-        // 🌍 Public room → join immediately through WebSocket
         await joinRoomWs(room.id);
         setAvailableRooms((prev) =>
           prev.map((r) => (r.id === room.id ? { ...r, isMember: true } : r))
@@ -123,7 +110,10 @@ export default function JoinRoom({
         }, 1000);
       }
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       console.error("Join room failed:", err);
       setError(err.response?.data?.message || "Failed to join room");
     } finally {
@@ -134,7 +124,7 @@ export default function JoinRoom({
   if (!isOpen) return null;
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-6 space-y-5 bg-white dark:bg-gray-800 rounded-xl shadow-md">
       {/* Error */}
       {error && (
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-600 dark:text-red-400">
@@ -144,12 +134,12 @@ export default function JoinRoom({
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-300" />
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search rooms..."
-          className="pl-10"
+          className="pl-10 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-300"
         />
       </div>
 
@@ -157,7 +147,7 @@ export default function JoinRoom({
       <div className="flex flex-col gap-4">
         {/* Room Type Filters */}
         <div>
-          <span className="text-xs font-medium text-muted-foreground block mb-2">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-2">
             Filter by Type
           </span>
           <div className="flex flex-wrap gap-2">
@@ -168,7 +158,9 @@ export default function JoinRoom({
                 size="sm"
                 className={cn(
                   "rounded-full",
-                  filter === f ? "bg-blue-600 text-white" : ""
+                  filter === f
+                    ? "bg-purple-600 text-white dark:bg-purple-500 dark:text-white"
+                    : ""
                 )}
                 onClick={() => setFilter(f)}
               >
@@ -180,7 +172,7 @@ export default function JoinRoom({
 
         {/* Sort Options */}
         <div>
-          <span className="text-xs font-medium text-muted-foreground block mb-2">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 block mb-2">
             Sort by
           </span>
           <div className="flex flex-wrap gap-2">
@@ -191,7 +183,9 @@ export default function JoinRoom({
                 size="sm"
                 className={cn(
                   "rounded-full",
-                  sortBy === s ? "bg-blue-600 text-white" : ""
+                  sortBy === s
+                    ? "bg-purple-600 text-white dark:bg-purple-500 dark:text-white"
+                    : ""
                 )}
                 onClick={() => setSortBy(s)}
               >
@@ -206,33 +200,33 @@ export default function JoinRoom({
       <div className="max-h-[350px] overflow-y-auto space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-300" />
           </div>
         ) : availableRooms.length === 0 ? (
-          <div className="text-center py-12 text-sm text-muted-foreground">
+          <div className="text-center py-12 text-sm text-gray-500 dark:text-gray-400">
             No rooms found. Try searching or changing filters.
           </div>
         ) : (
-          filteredRooms.map(
-            (
-              room // ✅ use filteredRooms
-            ) => (
-              <RoomCard
-                key={room.id}
-                filter={filter}
-                sortBy={sortBy}
-                room={room}
-                onJoin={handleJoinRoom}
-                isJoining={joiningRoomId === room.id}
-              />
-            )
-          )
+          filteredRooms.map((room) => (
+            <RoomCard
+              key={room.id}
+              filter={filter}
+              sortBy={sortBy}
+              room={room}
+              onJoin={handleJoinRoom}
+              isJoining={joiningRoomId === room.id}
+            />
+          ))
         )}
       </div>
 
       {/* Actions */}
       <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" onClick={onClose}>
+        <Button
+          variant="outline"
+          onClick={onClose}
+          className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+        >
           Cancel
         </Button>
       </div>

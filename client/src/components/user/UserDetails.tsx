@@ -22,8 +22,8 @@ export default function UserDetails({
   const [imageError, setImageError] = useState(false);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-xl sm:rounded-2xl shadow-lg max-w-md w-full border border-border">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 text-white">
+      <div className="bg-card rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full border border-border bg-black/40">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-semibold">User Info</h2>
@@ -43,8 +43,8 @@ export default function UserDetails({
           <div className="text-center">
             <div className="relative inline-block">
               {imageError || !friend.avatar ? (
-                <div className="w-24 h-24 bg-gray-500 rounded-full flex items-center justify-center mx-auto">
-                  <UserIcon className="w-12 h-12 text-white" />
+                <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto">
+                  <UserIcon className="w-12 h-12 text-muted-foreground" />
                 </div>
               ) : (
                 <img

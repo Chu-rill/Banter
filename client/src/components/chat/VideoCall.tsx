@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Video, VideoOff, Mic, MicOff, PhoneOff, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Video, VideoOff, Mic, MicOff, PhoneOff, X, Settings } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useCall } from "@/hooks/useCall";
 import { Room, User } from "@/types";
@@ -47,10 +47,46 @@ export default function VideoCall({
     leaveCall,
     toggleVideo,
     toggleAudio,
+    changeAudioDevice,
   } = useCall(roomId, isVideoCall);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
+  const [showAudioSettings, setShowAudioSettings] = useState(false);
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
+
+  // Load audio devices
+  useEffect(() => {
+    const loadAudioDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(device => device.kind === "audioinput");
+        setAudioDevices(audioInputs);
+
+        // Set current device
+        if (localStream) {
+          const audioTrack = localStream.getAudioTracks()[0];
+          const currentDevice = audioTrack?.getSettings().deviceId;
+          if (currentDevice) {
+            setSelectedAudioDevice(currentDevice);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load audio devices:", error);
+      }
+    };
+
+    if (isConnected) {
+      loadAudioDevices();
+    }
+  }, [isConnected, localStream]);
+
+  const handleAudioDeviceChange = async (deviceId: string) => {
+    setSelectedAudioDevice(deviceId);
+    await changeAudioDevice(deviceId);
+    setShowAudioSettings(false);
+  };
 
   // Join call when component opens
   useEffect(() => {
@@ -307,7 +343,7 @@ export default function VideoCall({
 
         {/* Controls */}
         <div className="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2">
-          <div className="flex items-center justify-center space-x-3 sm:space-x-4">
+          <div className="relative flex items-center justify-center space-x-3 sm:space-x-4">
             <button
               onClick={toggleAudio}
               className={cn(
@@ -330,6 +366,36 @@ export default function VideoCall({
             >
               <PhoneOff className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
+
+            <button
+              onClick={() => setShowAudioSettings(!showAudioSettings)}
+              className="flex items-center justify-center rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-gray-700 hover:bg-gray-600 text-white transition-colors shadow-xl"
+            >
+              <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+
+            {/* Audio Device Selector */}
+            {showAudioSettings && (
+              <div className="absolute bottom-full mb-4 right-0 bg-gray-800 rounded-lg shadow-2xl p-4 min-w-[250px]">
+                <h4 className="text-white font-medium mb-3 text-sm">Audio Input</h4>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {audioDevices.map((device) => (
+                    <button
+                      key={device.deviceId}
+                      onClick={() => handleAudioDeviceChange(device.deviceId)}
+                      className={cn(
+                        "w-full text-left px-3 py-2 rounded text-sm transition-colors",
+                        selectedAudioDevice === device.deviceId
+                          ? "bg-purple-600 text-white"
+                          : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                      )}
+                    >
+                      {device.label || `Microphone ${device.deviceId.slice(0, 5)}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -452,7 +518,7 @@ export default function VideoCall({
 
       {/* Controls */}
       <div className="p-4 sm:p-6 bg-black/20 backdrop-blur-sm">
-        <div className="flex items-center justify-center space-x-3 sm:space-x-4">
+        <div className="relative flex items-center justify-center space-x-3 sm:space-x-4">
           <button
             onClick={toggleAudio}
             className={cn(
@@ -493,6 +559,36 @@ export default function VideoCall({
           >
             <PhoneOff className="w-6 h-6 sm:w-7 sm:h-7" />
           </button>
+
+          <button
+            onClick={() => setShowAudioSettings(!showAudioSettings)}
+            className="flex items-center justify-center rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-gray-700 hover:bg-gray-600 text-white transition-colors shadow-lg"
+          >
+            <Settings className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Audio Device Selector */}
+          {showAudioSettings && (
+            <div className="absolute bottom-full mb-4 right-0 bg-gray-800 rounded-lg shadow-2xl p-4 min-w-[250px]">
+              <h4 className="text-white font-medium mb-3 text-sm">Audio Input</h4>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {audioDevices.map((device) => (
+                  <button
+                    key={device.deviceId}
+                    onClick={() => handleAudioDeviceChange(device.deviceId)}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded text-sm transition-colors",
+                      selectedAudioDevice === device.deviceId
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-700 text-gray-200 hover:bg-gray-600"
+                    )}
+                  >
+                    {device.label || `Microphone ${device.deviceId.slice(0, 5)}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

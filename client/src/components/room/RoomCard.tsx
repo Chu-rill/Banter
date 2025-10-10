@@ -16,7 +16,7 @@ export default function RoomCard({ room, onJoin, isJoining }: RoomCardProps) {
   const isRoomFull = room.participants?.length >= room.maxParticipants;
 
   return (
-    <div className="border border-border rounded-xl p-4 hover:shadow-md transition-all duration-200 hover:border-primary/20">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg transition-all duration-200 hover:border-purple-500 dark:hover:border-purple-400 bg-white dark:bg-gray-800">
       {/* Room Header */}
       <div className="flex items-start gap-3 mb-3">
         {room.profilePicture ? (
@@ -27,24 +27,14 @@ export default function RoomCard({ room, onJoin, isJoining }: RoomCardProps) {
           />
         ) : (
           <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center flex-shrink-0">
-            {room?.profilePicture ? (
-              <img
-                src={room.profilePicture}
-                alt={room.name || "Room"}
-                className="w-11 h-11 rounded-xl object-cover shadow-md"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src =
-                    "/Banter_logo.png";
-                }}
-              />
-            ) : (
-              <Users className="w-6 h-6 text-muted-foreground" />
-            )}
+            <Users className="w-6 h-6 text-white dark:text-gray-200" />
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg truncate">{room.name}</h3>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <h3 className="font-semibold text-lg truncate text-gray-900 dark:text-white">
+            {room.name}
+          </h3>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             {room.type === "PRIVATE" ? (
               <Lock className="w-3 h-3" />
             ) : (
@@ -57,13 +47,13 @@ export default function RoomCard({ room, onJoin, isJoining }: RoomCardProps) {
 
       {/* Room Description */}
       {room.description && (
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-2">
           {room.description}
         </p>
       )}
 
       {/* Room Stats */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
         <span className="flex items-center gap-1">
           <Users className="w-4 h-4" />
           {room.participants?.length || 0}/{room.maxParticipants}

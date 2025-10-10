@@ -39,7 +39,7 @@ export default function MembersTab({ room }: RoomMembersTabProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-white">
       {/* Members List */}
       <div className="space-y-2">
         {room.participants?.map((participant) => (
