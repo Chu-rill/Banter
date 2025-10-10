@@ -24,6 +24,7 @@
     "db:studio": "npx prisma studio"
   },
   "dependencies": {
+    "@types/express": "^5.0.0",
     "@nestjs/cli": "^11.0.10",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
@@ -38,6 +39,7 @@
     "@nestjs/websockets": "^11.1.6",
     "@prisma/client": "^6.13.0",
     "@supabase/supabase-js": "^2.74.0",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
@@ -66,9 +68,7 @@
     "@swc/cli": "^0.6.0",
     "@swc/core": "^1.10.7",
     "@types/bcryptjs": "^2.4.6",
-    "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
-    "@types/multer": "^2.0.0",
     "@types/node": "^22.10.7",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/passport-jwt": "^4.0.1",
