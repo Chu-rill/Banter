@@ -21,7 +21,7 @@ interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
 
-@WebSocketGateway(5001, {
+@WebSocketGateway({
   namespace: '/direct-messages',
   cors: {
     origin: '*',

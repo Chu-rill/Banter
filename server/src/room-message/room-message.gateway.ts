@@ -34,7 +34,7 @@ interface RoomTypingState {
   typingUsers: Map<string, TypingUser>;
 }
 
-@WebSocketGateway(5001, {
+@WebSocketGateway({
   namespace: '/room-messages',
   cors: {
     origin: process.env.FRONTEND_URL?.split(',') || ['http://localhost:3000'],

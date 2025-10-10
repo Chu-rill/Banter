@@ -8,7 +8,12 @@ import { uploadApi } from "@/lib/api";
 import { cn, formatFileSize } from "@/lib/utils";
 
 interface FileUploadProps {
-  onFileUploaded: (file: { url: string; name: string; size: number; type: string }) => void;
+  onFileUploaded: (file: {
+    url: string;
+    name: string;
+    size: number;
+    type: string;
+  }) => void;
   onClose: () => void;
 }
 
@@ -40,7 +45,7 @@ export default function FileUpload({
 
     try {
       const uploadedFile = await uploadApi.uploadFile(selectedFile);
-      console.log("Upload successful, file data:", uploadedFile);
+
       onFileUploaded(uploadedFile);
       onClose();
     } catch (err: unknown) {

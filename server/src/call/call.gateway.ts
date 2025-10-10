@@ -33,7 +33,7 @@ interface CallParticipant {
   joinedAt: Date;
 }
 
-@WebSocketGateway(5002, {
+@WebSocketGateway({
   namespace: '/call',
   cors: {
     origin: process.env.FRONTEND_URL?.split(',') || ['http://localhost:3000'],
