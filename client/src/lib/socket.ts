@@ -2,7 +2,7 @@
 import { io, Socket } from "socket.io-client";
 
 const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5001";
+  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
 
 class SocketService {
   private roomMessageSocket: Socket | null = null;
@@ -38,7 +38,8 @@ class SocketService {
   }
 
   connectCall(token: string) {
-    const CALL_URL = process.env.NEXT_PUBLIC_CALL_URL || "http://localhost:5002";
+    const CALL_URL =
+      process.env.NEXT_PUBLIC_CALL_URL || "http://localhost:5000";
     this.callSocket = io(`${CALL_URL}/call`, {
       auth: { token },
       autoConnect: true,

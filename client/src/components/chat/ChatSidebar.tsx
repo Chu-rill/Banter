@@ -18,11 +18,11 @@ import {
   UserIcon,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { roomApi } from "@/lib/api/roomApi";
+// import { roomApi } from "@/api/roomApi";x
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn, formatTimeAgo } from "@/lib/utils";
-import CreateRoomModal from "../room/RoomModal";
+import CreateRoomModal from "@/components/room/RoomModal";
 import FriendsPanel from "../user/Friends/FriendsPanel";
 import { Room, User } from "@/types";
 import RoomList from "../room/RoomList";
