@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -30,7 +30,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const { login, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -204,29 +204,16 @@ export default function LoginPage() {
                   )}
                 </div>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                <Link
-                  href="/register"
-                  className="font-medium text-purple-600 hover:text-purple-500"
-                >
-                  create a new account
-                </Link>
-              </p>
+
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-border rounded transition-colors"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-muted-foreground"
+                <p className="mt-2 text-sm text-muted-foreground">
+                  <Link
+                    href="/register"
+                    className="font-medium text-purple-600 hover:text-purple-500"
                   >
-                    Remember me
-                  </label>
-                </div>
+                    create a new account
+                  </Link>
+                </p>
 
                 <Link
                   href="/forgot-password"
@@ -270,5 +257,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <LoginPage />
+    </Suspense>
   );
 }

@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 type VerificationState = "loading" | "success" | "error" | "invalid";
 
-export default function VerifyEmailPage() {
+function VerifyEmailPage() {
   const [verificationState, setVerificationState] =
     useState<VerificationState>("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -53,7 +54,10 @@ export default function VerifyEmailPage() {
         router.push("/chat");
       }, 3000);
     } catch (error: unknown) {
-      const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      const err = error as {
+        response?: { status?: number; data?: { message?: string } };
+        message?: string;
+      };
       console.error("Email verification failed:", error);
       setVerificationState("error");
 
@@ -105,8 +109,8 @@ export default function VerifyEmailPage() {
             </h1>
             <div className="text-gray-600 dark:text-gray-300 mb-8 space-y-3">
               <p>
-                Welcome to Banter! Your account has been verified and you&apos;re now
-                logged in.
+                Welcome to Banter! Your account has been verified and
+                you&apos;re now logged in.
               </p>
               <p className="text-sm">
                 {isRedirecting
@@ -222,5 +226,13 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <VerifyEmailPage />
+    </Suspense>
   );
 }

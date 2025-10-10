@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackPage() {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
   const [errorMessage, setErrorMessage] = useState("");
-  const [userInfo, setUserInfo] = useState<{ username?: string; email?: string } | null>(null);
+  const [userInfo, setUserInfo] = useState<{
+    username?: string;
+    email?: string;
+  } | null>(null);
   const hasProcessed = useRef(false);
 
   const router = useRouter();
@@ -137,5 +140,13 @@ export default function OAuthCallbackPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <OAuthCallbackPage />
+    </Suspense>
   );
 }

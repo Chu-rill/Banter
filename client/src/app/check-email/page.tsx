@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { Mail, RefreshCw, ArrowLeft, CheckCircle } from "lucide-react";
 import { authApi } from "@/lib/api";
 
-export default function CheckEmailPage() {
+function CheckEmailPage() {
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendError, setResendError] = useState("");
   const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
@@ -45,15 +46,16 @@ export default function CheckEmailPage() {
     try {
       setIsResending(true);
       setResendError("");
-      
+
       await authApi.resendVerificationEmail(email);
-      
+
       setResendSuccess(true);
       setResendError("");
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       setResendError(
-        err.response?.data?.message || "Failed to resend email. Please try again."
+        err.response?.data?.message ||
+          "Failed to resend email. Please try again."
       );
     } finally {
       setIsResending(false);
@@ -76,16 +78,15 @@ export default function CheckEmailPage() {
 
           {/* Description */}
           <div className="text-gray-600 dark:text-gray-300 mb-8 space-y-3">
-            <p>
-              We&apos;ve sent a verification link to:
-            </p>
+            <p>We&apos;ve sent a verification link to:</p>
             {email && (
               <p className="font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg">
                 {email}
               </p>
             )}
             <p className="text-sm">
-              Click the link in the email to verify your account and get started with Banter.
+              Click the link in the email to verify your account and get started
+              with Banter.
             </p>
           </div>
 
@@ -129,11 +130,15 @@ export default function CheckEmailPage() {
               disabled={!canResend || isResending || !email}
               className="inline-flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              <RefreshCw className={`w-4 h-4 ${isResending ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-4 h-4 ${isResending ? "animate-spin" : ""}`}
+              />
               <span>
-                {isResending ? 'Sending...' : 
-                 canResend ? 'Resend verification email' : 
-                 `Resend in ${timeLeft}s`}
+                {isResending
+                  ? "Sending..."
+                  : canResend
+                  ? "Resend verification email"
+                  : `Resend in ${timeLeft}s`}
               </span>
             </button>
           </div>
@@ -147,7 +152,7 @@ export default function CheckEmailPage() {
               <ArrowLeft className="w-4 h-4" />
               <span>Back to registration</span>
             </Link>
-            
+
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Already verified?{" "}
               <Link
@@ -161,5 +166,13 @@ export default function CheckEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<p>Loading...</p>}>
+      <CheckEmailPage />
+    </Suspense>
   );
 }
