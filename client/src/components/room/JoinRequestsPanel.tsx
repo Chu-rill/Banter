@@ -67,9 +67,10 @@ export default function JoinRequestsPanel({
       await roomApi.approveJoinRequest(requestId);
       toast.success("Join request approved");
       setRequests(requests.filter((r) => r.id !== requestId));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error("Failed to approve request:", error);
-      toast.error(error.response?.data?.message || "Failed to approve request");
+      toast.error(err.response?.data?.message || "Failed to approve request");
     } finally {
       setProcessingId(null);
     }
@@ -81,9 +82,10 @@ export default function JoinRequestsPanel({
       await roomApi.denyJoinRequest(requestId);
       toast.success("Join request denied");
       setRequests(requests.filter((r) => r.id !== requestId));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error("Failed to deny request:", error);
-      toast.error(error.response?.data?.message || "Failed to deny request");
+      toast.error(err.response?.data?.message || "Failed to deny request");
     } finally {
       setProcessingId(null);
     }

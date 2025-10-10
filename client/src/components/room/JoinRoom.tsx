@@ -122,7 +122,8 @@ export default function JoinRoom({
           loadRooms();
         }, 1000);
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       console.error("Join room failed:", err);
       setError(err.response?.data?.message || "Failed to join room");
     } finally {

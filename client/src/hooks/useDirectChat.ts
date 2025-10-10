@@ -19,39 +19,27 @@ export function useDirectChat(friendId: string) {
     socket.emit("dm:get_messages", { friendId });
 
     // Listen for message history
-    socket.on("dm:messages", (data: { friendId: string; messages: any[] }) => {
+    socket.on("dm:messages", (data: { friendId: string; messages: MessageWithUser[] }) => {
       if (data.friendId === friendId) {
-        const transformedMessages = data.messages.map((msg: any) => ({
-          ...msg,
-          senderId: msg.sender || { id: msg.senderId },
-          receiverId: msg.receiver || { id: msg.receiverId },
-          user: msg.sender || { id: msg.senderId },
-        }));
-        setMessages(transformedMessages);
+        setMessages(data.messages);
         setIsLoading(false);
       }
     });
 
     // Listen for new messages
-    socket.on("dm:new", (msg: any) => {
+    socket.on("dm:new", (msg: MessageWithUser) => {
       // console.log("Direct message received:", msg);
       // Check if message is from/to the current friend
-      const isSender = msg.senderId === friendId || msg.sender?.id === friendId;
-      const isReceiver =
-        msg.receiverId === friendId || msg.receiver?.id === friendId;
+      const senderIsUser = typeof msg.senderId === 'string' ? msg.senderId : msg.senderId.id;
+      const receiverIsUser = typeof msg.receiverId === 'string' ? msg.receiverId : msg.receiverId.id;
+      const isSender = senderIsUser === friendId;
+      const isReceiver = receiverIsUser === friendId;
 
       if (isSender || isReceiver) {
-        // Transform the message to match MessageWithUser format
-        const transformedMsg: MessageWithUser = {
-          ...msg,
-          senderId: msg.sender || { id: msg.senderId },
-          receiverId: msg.receiver || { id: msg.receiverId },
-          user: msg.sender || { id: msg.senderId },
-        };
-        setMessages((prev) => [...prev, transformedMsg]);
+        setMessages((prev) => [...prev, msg]);
 
         // Play notification sound for new messages (only if from the friend, not own messages)
-        if (isSender && msg.sender?.id === friendId) {
+        if (isSender) {
           try {
             const sound = new Audio("/sounds/notification.mp3");
             sound.play().catch((error) => {
@@ -65,7 +53,7 @@ export function useDirectChat(friendId: string) {
     });
 
     // Listen for sent messages (confirmation) - but dm:new already handles this
-    socket.on("dm:sent", (msg: any) => {
+    socket.on("dm:sent", (msg: MessageWithUser) => {
       // console.log("Direct message sent confirmation:", msg);
     });
 

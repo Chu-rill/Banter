@@ -4,6 +4,7 @@ export interface User {
   username: string;
   email: string;
   avatar?: string;
+  bio?: string;
   isOnline?: boolean;
   lastSeen?: string;
   createdAt?: string;
@@ -156,7 +157,7 @@ export interface ErrorResponse {
   statusCode: number;
   success: boolean;
   message: string;
-  error?: any;
+  error?: unknown;
 }
 
 export interface MessageWithUser extends Message {

@@ -65,8 +65,9 @@ export default function LoginPage() {
     try {
       setError("");
       await login(data.email, data.password);
-    } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || "Login failed. Please try again.");
     }
   };
 
@@ -268,7 +269,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-      //{" "}
     </div>
   );
 }

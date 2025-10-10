@@ -52,19 +52,20 @@ export default function VerifyEmailPage() {
         setIsRedirecting(true);
         router.push("/chat");
       }, 3000);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
       console.error("Email verification failed:", error);
       setVerificationState("error");
 
-      if (error.response?.status === 400) {
+      if (err.response?.status === 400) {
         setErrorMessage("This verification link has expired or is invalid.");
-      } else if (error.response?.status === 404) {
+      } else if (err.response?.status === 404) {
         setErrorMessage(
           "Verification token not found. Please check your email link."
         );
       } else {
         setErrorMessage(
-          error.response?.data?.message ||
+          err.response?.data?.message ||
             "Verification failed. Please try again."
         );
       }
@@ -104,13 +105,13 @@ export default function VerifyEmailPage() {
             </h1>
             <div className="text-gray-600 dark:text-gray-300 mb-8 space-y-3">
               <p>
-                Welcome to Banter! Your account has been verified and you're now
+                Welcome to Banter! Your account has been verified and you&apos;re now
                 logged in.
               </p>
               <p className="text-sm">
                 {isRedirecting
                   ? "Redirecting you to the chat..."
-                  : "You'll be redirected to the chat in a few seconds."}
+                  : "You&apos;ll be redirected to the chat in a few seconds."}
               </p>
             </div>
 

@@ -34,18 +34,18 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
   const [loadingDefaults, setLoadingDefaults] = useState(false);
   const [error, setError] = useState("");
 
-  const tabs: { id: FriendsTab; label: string; icon: any; count: number }[] = [
+  const tabs: { id: FriendsTab; label: string; icon: React.ComponentType<{ className?: string }>; count: number }[] = [
     {
       id: "all",
       label: "All",
       icon: Users,
-      count: friends.filter((f: Friend) => f.status === "ACCEPTED").length,
+      count: friends.filter((f: FriendEntry) => f.status === "ACCEPTED").length,
     },
     {
       id: "pending",
       label: "Pending",
       icon: Clock,
-      count: friends.filter((f: Friend) => f.status === "PENDING").length,
+      count: pending.length,
     },
     // {
     //   id: "blocked",
@@ -81,13 +81,7 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
     try {
       const users = await friendApi.getRandomUsers(20);
       // Filter out current user and existing friends
-      interface ExistingFriend {
-        requesterId: string;
-        receiverId: string;
-      }
-      const existingFriendIds: string[] = friends.map((f: ExistingFriend) =>
-        f.requesterId === user?.id ? f.receiverId : f.requesterId
-      );
+      const existingFriendIds: string[] = friends.map((f: FriendEntry) => f.friend.id);
       const filteredUsers = users.filter(
         (u) => u.id !== user?.id && !existingFriendIds.includes(u.id)
       );
@@ -128,9 +122,10 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
       }
       listFriends(); // refresh
       listPendingRequests();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const message =
-        error.response?.data?.message || `Failed to ${action} friend request`;
+        err.response?.data?.message || `Failed to ${action} friend request`;
       setError(message);
     }
   };
@@ -141,9 +136,10 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
       toast.success("Friend removed");
       listFriends(); // refresh
       listPendingRequests();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       const message =
-        error.response?.data?.message || "Failed to remove friend";
+        err.response?.data?.message || "Failed to remove friend";
       setError(message);
     }
   };
@@ -159,8 +155,9 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
 
       listFriends(); // refresh to show new pending request
       listPendingRequests();
-    } catch (error: any) {
-      if (error.response?.status === 409) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string }; status?: number }; message?: string };
+      if (err.response?.status === 409) {
         setError("Friend request already exists");
       } else {
         setError("Failed to send friend request");
@@ -177,13 +174,7 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
     try {
       const users = await friendApi.searchUser(searchTerm);
       // Filter out current user and existing friends
-      interface ExistingFriend {
-        requesterId: string;
-        receiverId: string;
-      }
-      const existingFriendIds: string[] = friends.map((f: ExistingFriend) =>
-        f.requesterId === user?.id ? f.receiverId : f.requesterId
-      );
+      const existingFriendIds: string[] = friends.map((f: FriendEntry) => f.friend.id);
       const filteredUsers = users.filter(
         (u) => u.id !== user?.id && !existingFriendIds.includes(u.id)
       );
@@ -258,21 +249,26 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
       );
     }
 
-    let filteredFriends = friends;
+    let filteredFriendEntries: FriendEntry[] = [];
     let emptyMessage = "No friends to show";
 
     if (activeTab === "pending") {
-      filteredFriends = pending.filter((f: Friend) => f.status === "PENDING");
+      // Convert Friend[] to FriendEntry[] format for pending
+      filteredFriendEntries = pending.map((p: Friend) => ({
+        friendshipId: p.id,
+        status: p.status,
+        friend: p.requester.id === user?.id ? p.receiver : p.requester,
+      }));
       emptyMessage = "No pending friend requests";
     } else if (activeTab === "blocked") {
-      filteredFriends = friends.filter((f: Friend) => f.status === "BLOCKED");
+      filteredFriendEntries = friends.filter((f: FriendEntry) => f.status === "BLOCKED");
       emptyMessage = "No blocked users";
     } else if (activeTab === "all") {
-      filteredFriends = friends.filter((f: Friend) => f.status === "ACCEPTED");
+      filteredFriendEntries = friends.filter((f: FriendEntry) => f.status === "ACCEPTED");
       emptyMessage = "No friends yet";
     }
 
-    if (filteredFriends.length === 0) {
+    if (filteredFriendEntries.length === 0) {
       return (
         <div className="p-4">
           <EmptyState icon={Users} message={emptyMessage} />
@@ -282,7 +278,7 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
 
     return (
       <div className="p-4 space-y-2">
-        {filteredFriends.map((f: FriendEntry) => (
+        {filteredFriendEntries.map((f: FriendEntry) => (
           <FriendCard
             key={f.friendshipId}
             friendship={f}

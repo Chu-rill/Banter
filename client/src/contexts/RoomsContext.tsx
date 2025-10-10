@@ -15,9 +15,10 @@ interface RoomProviderProps {
 interface RoomsContextType {
   rooms: Room[];
   loadRooms: () => Promise<void>;
+  loading: boolean;
 }
 
-const RoomsContext = createContext<any | null>(null);
+const RoomsContext = createContext<RoomsContextType | null>(null);
 
 export function RoomsProvider({ children }: RoomProviderProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -37,7 +38,7 @@ export function RoomsProvider({ children }: RoomProviderProps) {
   }, []);
 
   return (
-    <RoomsContext.Provider value={{ rooms, loadRooms }}>
+    <RoomsContext.Provider value={{ rooms, loadRooms, loading }}>
       {children}
     </RoomsContext.Provider>
   );

@@ -96,7 +96,8 @@ export default function UserProfile({
 
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       setError(err.response?.data?.message || "Failed to update profile");
     }
   };
@@ -127,7 +128,8 @@ export default function UserProfile({
       // Refresh user data from server to get the updated avatar
       await refreshUser();
       setSuccess("Avatar updated successfully!");
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
       setError(err.response?.data?.message || "Failed to upload avatar");
     } finally {
       setIsUploading(false);
@@ -415,7 +417,7 @@ export default function UserProfile({
                       <div>
                         <p className="text-sm font-medium">Online Status</p>
                         <p className="text-xs text-muted-foreground">
-                          Show when you're online
+                          Show when you&apos;re online
                         </p>
                       </div>
                     </div>

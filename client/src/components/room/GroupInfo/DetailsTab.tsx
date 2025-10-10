@@ -137,8 +137,9 @@ export default function DetailsTab({
       loadRooms();
       // Update local state
       setEditedRoom({ ...editedRoom, profilePicture: response.data.profilePicture });
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to upload profile picture");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to upload profile picture");
     } finally {
       setIsUploadingImage(false);
     }

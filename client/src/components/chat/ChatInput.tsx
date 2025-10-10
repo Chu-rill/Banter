@@ -97,7 +97,7 @@ export default function ChatInput({
     }
   };
 
-  const handleEmojiClick = (emojiData: any) => {
+  const handleEmojiClick = (emojiData: { emoji: string }) => {
     setNewMessage((prev) => prev + emojiData.emoji);
     setShowEmojiPicker(false);
     messageInputRef.current?.focus();

@@ -81,8 +81,9 @@ export default function RegisterPage() {
     try {
       setError("");
       await registerUser(data.username, data.email, data.password);
-    } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || "Registration failed. Please try again.");
     }
   };
 
@@ -443,7 +444,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-      //{" "}
     </div>
   );
 }

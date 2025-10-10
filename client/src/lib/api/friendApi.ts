@@ -41,6 +41,7 @@ export const friendApi = {
 
   getRandomUsers: async (limit: number = 10): Promise<User[]> => {
     const { data } = await api.get(`/users?limit=${limit}`);
+    console.log(data);
     return Array.isArray(data.data) ? data.data : [data.data];
   },
 };

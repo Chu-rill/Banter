@@ -11,7 +11,7 @@ export interface UseLoadingReturn {
   loadingStates: LoadingState;
   setLoading: (loading: boolean) => void;
   setLoadingState: (key: string, loading: boolean) => void;
-  withLoading: <T extends any[], R>(
+  withLoading: <T extends unknown[], R>(
     fn: (...args: T) => Promise<R>,
     key?: string
   ) => (...args: T) => Promise<R>;
@@ -55,7 +55,7 @@ export function useLoading(initialLoading = false): UseLoadingReturn {
   }, [setLoadingState]);
 
   const withLoading = useCallback(
-    <T extends any[], R>(
+    <T extends unknown[], R>(
       fn: (...args: T) => Promise<R>,
       key?: string
     ) => {

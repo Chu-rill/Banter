@@ -10,7 +10,7 @@ export default function OAuthCallbackPage() {
     "loading"
   );
   const [errorMessage, setErrorMessage] = useState("");
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<{ username?: string; email?: string } | null>(null);
   const hasProcessed = useRef(false);
 
   const router = useRouter();
@@ -65,11 +65,12 @@ export default function OAuthCallbackPage() {
         setTimeout(() => {
           router.push("/chat");
         }, 500);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as { message?: string };
         console.error("OAuth processing failed:", err);
         setStatus("error");
         setErrorMessage(
-          err.message || "Authentication failed. Please try again."
+          error.message || "Authentication failed. Please try again."
         );
       }
     };

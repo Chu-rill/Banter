@@ -212,11 +212,12 @@ export const authApi = {
         email,
       });
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: unknown; status?: number; headers?: unknown }; message?: string };
       console.error("API Error Response:", {
-        data: error.response?.data,
-        status: error.response?.status,
-        headers: error.response?.headers,
+        data: err.response?.data,
+        status: err.response?.status,
+        headers: err.response?.headers,
       });
       throw error;
     }

@@ -145,9 +145,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Navigate after state is set
         router.push("/chat");
       }
-    } catch (error: any) {
-      console.error("Login failed:", error);
-      throw new Error(error.response?.data?.message || "Login failed");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      console.error("Login failed:", err);
+      throw new Error(err.response?.data?.message || "Login failed");
     } finally {
       setIsLoading(false);
     }
@@ -164,9 +165,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // After successful registration, redirect to check-email page
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
-    } catch (error: any) {
-      console.error("Registration failed:", error);
-      throw new Error(error.response?.data?.message || "Registration failed");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      console.error("Registration failed:", err);
+      throw new Error(err.response?.data?.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }

@@ -118,12 +118,20 @@ export default function ChatWindow({
         <FileUpload
           onFileUploaded={(file) => {
             console.log("onFileUploaded file:", file);
-            // Map file.type to allowed mediaType values
+            // Map file.type (MIME type) to allowed mediaType values
+            let mediaType: "VIDEO" | "IMAGE" | "AUDIO" | "FILE" = "FILE";
+            if (file.type.startsWith("image/")) {
+              mediaType = "IMAGE";
+            } else if (file.type.startsWith("video/")) {
+              mediaType = "VIDEO";
+            } else if (file.type.startsWith("audio/")) {
+              mediaType = "AUDIO";
+            }
 
             sendMessage({
               type: "MEDIA",
               mediaUrl: file.url,
-              mediaType: file.type,
+              mediaType,
             });
             setShowFileUpload(false);
           }}

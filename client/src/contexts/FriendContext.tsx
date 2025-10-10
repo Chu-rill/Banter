@@ -12,12 +12,14 @@ import { friendApi } from "@/lib/api/friendApi";
 interface FriendProviderProps {
   children: ReactNode;
 }
-interface RoomsContextType {
-  friends: Friend[];
-  loadRooms: () => Promise<void>;
+interface FriendContextType {
+  friends: FriendEntry[];
+  pending: Friend[];
+  listFriends: () => Promise<void>;
+  listPendingRequests: () => Promise<void>;
 }
 
-const FriendContext = createContext<any | null>(null);
+const FriendContext = createContext<FriendContextType | null>(null);
 
 export function FriendProvider({ children }: FriendProviderProps) {
   const [friends, setFriends] = useState<FriendEntry[]>([]);

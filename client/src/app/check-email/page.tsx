@@ -50,9 +50,10 @@ export default function CheckEmailPage() {
       
       setResendSuccess(true);
       setResendError("");
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       setResendError(
-        error.response?.data?.message || "Failed to resend email. Please try again."
+        err.response?.data?.message || "Failed to resend email. Please try again."
       );
     } finally {
       setIsResending(false);
@@ -76,7 +77,7 @@ export default function CheckEmailPage() {
           {/* Description */}
           <div className="text-gray-600 dark:text-gray-300 mb-8 space-y-3">
             <p>
-              We've sent a verification link to:
+              We&apos;ve sent a verification link to:
             </p>
             {email && (
               <p className="font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-lg">
@@ -96,7 +97,7 @@ export default function CheckEmailPage() {
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1 text-left">
               <li>• Check your inbox (and spam folder)</li>
               <li>• Click the verification link</li>
-              <li>• You'll be automatically logged in</li>
+              <li>• You&apos;ll be automatically logged in</li>
             </ul>
           </div>
 
@@ -120,7 +121,7 @@ export default function CheckEmailPage() {
             )}
 
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              Didn't receive the email?
+              Didn&apos;t receive the email?
             </div>
 
             <button
