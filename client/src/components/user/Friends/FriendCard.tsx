@@ -1,6 +1,6 @@
 import { MessageCircle, UserCheck, UserX, UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Friend, FriendEntry, User } from "@/types";
+import { FriendEntry, User } from "@/types";
 import { useState, useEffect } from "react";
 
 interface FriendCardProps {
@@ -19,11 +19,14 @@ export default function FriendCard({
   onMessage,
 }: FriendCardProps) {
   const friend = friendship.friend;
-
   const [imageError, setImageError] = useState(false);
-  const isIncomingRequest = friendship.status === "PENDING";
 
-  const isOutgoingRequest = friendship.status === "PENDING";
+  // Determine relationship direction
+  const isPending = friendship.status === "PENDING";
+  const isIncomingRequest =
+    isPending && friendship.receiverId === currentUser?.id;
+  const isOutgoingRequest =
+    isPending && friendship.senderId === currentUser?.id;
 
   useEffect(() => {
     setImageError(false);
@@ -57,6 +60,7 @@ export default function FriendCard({
           )}
         </div>
       </div>
+
       <div className="flex gap-2">
         {isIncomingRequest ? (
           <>
@@ -81,7 +85,6 @@ export default function FriendCard({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => onRemove(friendship.friendshipId)}
             disabled
             className="text-muted-foreground"
           >
@@ -92,7 +95,7 @@ export default function FriendCard({
             <Button
               size="sm"
               variant="ghost"
-              className=" hover:cursor-pointer"
+              className="hover:cursor-pointer"
               onClick={() => onMessage(friend)}
             >
               <MessageCircle size={16} />

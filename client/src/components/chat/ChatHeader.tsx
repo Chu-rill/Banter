@@ -117,7 +117,7 @@ export default function ChatHeader({
           </Button>
 
           {mobileMenuOpen && (
-            <div className="absolute right-0 top-10 bg-card border border-border rounded-lg shadow-lg p-2 flex flex-col space-y-1 z-30">
+            <div className="absolute right-0 top-10 bg-card border border-border rounded-lg shadow-lg p-2 flex flex-col space-y-1 z-30 bg-gray-200 dark:bg-gray-800">
               <Button variant="ghost" onClick={onStartVoiceCall}>
                 <Phone className="w-4 h-4 mr-2" /> Voice
               </Button>

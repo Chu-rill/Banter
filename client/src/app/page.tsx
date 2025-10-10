@@ -14,6 +14,7 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import Loader from "@/components/ui/Loader";
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -142,7 +143,10 @@ export default function Home() {
                 Trusted by 1M+ users worldwide
               </span>
             </div>
-
+            <div>
+              <h1>test</h1>
+              <Loader size={70} color="#9b6bff" />
+            </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-8 text-foreground">
               Connect, Chat, and
               <span className="gradient-text block mt-2 relative">

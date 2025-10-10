@@ -146,6 +146,8 @@ export class FriendshipService {
         friendshipId: f.id,
         status: f.status,
         friend: otherUser,
+        senderId: f.requesterId,
+        receiverId: f.receiverId,
       };
     });
 

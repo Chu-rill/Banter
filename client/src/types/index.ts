@@ -68,6 +68,8 @@ export interface FriendEntry {
   friendshipId: string;
   status: "PENDING" | "ACCEPTED" | "BLOCKED" | "DECLINED";
   friend: User;
+  senderId: string;
+  receiverId: string;
 }
 
 export interface DirectMessage {

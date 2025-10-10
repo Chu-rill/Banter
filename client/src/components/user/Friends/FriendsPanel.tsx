@@ -256,6 +256,8 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
         friendshipId: p.id,
         status: p.status,
         friend: p.requester.id === user?.id ? p.receiver : p.requester,
+        senderId: p.requesterId,
+        receiverId: p.receiverId,
       }));
       emptyMessage = "No pending friend requests";
     } else if (activeTab === "blocked") {
