@@ -19,7 +19,12 @@ export class FileController {
   @Post('upload')
   @UseInterceptors(FileInterceptor('images'))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    const result = await this.supabaseService.uploadImages(file, 'uploads');
-    return { url: result, type: 'IMAGE' };
+    const url = await this.supabaseService.uploadImages(file, 'uploads');
+    return {
+      url,
+      type: file.mimetype, // Return MIME type (e.g., "image/png", "video/mp4")
+      name: file.originalname,
+      size: file.size,
+    };
   }
 }

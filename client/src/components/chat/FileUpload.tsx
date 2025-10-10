@@ -40,11 +40,12 @@ export default function FileUpload({
 
     try {
       const uploadedFile = await uploadApi.uploadFile(selectedFile);
+      console.log("Upload successful, file data:", uploadedFile);
       onFileUploaded(uploadedFile);
       onClose();
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      console.error(err);
+      console.error("Upload error:", err);
       setError(error.response?.data?.message || "Upload failed");
     } finally {
       setUploading(false);
