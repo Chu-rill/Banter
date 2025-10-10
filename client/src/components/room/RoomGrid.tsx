@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { RoomWithStatus } from "./JoinRoom";
 import RoomCard from "./RoomCard";
 import Loader from "@/components/ui/Loader";

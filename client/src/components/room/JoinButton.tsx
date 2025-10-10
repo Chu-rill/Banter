@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
-import { CheckCircle, Clock, Loader2, UserPlus, Users } from "lucide-react";
+import { CheckCircle, Clock, UserPlus, Users } from "lucide-react";
 import { RoomWithStatus } from "./JoinRoom";
 import { useAuth } from "@/contexts/AuthContext";
 import Loader from "@/components/ui/Loader";

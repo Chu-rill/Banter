@@ -13,8 +13,8 @@ export default function Loader({ size = 80, color = "#8d7958" }: LoaderProps) {
         {
           width: `${size}px`,
           aspectRatio: "1",
-          ["--c" as any]: `${color} 91%,#0000`,
-        } as React.CSSProperties
+          "--c": `${color} 91%,#0000`,
+        } as React.CSSProperties & { "--c": string }
       }
     />
   );

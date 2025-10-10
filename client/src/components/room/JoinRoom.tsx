@@ -4,7 +4,7 @@ import { Room } from "@/types";
 import { roomApi } from "@/lib/api/roomApi";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Search, Loader2 } from "lucide-react";
+import { Search } from "lucide-react";
 import RoomCard from "./RoomCard";
 import { cn } from "@/lib/utils";
 import { useRooms } from "@/contexts/RoomsContext";

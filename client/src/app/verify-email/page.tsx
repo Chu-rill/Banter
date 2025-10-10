@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Mail, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import Loader from "@/components/ui/Loader";
 
