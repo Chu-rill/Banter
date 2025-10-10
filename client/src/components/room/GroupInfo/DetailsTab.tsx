@@ -20,6 +20,7 @@ import { roomApi } from "@/lib/api/roomApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRooms } from "@/contexts/RoomsContext";
 import { useChat } from "@/hooks/useRoomChat";
+import Loader from "@/components/ui/Loader";
 
 interface DetailsTabProps {
   room: Room;
@@ -176,7 +177,7 @@ export default function DetailsTab({
                 className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg"
               >
                 {isUploadingImage ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <Loader size={16} color="#ffffff" />
                 ) : (
                   <Camera className="w-4 h-4" />
                 )}

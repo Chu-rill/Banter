@@ -25,6 +25,7 @@ import { uploadApi } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { cn } from "@/lib/utils";
+import Loader from "@/components/ui/Loader";
 
 interface UserProfileProps {
   onClose: () => void;
@@ -228,7 +229,7 @@ export default function UserProfile({
 
                   {isUploading && (
                     <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      <Loader size={24} color="#ffffff" />
                     </div>
                   )}
 

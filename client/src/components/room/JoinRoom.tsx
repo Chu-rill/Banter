@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useRooms } from "@/contexts/RoomsContext";
 import toast from "react-hot-toast";
 import { useChat } from "@/hooks/useRoomChat";
+import Loader from "@/components/ui/Loader";
 // import { RoomFilter, RoomSort, RoomWithStatus } from "./JoinRoom";
 
 interface JoinRoomProps {
@@ -200,7 +201,7 @@ export default function JoinRoom({
       <div className="max-h-[350px] overflow-y-auto space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-300" />
+            <Loader size={60} color="#9b6bff" />
           </div>
         ) : availableRooms.length === 0 ? (
           <div className="text-center py-12 text-sm text-gray-500 dark:text-gray-400">

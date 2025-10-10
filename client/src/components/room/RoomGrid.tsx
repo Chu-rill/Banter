@@ -3,6 +3,7 @@
 import { Loader2, Users } from "lucide-react";
 import { RoomWithStatus } from "./JoinRoom";
 import RoomCard from "./RoomCard";
+import Loader from "@/components/ui/Loader";
 
 interface RoomGridProps {
   rooms: RoomWithStatus[];
@@ -21,7 +22,7 @@ export default function RoomGrid({
     return (
       <div className="flex-1 overflow-y-auto p-6">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          <Loader size={80} color="#9b6bff" />
         </div>
       </div>
     );

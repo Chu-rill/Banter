@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { CheckCircle, Clock, Loader2, UserPlus, Users } from "lucide-react";
 import { RoomWithStatus } from "./JoinRoom";
 import { useAuth } from "@/contexts/AuthContext";
+import Loader from "@/components/ui/Loader";
 
 interface RoomJoinButtonProps {
   room: RoomWithStatus;
@@ -60,7 +61,9 @@ export default function RoomJoinButton({
     >
       {isJoining ? (
         <>
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          <span className="mr-2">
+            <Loader size={16} color="#ffffff" />
+          </span>
           {room.type === "PRIVATE" ? "Requesting..." : "Joining..."}
         </>
       ) : room.type === "PRIVATE" ? (

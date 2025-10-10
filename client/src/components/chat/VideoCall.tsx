@@ -7,6 +7,7 @@ import { useCall } from "@/hooks/useCall";
 import { Room, User } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import Loader from "@/components/ui/Loader";
 
 interface VideoCallProps {
   room?: Room;
@@ -403,7 +404,7 @@ export default function VideoCall({
         {!isConnected && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm rounded-lg p-8">
             <div className="flex flex-col items-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              <Loader size={100} color="#9b6bff" />
               <p className="text-white">Connecting to call...</p>
             </div>
           </div>
@@ -596,7 +597,7 @@ export default function VideoCall({
       {!isConnected && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 backdrop-blur-sm rounded-lg p-8">
           <div className="flex flex-col items-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <Loader size={100} color="#9b6bff" />
             <p className="text-white">Connecting to call...</p>
           </div>
         </div>

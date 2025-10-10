@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { CheckCircle, XCircle, Loader2, Mail, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import Loader from "@/components/ui/Loader";
 
 type VerificationState = "loading" | "success" | "error" | "invalid";
 
@@ -87,7 +88,7 @@ function VerifyEmailPage() {
         return (
           <>
             <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Loader2 className="w-10 h-10 text-blue-600 dark:text-blue-400 animate-spin" />
+              <Loader size={40} color="#9b6bff" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
               Verifying your email...

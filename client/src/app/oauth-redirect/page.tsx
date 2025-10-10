@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import Loader from "@/components/ui/Loader";
 
 function OAuthCallbackPage() {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
@@ -86,7 +87,9 @@ function OAuthCallbackPage() {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center">
         {status === "loading" && (
           <>
-            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
+            <div className="flex justify-center mb-4">
+              <Loader size={100} color="#9b6bff" />
+            </div>
             <h2 className="text-xl font-semibold mb-2">
               Completing sign in...
             </h2>
