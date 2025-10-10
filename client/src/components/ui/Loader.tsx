@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
 
 type LoaderProps = {
   size?: number; // default 80
@@ -6,23 +8,12 @@ type LoaderProps = {
 };
 
 export default function Loader({ size = 80, color = "#8d7958" }: LoaderProps) {
-  return (
-    <div
-      className="loader"
-      style={
-        {
-          width: `${size}px`,
-          aspectRatio: "1",
-          "--c": `${color} 91%,#0000`,
-        } as React.CSSProperties & { "--c": string }
-      }
-    />
-  );
-}
-
-// Inline CSS for the loader animation
-const style = document.createElement("style");
-style.innerHTML = `
+  useEffect(() => {
+    // Only inject styles once
+    if (typeof document !== "undefined" && !document.getElementById("loader-styles")) {
+      const style = document.createElement("style");
+      style.id = "loader-styles";
+      style.innerHTML = `
 .loader {
   --c: #8d7958 91%,#0000;
   background:
@@ -42,4 +33,20 @@ style.innerHTML = `
 @keyframes l8 {
   100% { transform: rotate(1turn); }
 }`;
-document.head.appendChild(style);
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  return (
+    <div
+      className="loader"
+      style={
+        {
+          width: `${size}px`,
+          aspectRatio: "1",
+          "--c": `${color} 91%,#0000`,
+        } as React.CSSProperties & { "--c": string }
+      }
+    />
+  );
+}

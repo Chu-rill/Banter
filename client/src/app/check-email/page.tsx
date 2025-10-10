@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Mail, RefreshCw, ArrowLeft, CheckCircle } from "lucide-react";
 import { authApi } from "@/lib/api";
+import Loader from "@/components/ui/Loader";
 
 function CheckEmailPage() {
   const [isResending, setIsResending] = useState(false);
@@ -171,7 +172,7 @@ function CheckEmailPage() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<p>Loading...</p>}>
+    <Suspense fallback={<Loader size={70} color="#9b6bff" />}>
       <CheckEmailPage />
     </Suspense>
   );

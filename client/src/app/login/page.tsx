@@ -263,7 +263,7 @@ function LoginPage() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<p>Loading...</p>}>
+    <Suspense fallback={<Loader size={70} color="#9b6bff" />}>
       <LoginPage />
     </Suspense>
   );

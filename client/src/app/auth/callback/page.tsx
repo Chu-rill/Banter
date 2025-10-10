@@ -4,9 +4,12 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import Loader from "@/components/ui/Loader";
 
 function AuthCallbackContent() {
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading"
+  );
   const [message, setMessage] = useState("");
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -124,23 +127,25 @@ function AuthCallbackContent() {
 
 export default function AuthCallback() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="max-w-md w-full mx-auto text-center">
-          <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
-            <div className="flex flex-col items-center gap-4">
-              <LoadingSpinner size="xl" />
-              <div>
-                <h2 className="text-xl font-semibold text-foreground mb-2">
-                  Loading...
-                </h2>
-                <p className="text-muted-foreground">Please wait...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="max-w-md w-full mx-auto text-center">
+            <div className="bg-card border border-border rounded-lg p-8 shadow-lg">
+              <div className="flex flex-col items-center gap-4">
+                <Loader size={70} color="#9b6bff" />
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground mb-2">
+                    Loading...
+                  </h2>
+                  <p className="text-muted-foreground">Please wait...</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <AuthCallbackContent />
     </Suspense>
   );
