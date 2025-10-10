@@ -142,6 +142,7 @@ export class UserRepository {
         username: true,
         email: true,
         avatar: true,
+        bio: true,
         isOnline: true,
         isVerified: true,
       },
@@ -178,12 +179,36 @@ export class UserRepository {
         username: true,
         email: true,
         avatar: true,
+        bio: true,
         isOnline: true,
         lastSeen: true,
         createdAt: true,
       },
     });
     return user;
+  }
+
+  async searchUsersByUsername(username: string) {
+    const users = await this.prisma.user.findMany({
+      where: {
+        username: {
+          contains: username,
+          mode: 'insensitive',
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatar: true,
+        bio: true,
+        isOnline: true,
+        lastSeen: true,
+        createdAt: true,
+      },
+      take: 20,
+    });
+    return users;
   }
 
   async updateUser(id: string, updateData: any) {
@@ -196,6 +221,7 @@ export class UserRepository {
           username: true,
           email: true,
           avatar: true,
+          bio: true,
           isOnline: true,
           lastSeen: true,
           updatedAt: true,
@@ -220,6 +246,7 @@ export class UserRepository {
           username: true,
           email: true,
           avatar: true,
+          bio: true,
           isOnline: true,
           lastSeen: true,
           updatedAt: true,
@@ -243,6 +270,7 @@ export class UserRepository {
           username: true,
           email: true,
           avatar: true,
+          bio: true,
           isOnline: true,
           lastSeen: true,
           createdAt: true,

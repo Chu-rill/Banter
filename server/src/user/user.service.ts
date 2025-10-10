@@ -55,6 +55,17 @@ export class UserService {
     };
   }
 
+  async searchUsersByUsername(username: string) {
+    const users = await this.userRepository.searchUsersByUsername(username);
+
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Users retrieved successfully',
+      data: users,
+    };
+  }
+
   async updateUser(id: string, updateData: UpdateUserDto) {
     try {
       const user = await this.userRepository.updateUser(id, updateData);
@@ -78,7 +89,12 @@ export class UserService {
     // Step 2: update user record in DB
     const user = await this.userRepository.updateAvatar(userId, avatarUrl);
 
-    return user;
+    return {
+      statusCode: HttpStatus.OK,
+      success: true,
+      message: 'Avatar updated successfully',
+      data: user,
+    };
   }
 
   async getAllUsers(page: number = 1, limit: number = 10) {

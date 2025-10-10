@@ -213,7 +213,10 @@ export const authApi = {
       });
       return data;
     } catch (error: unknown) {
-      const err = error as { response?: { data?: unknown; status?: number; headers?: unknown }; message?: string };
+      const err = error as {
+        response?: { data?: unknown; status?: number; headers?: unknown };
+        message?: string;
+      };
       console.error("API Error Response:", {
         data: err.response?.data,
         status: err.response?.status,
@@ -236,6 +239,11 @@ export const authApi = {
     if (typeof window !== "undefined") {
       localStorage.setItem("userData", JSON.stringify(data.data));
     }
+    return data;
+  },
+
+  updateUser: async (userData: Partial<User>): Promise<UserResponse> => {
+    const { data } = await api.put("/users/me", userData);
     return data;
   },
 

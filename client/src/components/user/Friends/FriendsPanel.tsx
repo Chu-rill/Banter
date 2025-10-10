@@ -202,6 +202,7 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
           ) : (
             <div className="space-y-2">
               {searchTerm.trim() ? (
+                // Search results section
                 searchResults.length === 0 ? (
                   <EmptyState icon={UserPlus} message="No users found" />
                 ) : (
@@ -218,29 +219,26 @@ export default function FriendsPanel({ onSelectFriend }: FriendsPanelProps) {
                     ))}
                   </>
                 )
+              ) : loadingDefaults ? (
+                <LoadingSpinner />
+              ) : defaultUsers.length === 0 ? (
+                <EmptyState
+                  icon={UserPlus}
+                  message="No suggested users available"
+                />
               ) : (
+                // Suggested users section
                 <>
-                  {loadingDefaults ? (
-                    <LoadingSpinner />
-                  ) : defaultUsers.length === 0 ? (
-                    <EmptyState
-                      icon={UserPlus}
-                      message="No suggested users available"
+                  <h3 className="text-sm font-medium text-muted-foreground px-2">
+                    Suggested Users
+                  </h3>
+                  {defaultUsers.map((user) => (
+                    <UserSearchCard
+                      key={user.id}
+                      searchUser={user}
+                      onSendRequest={handleSendRequest}
                     />
-                  ) : (
-                    <>
-                      <h3 className="text-sm font-medium text-muted-foreground px-2">
-                        Suggested Users
-                      </h3>
-                      {defaultUsers.map((user) => (
-                        <UserSearchCard
-                          key={user.id}
-                          searchUser={user}
-                          onSendRequest={handleSendRequest}
-                        />
-                      ))}
-                    </>
-                  )}
+                  ))}
                 </>
               )}
             </div>

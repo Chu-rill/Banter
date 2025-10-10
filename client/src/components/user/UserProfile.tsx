@@ -51,6 +51,7 @@ const profileSchema = z.object({
     .string()
     .min(1, "Email is required")
     .email("Please enter a valid email address"),
+  bio: z.string().max(200, "Bio must be less than 200 characters").optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -78,26 +79,38 @@ export default function UserProfile({
     defaultValues: {
       username: user?.username || "",
       email: user?.email || "",
+      bio: user?.bio || "",
     },
   });
+
+  // Update form values when user data changes
+  useEffect(() => {
+    reset({
+      username: user?.username || "",
+      email: user?.email || "",
+      bio: user?.bio || "",
+    });
+  }, [user, reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
       setError("");
       setSuccess("");
 
-      // TODO: Implement profile update API call
-      console.log("Update profile:", data);
-
-      updateUser({
+      // Update user profile via API
+      await updateUser({
         username: data.username,
         email: data.email,
+        bio: data.bio,
       });
 
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       setError(err.response?.data?.message || "Failed to update profile");
     }
   };
@@ -129,7 +142,10 @@ export default function UserProfile({
       await refreshUser();
       setSuccess("Avatar updated successfully!");
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       setError(err.response?.data?.message || "Failed to upload avatar");
     } finally {
       setIsUploading(false);
@@ -140,6 +156,7 @@ export default function UserProfile({
     reset({
       username: user?.username || "",
       email: user?.email || "",
+      bio: user?.bio || "",
     });
     setIsEditing(false);
     setError("");
@@ -153,9 +170,11 @@ export default function UserProfile({
   ];
 
   const [imageError, setImageError] = useState(false);
+  const [avatarKey, setAvatarKey] = useState(Date.now());
 
   useEffect(() => {
     setImageError(false);
+    setAvatarKey(Date.now()); // Force image reload when avatar changes
   }, [user?.avatar]);
 
   return (
@@ -223,12 +242,13 @@ export default function UserProfile({
                 <div className="relative inline-block">
                   <div className="relative">
                     {imageError || !user?.avatar ? (
-                      <div className="bg-gray-500 w-12 h-12 rounded-full flex items-center justify-center text-white font-medium">
+                      <div className="bg-gray-500 w-24 h-24 rounded-full flex items-center justify-center text-white font-medium">
                         <UserIcon className="w-8 h-8 text-white" />
                       </div>
                     ) : (
                       <img
-                        src={user?.avatar}
+                        key={avatarKey}
+                        src={`${user?.avatar}${user?.avatar.includes('?') ? '&' : '?'}t=${avatarKey}`}
                         alt={user?.username}
                         className="w-24 h-24 rounded-full object-cover border-4 border-border"
                         onError={() => setImageError(true)}
@@ -280,7 +300,7 @@ export default function UserProfile({
 
               {/* Profile Form */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex  items-center justify-between">
                   <h4 className="text-sm font-medium text-foreground">
                     Account Information
                   </h4>
@@ -289,7 +309,7 @@ export default function UserProfile({
                       variant="outline"
                       size="sm"
                       onClick={() => setIsEditing(true)}
-                      className="flex items-center space-x-1"
+                      className="flex items-center space-x-1 bg-orange-500 hover:bg-orange-600 text-white hover:cursor-pointer"
                     >
                       <Edit3 className="w-3 h-3" />
                       <span>Edit</span>
@@ -300,6 +320,7 @@ export default function UserProfile({
                         variant="outline"
                         size="sm"
                         onClick={handleCancel}
+                        className="bg-red-500 hover:bg-red-600 text-white hover:cursor-pointer"
                         disabled={isSubmitting}
                       >
                         Cancel
@@ -309,7 +330,7 @@ export default function UserProfile({
                         size="sm"
                         onClick={handleSubmit(onSubmit)}
                         disabled={isSubmitting}
-                        className="flex items-center space-x-1"
+                        className="flex items-center space-x-1 bg-green-500 hover:bg-green-600 text-white hover:cursor-pointer"
                       >
                         <Save className="w-3 h-3" />
                         <span>Save</span>
@@ -342,6 +363,36 @@ export default function UserProfile({
                         !isEditing && "bg-muted cursor-not-allowed"
                       )}
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Bio
+                    </label>
+                    <textarea
+                      {...register("bio")}
+                      disabled={!isEditing}
+                      rows={3}
+                      maxLength={200}
+                      placeholder="Tell us about yourself..."
+                      className={cn(
+                        "w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-colors resize-none",
+                        !isEditing && "bg-muted cursor-not-allowed"
+                      )}
+                    />
+                    {errors.bio && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.bio.message}
+                      </p>
+                    )}
+                    {isEditing && (
+                      <p className="mt-1 text-xs text-muted-foreground text-right">
+                        {200 -
+                          (register("bio") as unknown as { value: string })
+                            ?.value?.length || 200}{" "}
+                        characters remaining
+                      </p>
+                    )}
                   </div>
                 </form>
               </div>

@@ -13,14 +13,25 @@ interface ChatMessageItemProps {
 
 export default function ChatMessageItem({ message }: ChatMessageItemProps) {
   const { user } = useAuth();
-  const isOwn = message.isOwn || message.user.id === user?.id;
+
+  // For direct messages, check senderId. For room messages, check user.id
+  const senderId = typeof message.senderId === 'object' && message.senderId !== null
+    ? message.senderId.id
+    : message.senderId;
+  const isOwn = message.isOwn || senderId === user?.id || message.user?.id === user?.id;
+
+  // Get the display user (for avatar/username) - use senderId for DMs, user for room messages
+  const displayUser = message.senderId && typeof message.senderId === 'object'
+    ? message.senderId
+    : message.user;
+
   const isSystem = message.type === "SYSTEM";
   const showAvatar = !isOwn && !isSystem;
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     setImageError(false);
-  }, [message.user.avatar]);
+  }, [displayUser?.avatar]);
 
   // 🟢 System messages
   if (isSystem) {
@@ -53,16 +64,16 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
       )}
     >
       {/* Avatar for others */}
-      {showAvatar && (
+      {showAvatar && displayUser && (
         <div className="mr-2 flex-shrink-0">
-          {imageError || !message.user.avatar ? (
+          {imageError || !displayUser.avatar ? (
             <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center">
               <UserIcon className="w-5 h-5 text-white" />
             </div>
           ) : (
             <img
-              src={message.user.avatar}
-              alt={message.user.username}
+              src={displayUser.avatar}
+              alt={displayUser.username}
               className="w-8 h-8 rounded-full object-cover"
               onError={() => setImageError(true)}
             />
@@ -81,9 +92,9 @@ export default function ChatMessageItem({ message }: ChatMessageItemProps) {
         )}
       >
         {/* Username (only for others) */}
-        {!isOwn && (
+        {!isOwn && displayUser && (
           <span className="text-xs text-black mb-0.5 font-medium">
-            {message.user.username}
+            {displayUser.username}
           </span>
         )}
 

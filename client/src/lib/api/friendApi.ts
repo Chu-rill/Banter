@@ -41,7 +41,12 @@ export const friendApi = {
 
   getRandomUsers: async (limit: number = 10): Promise<User[]> => {
     const { data } = await api.get(`/users?limit=${limit}`);
-    console.log(data);
-    return Array.isArray(data.data) ? data.data : [data.data];
+    console.log("getRandomUsers response:", data);
+    // The response structure is { data: { users: [...], pagination: {...} } }
+    if (data.data && data.data.users && Array.isArray(data.data.users)) {
+      return data.data.users;
+    }
+    // Fallback for other response structures
+    return Array.isArray(data.data) ? data.data : [];
   },
 };

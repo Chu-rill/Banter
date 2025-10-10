@@ -10,6 +10,7 @@ export const UserSchema = z.object({
   email: z.string().email(),
   password: z.string(),
   avatar: z.string().nullable().optional(),
+  bio: z.string().max(200).nullable().optional(),
   isOnline: z.boolean().optional(),
   lastSeen: z.date().optional(),
   createdAt: z.date().optional(),
@@ -32,6 +33,7 @@ export const UpdateUserSchema = z.object({
   username: z.string().optional(),
   email: z.string().email().optional(),
   avatar: z.string().nullable().optional(),
+  bio: z.string().max(200).nullable().optional(),
 });
 
 // Query validation schema
@@ -89,6 +91,12 @@ export class UpdateUserDtoSwagger {
     description: 'Updated avatar URL',
   })
   avatar?: string | null;
+
+  @ApiPropertyOptional({
+    example: 'Software developer who loves coding',
+    description: 'User bio (max 200 characters)',
+  })
+  bio?: string | null;
 }
 
 export class GetUsersQueryDtoSwagger {

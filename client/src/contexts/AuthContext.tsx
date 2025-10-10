@@ -31,7 +31,10 @@ interface AuthContextType {
     token: string,
     refreshToken?: string
   ) => Promise<User | null>;
-  handleEmailVerification: (token: string, refreshToken?: string) => Promise<void>;
+  handleEmailVerification: (
+    token: string,
+    refreshToken?: string
+  ) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -146,7 +149,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         router.push("/chat");
       }
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       console.error("Login failed:", err);
       throw new Error(err.response?.data?.message || "Login failed");
     } finally {
@@ -166,7 +172,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // After successful registration, redirect to check-email page
       router.push(`/check-email?email=${encodeURIComponent(email)}`);
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
       console.error("Registration failed:", err);
       throw new Error(err.response?.data?.message || "Registration failed");
     } finally {
@@ -188,10 +197,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      setUser({ ...user, ...userData });
-    }
+  const updateUser = async (userData: Partial<User>) => {
+    const response = await authApi.updateUser(userData);
+    const user = response.data as User;
+    setUser(user);
+    // if (user) {
+    //   setUser({ ...user, ...userData });
+    // }
   };
 
   const refreshUser = async () => {

@@ -138,7 +138,7 @@ export class DirectMessageGateway
     @WsUser() senderId: string,
   ) {
     const { receiverId, content, mediaUrl, type, mediaType } = data;
-    console.log('Received direct message data:', data);
+
     if (!senderId) {
       this.logger.error('No senderId found');
       client.emit('dm:error', { message: 'Not authenticated' });
