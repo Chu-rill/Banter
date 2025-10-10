@@ -46,7 +46,7 @@ class SocketService {
     });
 
     this.callSocket.on("connect", () => {
-      console.log("Call socket connected");
+      console.log("Call socket connected!");
     });
   }
 
