@@ -17,6 +17,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
+    "types": ["node", "express", "multer"],
     "paths": {
       "@generated/*": ["generated/*"]
     }
