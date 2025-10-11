@@ -78,7 +78,7 @@ export default function ChatSidebar({
   // --- COLLAPSED SIDEBAR ---
   if (collapsed) {
     return (
-      <div className="w-16 bg-card border-r border-border flex flex-col text-black dark:text-white">
+      <div className="w-16 bg-card border-r border-border flex flex-col">
         <div className="p-3 border-b border-border">
           <Button
             variant="ghost"
@@ -86,7 +86,7 @@ export default function ChatSidebar({
             onClick={onToggleCollapse}
             className="w-10 h-10"
           >
-            <Expand className="w-5 h-5" />
+            <Expand className="w-5 h-5 text-foreground" />
           </Button>
         </div>
 
@@ -97,7 +97,7 @@ export default function ChatSidebar({
             onClick={handleCreateRoom}
             className="w-10 h-10"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-5 h-5 text-foreground" />
           </Button>
 
           <div className="flex-1 w-full">
@@ -112,7 +112,7 @@ export default function ChatSidebar({
                   selectedRoom?.id === room.id && "bg-accent"
                 )}
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4 text-foreground" />
                 {room.isActive && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card" />
                 )}
@@ -128,7 +128,7 @@ export default function ChatSidebar({
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="w-10 h-10"
           >
-            {theme === "dark" ? <Sun /> : <Moon />}
+            {theme === "dark" ? <Sun className="text-foreground" /> : <Moon className="text-foreground" />}
           </Button>
 
           <Button
@@ -165,7 +165,7 @@ export default function ChatSidebar({
 
       <div
         className={cn(
-          "border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out text-white",
+          "border-r border-border/50 flex flex-col transition-transform duration-300 ease-in-out",
           // Solid opaque background on mobile
           "bg-background md:bg-card shadow-lg md:shadow-none",
           // Position and size
@@ -175,33 +175,33 @@ export default function ChatSidebar({
         )}
       >
         {/* Header */}
-        <div className="p-4 border-b border-border/50">
+        <div className="p-4 md:p-4 border-b border-border/50">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <MessageCircle className="w-6 h-6 text-white" />
+              <div className="w-11 h-11 md:w-10 md:h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <MessageCircle className="w-7 h-7 md:w-6 md:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-text">Banter</h1>
-                <p className="text-xs text-muted-foreground -mt-1">
+                <h1 className="text-xl md:text-xl font-bold gradient-text">Banter</h1>
+                <p className="text-sm md:text-xs text-muted-foreground -mt-1">
                   Chat & Video
                 </p>
               </div>
             </div>
 
-            <Button variant="ghost" size="icon" onClick={onToggleCollapse}>
-              <Minimize2 className="w-4 h-4" />
+            <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="w-10 h-10 md:w-9 md:h-9">
+              <Minimize2 className="w-5 h-5 md:w-4 md:h-4 text-foreground" />
             </Button>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 md:w-4 md:h-4 text-muted-foreground" />
             <input
               placeholder="Search conversations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 bg-secondary/50 border border-border/30 rounded-lg text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all"
+              className="w-full h-11 md:h-10 pl-11 md:pl-10 pr-4 bg-secondary/50 border border-border/30 rounded-lg text-base md:text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all"
             />
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function ChatSidebar({
           <button
             onClick={() => setActiveTab("rooms")}
             className={cn(
-              "flex-1 py-3 px-4 text-sm font-medium transition-all relative overflow-hidden",
+              "flex-1 py-3.5 md:py-3 px-4 text-base md:text-sm font-medium transition-all relative overflow-hidden",
               activeTab === "rooms"
                 ? "text-purple-600 bg-secondary/80 md:bg-background/50"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 md:hover:bg-secondary/30"
@@ -220,13 +220,13 @@ export default function ChatSidebar({
             {activeTab === "rooms" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
             )}
-            <Users className="w-4 h-4 inline-block mr-2" />
+            <Users className="w-5 h-5 md:w-4 md:h-4 inline-block mr-2" />
             Rooms
           </button>
           <button
             onClick={() => setActiveTab("friends")}
             className={cn(
-              "flex-1 py-3 px-4 text-sm font-medium transition-all relative overflow-hidden",
+              "flex-1 py-3.5 md:py-3 px-4 text-base md:text-sm font-medium transition-all relative overflow-hidden",
               activeTab === "friends"
                 ? "text-purple-600 bg-secondary/80 md:bg-background/50"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary/50 md:hover:bg-secondary/30"
@@ -235,7 +235,7 @@ export default function ChatSidebar({
             {activeTab === "friends" && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-purple-600 rounded-full" />
             )}
-            <Contact className="w-4 h-4 inline-block mr-2" />
+            <Contact className="w-5 h-5 md:w-4 md:h-4 inline-block mr-2" />
             Friends
           </button>
         </div>
@@ -263,12 +263,12 @@ export default function ChatSidebar({
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               <div className="relative">
                 {imageError || !user?.avatar ? (
-                  <UserIcon className="w-8 h-8 text-gray-400" />
+                  <UserIcon className="w-10 h-10 md:w-8 md:h-8 text-gray-400" />
                 ) : (
                   <img
                     src={user.avatar}
                     alt={user.username || "User"}
-                    className="w-11 h-11 rounded-xl object-cover shadow-md"
+                    className="w-12 h-12 md:w-11 md:h-11 rounded-xl object-cover shadow-md"
                     onError={() => setImageError(true)}
                   />
                 )}
@@ -281,12 +281,12 @@ export default function ChatSidebar({
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">
+                <p className="text-base md:text-sm font-semibold text-foreground truncate">
                   {user?.username || "Loading..."}
                 </p>
                 <p
                   className={cn(
-                    "text-xs font-medium truncate",
+                    "text-sm md:text-xs font-medium truncate",
                     user?.isOnline ? "text-green-600" : "text-muted-foreground"
                   )}
                 >
@@ -300,30 +300,30 @@ export default function ChatSidebar({
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="w-9 h-9 hover:bg-accent/50 rounded-lg"
+                className="w-10 h-10 md:w-9 md:h-9 hover:bg-accent/50 rounded-lg"
                 title="Toggle theme"
               >
-                {theme === "dark" ? <Sun /> : <Moon />}
+                {theme === "dark" ? <Sun className="w-5 h-5 md:w-4 md:h-4 text-foreground" /> : <Moon className="w-5 h-5 md:w-4 md:h-4 text-foreground" />}
               </Button>
 
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={onShowProfile}
-                className="w-9 h-9 hover:bg-accent/50 rounded-lg"
+                className="w-10 h-10 md:w-9 md:h-9 hover:bg-accent/50 rounded-lg"
                 title="Settings"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-5 h-5 md:w-4 md:h-4 text-foreground" />
               </Button>
 
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={logout}
-                className="w-9 h-9 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"
+                className="w-10 h-10 md:w-9 md:h-9 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg"
                 title="Sign out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-5 h-5 md:w-4 md:h-4 text-destructive" />
               </Button>
             </div>
           </div>

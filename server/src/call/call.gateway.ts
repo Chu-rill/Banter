@@ -109,16 +109,25 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } = data;
     const userId = client.userId!;
 
+    this.logger.log(
+      `🔔 User ${userId} attempting to join call in room ${roomId}`,
+    );
+
     try {
       // Check room access
       const hasAccess = await this.verifyRoomAccess(roomId, userId);
       if (!hasAccess) {
+        this.logger.warn(
+          `❌ Access denied for user ${userId} to room ${roomId}`,
+        );
         client.emit('error', {
           code: 'ACCESS_DENIED',
           message: 'No access to this room',
         });
         return;
       }
+
+      this.logger.log(`✅ Access granted for user ${userId} to room ${roomId}`);
 
       // Leave current room if in one
       if (client.currentRoom && client.currentRoom !== roomId) {
@@ -299,6 +308,10 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
     userId: string,
   ): Promise<boolean> {
     try {
+      this.logger.log(
+        `🔍 Verifying room access for userId: ${userId}, roomId: ${roomId}`,
+      );
+
       // First check if it's an actual room
       const room = await this.prisma.room.findFirst({
         where: {
@@ -310,22 +323,30 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
         },
       });
 
-      if (room) return true;
+      if (room) {
+        this.logger.log(`✅ Found actual room: ${room.id}`);
+        return true;
+      }
 
       // Check if roomId is a combined ID for friend calls (format: userId1-userId2)
       if (roomId.includes('-')) {
+        this.logger.log(
+          `🔍 Checking friend call with combined roomId: ${roomId}`,
+        );
         const [id1, id2] = roomId.split('-');
+        this.logger.log(`Split IDs: ${id1}, ${id2}`);
 
         // Verify userId is one of the two IDs
         if (userId !== id1 && userId !== id2) {
-          this.logger.log(
-            `User ${userId} not part of combined room ID ${roomId}`,
+          this.logger.warn(
+            `❌ User ${userId} not part of combined room ID ${roomId}`,
           );
           return false;
         }
 
         // Get the other user's ID
         const otherUserId = userId === id1 ? id2 : id1;
+        this.logger.log(`Other user ID: ${otherUserId}`);
 
         // Check if they are friends
         const friendship = await this.prisma.friendship.findFirst({
