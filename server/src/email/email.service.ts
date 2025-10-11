@@ -88,12 +88,13 @@ export class EmailService {
 
       if (this.useResend) {
         // Use configured email or fall back to the Resend account owner's email for testing
-        const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') ||
-                         this.configService.get<string>('EMAIL_USER') ||
-                         'onboarding@resend.dev';
+        const fromEmail =
+          this.configService.get<string>('RESEND_FROM_EMAIL') ||
+          this.configService.get<string>('EMAIL_USER') ||
+          'onboarding@resend.dev';
 
         const { data: resendData, error } = await this.resend.emails.send({
-          from: `Banter <${fromEmail}>`,
+          from: `banter@churchilldaniel.dev`,
           to: [email],
           subject: data.subject,
           html: htmlContent,
@@ -151,9 +152,10 @@ export class EmailService {
       });
 
       if (this.useResend) {
-        const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') ||
-                         this.configService.get<string>('EMAIL_USER') ||
-                         'onboarding@resend.dev';
+        const fromEmail =
+          this.configService.get<string>('RESEND_FROM_EMAIL') ||
+          this.configService.get<string>('EMAIL_USER') ||
+          'onboarding@resend.dev';
 
         const { data: resendData, error } = await this.resend.emails.send({
           from: `Banter <${fromEmail}>`,
@@ -215,9 +217,10 @@ export class EmailService {
       });
 
       if (this.useResend) {
-        const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') ||
-                         this.configService.get<string>('EMAIL_USER') ||
-                         'onboarding@resend.dev';
+        const fromEmail =
+          this.configService.get<string>('RESEND_FROM_EMAIL') ||
+          this.configService.get<string>('EMAIL_USER') ||
+          'onboarding@resend.dev';
 
         const { data: resendData, error } = await this.resend.emails.send({
           from: `Banter <${fromEmail}>`,
@@ -280,9 +283,10 @@ export class EmailService {
       });
 
       if (this.useResend) {
-        const fromEmail = this.configService.get<string>('RESEND_FROM_EMAIL') ||
-                         this.configService.get<string>('EMAIL_USER') ||
-                         'onboarding@resend.dev';
+        const fromEmail =
+          this.configService.get<string>('RESEND_FROM_EMAIL') ||
+          this.configService.get<string>('EMAIL_USER') ||
+          'onboarding@resend.dev';
 
         const { data: resendData, error } = await this.resend.emails.send({
           from: `Banter <${fromEmail}>`,
