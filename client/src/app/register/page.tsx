@@ -379,35 +379,6 @@ function RegisterPage() {
                   Sign in here
                 </Link>
               </p>
-              {/* Terms Checkbox */}
-              <div className="flex items-start space-x-3">
-                <input
-                  id="terms"
-                  name="terms"
-                  type="checkbox"
-                  required
-                  className="mt-1 h-4 w-4 text-purple-600 focus:ring-purple-500 border-border rounded cursor-pointer"
-                />
-                <label
-                  htmlFor="terms"
-                  className="text-sm text-muted-foreground leading-5"
-                >
-                  I agree to the{" "}
-                  <Link
-                    href="/terms"
-                    className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
-                  >
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/privacy"
-                    className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>
-                </label>
-              </div>
 
               <button
                 type="submit"
