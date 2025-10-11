@@ -152,8 +152,21 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
     try {
       const stream = await initializeMedia();
       const socket = socketService.getCallSocket();
-      if (!socket) return;
 
+      if (!socket) {
+        console.error("❌ Call socket not initialized!");
+        return;
+      }
+
+      if (!socket.connected) {
+        console.error("❌ Call socket not connected! Socket state:", {
+          connected: socket.connected,
+          id: socket.id
+        });
+        return;
+      }
+
+      console.log("✅ Joining call with roomId:", roomId, "mediaState:", mediaState);
       socket.emit("join-call", { roomId, mediaState });
       setIsConnected(true);
     } catch (error) {
@@ -217,11 +230,21 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
   // Socket event handlers
   useEffect(() => {
     const socket = socketService.getCallSocket();
-    if (!socket) return;
+    if (!socket) {
+      console.error("❌ Socket not available in useEffect for roomId:", roomId);
+      return;
+    }
+
+    console.log("🔧 Setting up socket listeners for roomId:", roomId);
+
+    // Handle errors from server
+    socket.on("error", (error) => {
+      console.error("❌ Server error:", error);
+    });
 
     // Handle successful join
     socket.on("call-joined", async ({ participants: otherParticipants }) => {
-      console.log("Call joined, existing participants:", otherParticipants);
+      console.log("✅ Call joined successfully! Existing participants:", otherParticipants);
       setParticipants(otherParticipants);
 
       // DON'T create offers for existing participants
@@ -368,6 +391,8 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
     });
 
     return () => {
+      console.log("🧹 Cleaning up socket listeners for roomId:", roomId);
+      socket.off("error");
       socket.off("call-joined");
       socket.off("participant-joined");
       socket.off("participant-left");
