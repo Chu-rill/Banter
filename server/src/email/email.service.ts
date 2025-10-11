@@ -4,26 +4,45 @@ import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 import * as path from 'path';
 import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
+  private resend: Resend;
+  private useResend: boolean;
   private welcomeTemplatePath: string;
   private forgetPasswordTemplatePath: string;
   private sendPasswordChangeConfirmationTemplatePath: string;
 
   constructor(private readonly configService: ConfigService) {
-    this.transporter = nodemailer.createTransport({
-      host: configService.get<string>('EMAIL_PROVIDER'),
-      port: Number(configService.get<string>('SERVICE_PORT')),
-      secure: false,
-      service: 'gmail',
-      auth: {
-        user: configService.get<string>('EMAIL_USER'),
-        pass: configService.get<string>('EMAIL_PASS'),
-      },
-    });
+    // Check if Resend API key is provided
+    const resendApiKey = configService.get<string>('RESEND_API_KEY');
+    this.useResend = !!resendApiKey;
+
+    if (this.useResend) {
+      this.resend = new Resend(resendApiKey);
+      this.logger.log('Email service initialized with Resend');
+    } else {
+      // Fallback to SMTP (for local development)
+      const port = Number(configService.get<string>('SERVICE_PORT'));
+      this.transporter = nodemailer.createTransport({
+        host: configService.get<string>('EMAIL_PROVIDER'),
+        port: port,
+        secure: port === 465, // true for 465, false for other ports
+        service: 'gmail',
+        auth: {
+          user: configService.get<string>('EMAIL_USER'),
+          pass: configService.get<string>('EMAIL_PASS'),
+        },
+        // Increase timeout for cloud environments
+        connectionTimeout: 60000, // 60 seconds
+        greetingTimeout: 30000, // 30 seconds
+        socketTimeout: 60000, // 60 seconds
+      });
+      this.logger.log('Email service initialized with SMTP');
+    }
 
     this.welcomeTemplatePath = path.join(
       process.cwd(),
@@ -60,22 +79,40 @@ export class EmailService {
         this.welcomeTemplatePath,
       );
       const emailTemplate = handlebars.compile(templateSource);
-
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_USER'),
-        to: email,
-        subject: data.subject,
-        html: emailTemplate({
-          appName: 'Banter',
-          username: data.username,
-          verificationLink: verificationUrl,
-          title: 'Verification Email',
-        }),
+      const htmlContent = emailTemplate({
+        appName: 'Banter',
+        username: data.username,
+        verificationLink: verificationUrl,
+        title: 'Verification Email',
       });
 
-      this.logger.log(
-        `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
-      );
+      if (this.useResend) {
+        const { data: resendData, error } = await this.resend.emails.send({
+          from: 'Banter <onboarding@resend.dev>', // Use your verified domain or resend.dev for testing
+          to: [email],
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        if (error) {
+          throw new Error(`Resend error: ${error.message}`);
+        }
+
+        this.logger.log(
+          `Welcome email sent successfully to ${email}. MessageId: ${resendData.id}`,
+        );
+      } else {
+        const info = await this.transporter.sendMail({
+          from: this.configService.get<string>('EMAIL_USER'),
+          to: email,
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        this.logger.log(
+          `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
+        );
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -101,22 +138,40 @@ export class EmailService {
         this.welcomeTemplatePath,
       );
       const emailTemplate = handlebars.compile(templateSource);
-
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_USER'),
-        to: email,
-        subject: data.subject,
-        html: emailTemplate({
-          appName: 'Banter',
-          username: data.username,
-          verificationLink: verifyUrl,
-          title: 'Verification Email',
-        }),
+      const htmlContent = emailTemplate({
+        appName: 'Banter',
+        username: data.username,
+        verificationLink: verifyUrl,
+        title: 'Verification Email',
       });
 
-      this.logger.log(
-        `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
-      );
+      if (this.useResend) {
+        const { data: resendData, error } = await this.resend.emails.send({
+          from: 'Banter <onboarding@resend.dev>',
+          to: [email],
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        if (error) {
+          throw new Error(`Resend error: ${error.message}`);
+        }
+
+        this.logger.log(
+          `Welcome email sent successfully to ${email}. MessageId: ${resendData.id}`,
+        );
+      } else {
+        const info = await this.transporter.sendMail({
+          from: this.configService.get<string>('EMAIL_USER'),
+          to: email,
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        this.logger.log(
+          `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
+        );
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
@@ -143,28 +198,46 @@ export class EmailService {
         this.forgetPasswordTemplatePath,
       );
       const emailTemplate = handlebars.compile(templateSource);
-
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_USER'),
-        to: email,
-        subject: data.subject,
-        html: emailTemplate({
-          appName: 'Banter',
-          username: data.username,
-          resetPasswordLink: verificationUrl,
-          title: 'Forgot Password',
-        }),
+      const htmlContent = emailTemplate({
+        appName: 'Banter',
+        username: data.username,
+        resetPasswordLink: verificationUrl,
+        title: 'Forgot Password',
       });
 
-      this.logger.log(
-        `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
-      );
+      if (this.useResend) {
+        const { data: resendData, error } = await this.resend.emails.send({
+          from: 'Banter <onboarding@resend.dev>',
+          to: [email],
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        if (error) {
+          throw new Error(`Resend error: ${error.message}`);
+        }
+
+        this.logger.log(
+          `Forgot password email sent successfully to ${email}. MessageId: ${resendData.id}`,
+        );
+      } else {
+        const info = await this.transporter.sendMail({
+          from: this.configService.get<string>('EMAIL_USER'),
+          to: email,
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        this.logger.log(
+          `Forgot password email sent successfully to ${email}. MessageId: ${info.messageId}`,
+        );
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
 
       this.logger.error(
-        `Failed to send welcome email to ${email}: ${errorMessage}`,
+        `Failed to send forgot password email to ${email}: ${errorMessage}`,
         error,
       );
 
@@ -185,29 +258,47 @@ export class EmailService {
         this.sendPasswordChangeConfirmationTemplatePath,
       );
       const emailTemplate = handlebars.compile(templateSource);
-
-      const info = await this.transporter.sendMail({
-        from: this.configService.get<string>('EMAIL_USER'),
-        to: email,
-        subject: data.subject,
-        html: emailTemplate({
-          appName: 'Vidora',
-          username: data.username,
-          userEmail: email,
-          loginUrl: loginUrl,
-          title: 'Password Change Confirmation',
-        }),
+      const htmlContent = emailTemplate({
+        appName: 'Banter',
+        username: data.username,
+        userEmail: email,
+        loginUrl: loginUrl,
+        title: 'Password Change Confirmation',
       });
 
-      this.logger.log(
-        `Welcome email sent successfully to ${email}. MessageId: ${info.messageId}`,
-      );
+      if (this.useResend) {
+        const { data: resendData, error } = await this.resend.emails.send({
+          from: 'Banter <onboarding@resend.dev>',
+          to: [email],
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        if (error) {
+          throw new Error(`Resend error: ${error.message}`);
+        }
+
+        this.logger.log(
+          `Password change confirmation email sent successfully to ${email}. MessageId: ${resendData.id}`,
+        );
+      } else {
+        const info = await this.transporter.sendMail({
+          from: this.configService.get<string>('EMAIL_USER'),
+          to: email,
+          subject: data.subject,
+          html: htmlContent,
+        });
+
+        this.logger.log(
+          `Password change confirmation email sent successfully to ${email}. MessageId: ${info.messageId}`,
+        );
+      }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
 
       this.logger.error(
-        `Failed to send welcome email to ${email}: ${errorMessage}`,
+        `Failed to send password change confirmation email to ${email}: ${errorMessage}`,
         error,
       );
 
