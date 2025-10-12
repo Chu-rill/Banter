@@ -91,10 +91,10 @@ export class EmailService {
         const fromEmail =
           this.configService.get<string>('RESEND_FROM_EMAIL') ||
           this.configService.get<string>('EMAIL_USER') ||
-          'onboarding@resend.dev';
+          'banter@churchilldaniel.dev';
 
         const { data: resendData, error } = await this.resend.emails.send({
-          from: `banter@churchilldaniel.dev`,
+          from: `Banter <${fromEmail}>`,
           to: [email],
           subject: data.subject,
           html: htmlContent,
