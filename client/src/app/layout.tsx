@@ -8,7 +8,7 @@ import "./globals.css";
 import "./accessibility.css";
 import { RoomsProvider } from "@/contexts/RoomsContext";
 import { FriendProvider } from "@/contexts/FriendContext";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   subsets: ["latin"],
