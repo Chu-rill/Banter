@@ -6,7 +6,8 @@ export class CallRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findRoomWithAccess(roomId: string, userId: string) {
-    return await this.prisma.room.findFirst({
+    // First try to find an actual room
+    const room = await this.prisma.room.findFirst({
       where: {
         id: roomId,
         OR: [{ participants: { some: { id: userId } } }, { creatorId: userId }],
@@ -17,6 +18,97 @@ export class CallRepository {
         },
       },
     });
+
+    if (room) {
+      return room;
+    }
+
+    // Handle friend calls with combined ID format (userId1-userId2)
+    if (roomId.includes('-')) {
+      const [id1, id2] = roomId.split('-');
+
+      // Verify userId is one of the two IDs
+      if (userId !== id1 && userId !== id2) {
+        return null;
+      }
+
+      // Get the other user's ID
+      const otherUserId = userId === id1 ? id2 : id1;
+
+      // Check if they are friends
+      const friendship = await this.prisma.friendship.findFirst({
+        where: {
+          OR: [
+            {
+              requesterId: userId,
+              receiverId: otherUserId,
+              status: 'ACCEPTED',
+            },
+            {
+              requesterId: otherUserId,
+              receiverId: userId,
+              status: 'ACCEPTED',
+            },
+          ],
+        },
+      });
+
+      if (!friendship) {
+        return null;
+      }
+
+      // Fetch both users' info
+      const [user1, user2] = await Promise.all([
+        this.prisma.user.findUnique({
+          where: { id: id1 },
+          select: { id: true, username: true, avatar: true },
+        }),
+        this.prisma.user.findUnique({
+          where: { id: id2 },
+          select: { id: true, username: true, avatar: true },
+        }),
+      ]);
+
+      // Return a virtual room object for friend calls
+      return {
+        id: roomId,
+        name: `${user1?.username || 'User'} & ${user2?.username || 'User'}`,
+        participants: [user1, user2].filter(Boolean),
+      } as any;
+    }
+
+    // Handle legacy friend calls where roomId is the friend's userId
+    const friendship = await this.prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { requesterId: userId, receiverId: roomId, status: 'ACCEPTED' },
+          { requesterId: roomId, receiverId: userId, status: 'ACCEPTED' },
+        ],
+      },
+    });
+
+    if (!friendship) {
+      return null;
+    }
+
+    // Fetch both users' info
+    const [currentUser, friendUser] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, username: true, avatar: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: roomId },
+        select: { id: true, username: true, avatar: true },
+      }),
+    ]);
+
+    // Return a virtual room object for legacy friend calls
+    return {
+      id: roomId,
+      name: `${currentUser?.username || 'User'} & ${friendUser?.username || 'User'}`,
+      participants: [currentUser, friendUser].filter(Boolean),
+    } as any;
   }
 
   async createCallSession(roomId: string, userId: string) {

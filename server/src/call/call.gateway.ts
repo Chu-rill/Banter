@@ -191,11 +191,15 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
         mediaState,
       });
 
-      // Create call session record
-      await this.callService.startCall(userId, {
-        roomId,
-        type: CallType.VIDEO,
-      });
+      // Create call session record only for actual rooms (not friend calls with combined IDs)
+      // Friend calls use format: userId1-userId2, which don't have Room records in DB
+      const isActualRoom = !roomId.includes('-');
+      if (isActualRoom) {
+        await this.callService.startCall(userId, {
+          roomId,
+          type: CallType.VIDEO,
+        });
+      }
     } catch (error) {
       this.logger.error('Error joining call:', error);
       client.emit('error', {
@@ -236,11 +240,14 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     client.emit('call-left', { roomId });
 
-    // Record call end
-    try {
-      await this.callService.endCall(userId, roomId, callDuration);
-    } catch (error) {
-      this.logger.error('Error recording call end:', error);
+    // Record call end only for actual rooms (not friend calls with combined IDs)
+    const isActualRoom = !roomId.includes('-');
+    if (isActualRoom) {
+      try {
+        await this.callService.endCall(userId, roomId, callDuration);
+      } catch (error) {
+        this.logger.error('Error recording call end:', error);
+      }
     }
   }
 
