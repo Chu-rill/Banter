@@ -94,7 +94,7 @@ export default function FileUpload({
             <button
               type="button"
               onClick={open}
-              className="text-primary hover:underline"
+              className="text-orange-500 hover:cursor-pointer hover:underline"
             >
               browse files
             </button>
