@@ -82,7 +82,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = configService.get('PORT') || 5000;
+  const port = 80;
   const protocol = httpsOptions ? 'https' : 'http';
 
   await app.listen(port);
