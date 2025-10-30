@@ -6,13 +6,14 @@ import { Room, User } from "@/types";
 import ChatHeader from "./ChatHeader";
 import ChatMessages from "./ChatMessages";
 import ChatInput from "./ChatInput";
-import VideoCall from "./VideoCall";
 import FileUpload from "./FileUpload";
 import GroupInfo from "../room/GroupInfo/GroupInfo";
 import { useChat } from "@/hooks/useRoomChat";
 import { useDirectChat } from "@/hooks/useDirectChat";
 import ChatSearch from "./ChatSearch";
 import UserDetails from "../user/UserDetails";
+import { useCallNotification } from "@/contexts/CallNotificationContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatWindowProps {
   room?: Room;
@@ -27,6 +28,9 @@ export default function ChatWindow({
   onToggleSidebar,
   onLeaveRoom,
 }: ChatWindowProps) {
+  const { user } = useAuth();
+  const { initiateCall } = useCallNotification();
+
   // Use room chat or direct chat based on what's provided
   const roomChat = useChat(room?.id || "");
   const directChat = useDirectChat(friend?.id || "");
@@ -39,22 +43,34 @@ export default function ChatWindow({
   const typingUsers = isRoomChat ? roomChat.typingUsers : [];
   const isTyping = !isRoomChat ? directChat.isTyping : false;
 
-  const [showVideoCall, setShowVideoCall] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [showRoomDetails, setShowRoomDetails] = useState(false);
   const [showUserDetails, setShowUserDetails] = useState(false);
-  const [isVideoCallMode, setIsVideoCallMode] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Get room ID for calls
+  const getRoomId = () => {
+    if (room?.id) return room.id;
+    if (friend?.id && user?.id) {
+      // Create combined ID for friend calls (sorted to ensure consistency)
+      return [user.id, friend.id].sort().join("-");
+    }
+    return "";
+  };
+
   const handleStartVideoCall = () => {
-    setIsVideoCallMode(true);
-    setShowVideoCall(true);
+    const roomId = getRoomId();
+    if (roomId) {
+      initiateCall(roomId, true);
+    }
   };
 
   const handleStartVoiceCall = () => {
-    setIsVideoCallMode(false);
-    setShowVideoCall(true);
+    const roomId = getRoomId();
+    if (roomId) {
+      initiateCall(roomId, false);
+    }
   };
 
   return (
@@ -103,16 +119,6 @@ export default function ChatWindow({
         onStopTyping={stopTyping}
         onOpenFileUpload={() => setShowFileUpload(true)}
       />
-
-      {showVideoCall && (
-        <VideoCall
-          room={room}
-          friend={friend}
-          isOpen={showVideoCall}
-          onClose={() => setShowVideoCall(false)}
-          isVideoCall={isVideoCallMode}
-        />
-      )}
 
       {showFileUpload && (
         <FileUpload

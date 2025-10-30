@@ -46,6 +46,9 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // Simplified: Just track who's in which room
   private rooms = new Map<string, Map<string, CallParticipant>>();
 
+  // Track user socket connections for notifications (userId -> Set of socketIds)
+  private userConnections = new Map<string, Set<string>>();
+
   @WebSocketServer()
   server: Server;
 
@@ -69,7 +72,15 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       client.userId = userId;
+
+      // Track this socket connection for the user
+      if (!this.userConnections.has(userId)) {
+        this.userConnections.set(userId, new Set());
+      }
+      this.userConnections.get(userId)!.add(client.id);
+
       client.emit('connected', { userId });
+      this.logger.log(`✅ User ${userId} connected with socket ${client.id}`);
     } catch (error) {
       this.logger.error('Connection error:', error);
       client.disconnect();
@@ -79,6 +90,20 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleDisconnect(client: AuthenticatedSocket) {
     if (client.currentRoom && client.userId) {
       await this.handleLeaveCall(client, { roomId: client.currentRoom });
+    }
+
+    // Remove socket from user connections
+    if (client.userId) {
+      const connections = this.userConnections.get(client.userId);
+      if (connections) {
+        connections.delete(client.id);
+        if (connections.size === 0) {
+          this.userConnections.delete(client.userId);
+        }
+      }
+      this.logger.log(
+        `❌ User ${client.userId} disconnected socket ${client.id}`,
+      );
     }
   }
 
@@ -98,6 +123,95 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   // ===== CALL MANAGEMENT =====
+  @SubscribeMessage('initiate-call')
+  async handleInitiateCall(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody()
+    data: { roomId: string; isVideoCall: boolean },
+  ) {
+    const { roomId, isVideoCall } = data;
+    const callerId = client.userId!;
+
+    this.logger.log(
+      `📞 User ${callerId} initiating ${isVideoCall ? 'video' : 'voice'} call for room ${roomId}`,
+    );
+
+    try {
+      // Verify caller has access
+      const hasAccess = await this.verifyRoomAccess(roomId, callerId);
+      if (!hasAccess) {
+        this.logger.warn(`❌ Caller ${callerId} denied access to ${roomId}`);
+        client.emit('error', {
+          code: 'ACCESS_DENIED',
+          message: 'No access to this room',
+        });
+        return;
+      }
+
+      // Get caller info
+      const caller = await this.prisma.user.findUnique({
+        where: { id: callerId },
+        select: { username: true, avatar: true },
+      });
+
+      // Find recipients based on room type
+      let recipientIds: string[] = [];
+
+      // Check if it's an actual room
+      const room = await this.prisma.room.findUnique({
+        where: { id: roomId },
+        include: { participants: { select: { id: true } } },
+      });
+
+      if (room) {
+        // Group call - notify all members except caller
+        recipientIds = room.participants
+          .map((p) => p.id)
+          .filter((id) => id !== callerId);
+      } else if (roomId.includes('-')) {
+        // Friend call with combined ID (userId1-userId2)
+        const [id1, id2] = roomId.split('-');
+        const otherUserId = callerId === id1 ? id2 : id1;
+        recipientIds = [otherUserId];
+      } else {
+        // Legacy: roomId is the friend's userId
+        recipientIds = [roomId];
+      }
+
+      this.logger.log(`📢 Notifying ${recipientIds.length} recipient(s)`);
+
+      // Send incoming-call event to all recipient connections
+      for (const recipientId of recipientIds) {
+        const recipientSockets = this.userConnections.get(recipientId);
+        if (recipientSockets && recipientSockets.size > 0) {
+          for (const socketId of recipientSockets) {
+            this.server.to(socketId).emit('incoming-call', {
+              callerId,
+              callerName: caller?.username || 'Unknown',
+              callerAvatar: caller?.avatar,
+              roomId,
+              isVideoCall,
+            });
+          }
+          this.logger.log(
+            `✅ Notified ${recipientId} on ${recipientSockets.size} device(s)`,
+          );
+        } else {
+          this.logger.log(`⚠️ Recipient ${recipientId} not connected`);
+        }
+      }
+
+      // Confirm to caller
+      client.emit('call-initiated', { roomId, recipientCount: recipientIds.length });
+    } catch (error) {
+      this.logger.error('Error initiating call:', error);
+      client.emit('error', {
+        code: 'INITIATE_FAILED',
+        message: 'Failed to initiate call',
+      });
+    }
+  }
+
   @SubscribeMessage('join-call')
   async handleJoinCall(
     @ConnectedSocket() client: AuthenticatedSocket,
@@ -143,9 +257,27 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       // Check if already in room
       if (room.has(userId)) {
-        client.emit('error', {
-          code: 'ALREADY_IN_CALL',
-          message: 'Already in this call',
+        this.logger.warn(
+          `⚠️ User ${userId} already in room ${roomId}, updating socket connection`,
+        );
+        // Update the socket ID for this user instead of rejecting
+        const existingParticipant = room.get(userId)!;
+        existingParticipant.socketId = client.id;
+        client.currentRoom = roomId;
+        client.join(roomId);
+
+        // Send current participants to the reconnecting user
+        const otherParticipants = Array.from(room.values())
+          .filter((p) => p.userId !== userId)
+          .map((p) => ({
+            userId: p.userId,
+            username: p.username,
+            mediaState: p.mediaState,
+          }));
+
+        client.emit('call-joined', {
+          roomId,
+          participants: otherParticipants,
         });
         return;
       }
