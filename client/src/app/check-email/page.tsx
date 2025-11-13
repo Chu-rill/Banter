@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Mail, RefreshCw, ArrowLeft, CheckCircle } from "lucide-react";
 import { authApi } from "@/lib/api";
@@ -15,7 +15,7 @@ function CheckEmailPage() {
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
 
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
 
