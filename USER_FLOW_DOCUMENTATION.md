@@ -292,18 +292,12 @@ A room is like a group chat where multiple people can talk together. Perfect for
    - Click again to unmute
    - Others can't hear you when muted
 
-3. **📺 Share Screen**
-
-   - Click to share your screen
-   - Choose what to share (entire screen or just one window)
-   - Click again to stop sharing
-
-4. **☰ Participants** (see who's in the call)
+3. **☰ Participants** (see who's in the call)
 
    - See everyone on the call
    - See their video/audio status
 
-5. **⊗ End Call** (hang up)
+4. **⊗ End Call** (hang up)
    - Click to leave the call
    - Others can keep talking if it's a group call
 
