@@ -21,9 +21,8 @@ function ChatPage() {
   // Start with sidebar collapsed on mobile (will be expanded on desktop via CSS)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showThemeCustomizer, setShowThemeCustomizer] = useState(false);
-  const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
 
-  const { notifications, addNotification, removeNotification } =
+  const { notifications, removeNotification } =
     useNotifications();
 
   // Listen for room member changes via WebSocket and refetch room data
