@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import VideoCall from "../chat/VideoCall";
+import { Room } from "@/types";
 
 interface CallState {
   roomId: string;
@@ -30,7 +31,7 @@ export default function GlobalCallHandler() {
   if (!activeCall) return null;
 
   // Create a minimal room object for VideoCall
-  const roomForCall = { id: activeCall.roomId } as any;
+  const roomForCall: Partial<Room> = { id: activeCall.roomId };
 
   return (
     <VideoCall

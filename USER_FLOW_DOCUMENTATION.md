@@ -7,6 +7,7 @@ Banter is a communication app where you can chat with friends, create group room
 ---
 
 ## Table of Contents
+
 1. [Getting Started](#getting-started)
 2. [Chatting with Friends](#chatting-with-friends)
 3. [Creating & Joining Rooms](#creating--joining-rooms)
@@ -21,6 +22,7 @@ Banter is a communication app where you can chat with friends, create group room
 ### Create Your Account
 
 1. **Sign Up**
+
    - Visit the Banter homepage
    - Click **"Get Started"**
    - Fill in your details:
@@ -30,6 +32,7 @@ Banter is a communication app where you can chat with friends, create group room
    - Click **"Sign Up"**
 
 2. **Verify Your Email**
+
    - Check your email inbox
    - Open the email from Banter
    - Click the verification link
@@ -43,6 +46,7 @@ Banter is a communication app where you can chat with friends, create group room
 ### First Time Login
 
 1. **Go to the Login Page**
+
    - Click **"Sign In"** from the homepage
    - Enter your email and password
    - Click **"Sign In"**
@@ -77,6 +81,7 @@ Once logged in, here's what you'll see:
 ```
 
 **Left Side (Sidebar):**
+
 - Your profile at the top
 - Search bar
 - List of your rooms
@@ -84,6 +89,7 @@ Once logged in, here's what you'll see:
 - Buttons to create rooms and change settings
 
 **Right Side (Chat Area):**
+
 - Your messages and conversations
 - Text box at the bottom to type messages
 
@@ -94,12 +100,14 @@ Once logged in, here's what you'll see:
 ### Adding Friends
 
 1. **Search for Someone**
+
    - Click the **"Friends"** tab in the sidebar
    - Use the search bar at the top
    - Type their username or email
    - Click on their name when they appear
 
 2. **Send a Friend Request**
+
    - Click **"Add Friend"**
    - They'll receive a notification
    - Wait for them to accept
@@ -113,13 +121,15 @@ Once logged in, here's what you'll see:
 ### Messaging a Friend
 
 1. **Start a Chat**
+
    - Click on a friend's name in the sidebar
    - Their chat opens on the right
    - Type your message in the box at the bottom
    - Press **Enter** to send
 
 2. **You'll See:**
-   - Your messages on the right (blue)
+
+   - Your messages on the right (green)
    - Their messages on the left (gray)
    - A green dot if they're online
    - "Typing..." when they're writing
@@ -141,6 +151,7 @@ A room is like a group chat where multiple people can talk together. Perfect for
 1. **Click "Create Room"** in the sidebar
 
 2. **Fill in the Details:**
+
    - **Room Name**: What do you want to call it?
    - **Description**: What's the room for? (optional)
    - **Type**:
@@ -159,6 +170,7 @@ A room is like a group chat where multiple people can talk together. Perfect for
 ### Join an Existing Room
 
 1. **Find a Room**
+
    - Browse public rooms
    - Or get a room link from someone
    - Or search for a room name
@@ -171,10 +183,12 @@ A room is like a group chat where multiple people can talk together. Perfect for
 ### Chatting in Rooms
 
 1. **Select the Room**
+
    - Click the room name in your Rooms list
    - The room chat opens
 
 2. **Send Messages**
+
    - Type in the message box
    - Press **Enter** to send
    - Everyone in the room can see your message
@@ -186,6 +200,7 @@ A room is like a group chat where multiple people can talk together. Perfect for
 ### Managing Your Room
 
 1. **Room Settings** (if you created the room)
+
    - Click the info icon (ⓘ) next to the room name
    - See three tabs:
      - **Details**: Room info
@@ -193,11 +208,13 @@ A room is like a group chat where multiple people can talk together. Perfect for
      - **Settings**: Change room options
 
 2. **Add or Remove Members**
+
    - Go to the **Members** tab
    - Invite friends to join
    - Remove people if needed (room creators only)
 
 3. **Leave a Room**
+
    - Open Room Settings
    - Click **"Leave Room"**
    - Confirm you want to leave
@@ -215,6 +232,7 @@ A room is like a group chat where multiple people can talk together. Perfect for
 ### Starting a Voice or Video Call
 
 1. **From a Friend Chat**
+
    - Open a chat with your friend
    - At the top, you'll see:
      - 📞 Phone icon = Voice call
@@ -222,6 +240,7 @@ A room is like a group chat where multiple people can talk together. Perfect for
    - Click one to start calling
 
 2. **From a Room**
+
    - Open any room
    - Click the phone or video icon
    - Everyone in the room gets notified
@@ -234,11 +253,13 @@ A room is like a group chat where multiple people can talk together. Perfect for
 ### Answering a Call
 
 1. **You'll See a Popup**
+
    - Shows who's calling
    - Shows if it's voice or video
    - Two buttons: **Accept** or **Decline**
 
 2. **Accept the Call**
+
    - Click **"Accept"**
    - Your browser may ask for mic/camera permission
    - Click **"Allow"**
@@ -252,6 +273,7 @@ A room is like a group chat where multiple people can talk together. Perfect for
 ### During a Call
 
 **You'll See:**
+
 - The other person's video (if video call)
 - Your own video in a small box (bottom corner)
 - Control buttons at the bottom
@@ -259,21 +281,25 @@ A room is like a group chat where multiple people can talk together. Perfect for
 **Control Buttons:**
 
 1. **🎥 Video** (toggle camera on/off)
+
    - Click to turn your camera off
    - Click again to turn it back on
    - Others see a black screen when it's off
 
 2. **🎤 Microphone** (mute/unmute)
+
    - Click to mute yourself
    - Click again to unmute
    - Others can't hear you when muted
 
 3. **📺 Share Screen**
+
    - Click to share your screen
    - Choose what to share (entire screen or just one window)
    - Click again to stop sharing
 
 4. **☰ Participants** (see who's in the call)
+
    - See everyone on the call
    - See their video/audio status
 
@@ -284,6 +310,7 @@ A room is like a group chat where multiple people can talk together. Perfect for
 ### Group Calls
 
 When multiple people join:
+
 - You'll see everyone's video in a grid
 - Up to 100 people can join (depending on room settings)
 - The person talking gets highlighted
@@ -296,11 +323,13 @@ When multiple people join:
 ### Upload a File
 
 1. **In Any Chat or Room**
+
    - Look for the 📎 paperclip icon
    - Click it to choose a file
    - Or drag & drop a file from your computer
 
 2. **Select Your File**
+
    - Pick any file from your computer
    - Files can be up to 50MB
    - Supported: Images, videos, documents, PDFs, etc.
@@ -313,14 +342,17 @@ When multiple people join:
 ### View or Download Files
 
 **Images:**
+
 - Show up as thumbnails in chat
 - Click to see full size
 
 **Videos:**
+
 - Play directly in the chat
 - Click play button
 
 **Documents & Other Files:**
+
 - Show as a file icon with the name
 - Click to download
 
@@ -361,6 +393,7 @@ When multiple people join:
 ### Communication Tips
 
 ✅ **DO:**
+
 - Keep messages clear and friendly
 - Use rooms for group topics
 - Use direct messages for one-on-one chats
@@ -368,6 +401,7 @@ When multiple people join:
 - Use video calls for complex discussions
 
 ❌ **DON'T:**
+
 - Don't spam messages
 - Don't share sensitive information in public rooms
 - Don't forget to mute yourself when not speaking in calls
@@ -375,6 +409,7 @@ When multiple people join:
 ### Privacy Tips
 
 🔒 **Stay Safe:**
+
 - Use a strong password
 - Verify your email address
 - Only add people you know
@@ -385,19 +420,23 @@ When multiple people join:
 ### Troubleshooting
 
 **Can't Send Messages?**
+
 - Check your internet connection
 - Refresh the page
 
 **Call Not Working?**
+
 - Make sure you allowed camera/microphone access
 - Check your browser settings
 - Try refreshing the page
 
 **Forgot Password?**
+
 - Click "Forgot Password?" on the login page
 - Check your email for reset link
 
 **Not Getting Emails?**
+
 - Check your spam folder
 - Make sure you entered the right email
 
@@ -455,4 +494,4 @@ Need assistance? Here's how to get support:
 
 ---
 
-*Enjoy connecting with friends and teams on Banter!*
+_Enjoy connecting with friends and teams on Banter!_
