@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { useAuth } from "./AuthContext";
 import { socketService } from "@/lib/socket";
 
@@ -19,9 +25,15 @@ interface CallNotificationContextType {
   declineCall: () => void;
 }
 
-const CallNotificationContext = createContext<CallNotificationContextType | undefined>(undefined);
+const CallNotificationContext = createContext<
+  CallNotificationContextType | undefined
+>(undefined);
 
-export function CallNotificationProvider({ children }: { children: React.ReactNode }) {
+export function CallNotificationProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, isAuthenticated } = useAuth();
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
   const [socketReady, setSocketReady] = useState(false);
@@ -35,7 +47,9 @@ export function CallNotificationProvider({ children }: { children: React.ReactNo
 
     const socket = socketService.getCallSocket();
     if (!socket) {
-      console.log("⚠️ Call socket not available yet, will retry when available");
+      console.log(
+        "⚠️ Call socket not available yet, will retry when available"
+      );
       // Retry after a short delay
       const timer = setTimeout(() => setSocketReady((prev) => !prev), 500);
       return () => clearTimeout(timer);
@@ -99,49 +113,60 @@ export function CallNotificationProvider({ children }: { children: React.ReactNo
     };
   }, [isAuthenticated, user, socketReady]);
 
-  const initiateCall = useCallback((roomId: string, isVideoCall: boolean) => {
-    const socket = socketService.getCallSocket();
-    if (!socket) {
-      console.error("❌ Call socket not available");
-      alert("Call connection not ready. Please try again.");
-      return;
-    }
+  const initiateCall = useCallback(
+    (roomId: string, isVideoCall: boolean) => {
+      const socket = socketService.getCallSocket();
+      if (!socket) {
+        console.error("❌ Call socket not available");
+        alert("Call connection not ready. Please try again.");
+        return;
+      }
 
-    if (!socket.connected) {
-      console.error("❌ Call socket not connected");
-      alert("Call connection not ready. Please try again.");
-      return;
-    }
+      if (!socket.connected) {
+        console.error("❌ Call socket not connected");
+        alert("Call connection not ready. Please try again.");
+        return;
+      }
 
-    console.log("📞 Initiating call:", {
-      roomId,
-      isVideoCall,
-      socketId: socket.id,
-      socketConnected: socket.connected
-    });
+      console.log("📞 Initiating call:", {
+        roomId,
+        isVideoCall,
+        socketId: socket.id,
+        socketConnected: socket.connected,
+      });
 
-    // Emit initiate-call event
-    socket.emit("initiate-call", { roomId, isVideoCall });
+      // Emit initiate-call event
+      socket.emit("initiate-call", {
+        roomId,
+        isVideoCall,
+        callerName: user.username,
+        callerAvatar: user.avatar,
+      });
 
-    // Listen for confirmation
-    socket.once("call-initiated", (data: { roomId: string; recipientCount: number }) => {
-      console.log("✅ Call initiated successfully:", data);
-      console.log(`📢 Notified ${data.recipientCount} recipient(s)`);
+      // Listen for confirmation
+      socket.once(
+        "call-initiated",
+        (data: { roomId: string; recipientCount: number }) => {
+          console.log("✅ Call initiated successfully:", data);
+          console.log(`📢 Notified ${data.recipientCount} recipient(s)`);
 
-      // Dispatch custom event to trigger VideoCall component
-      window.dispatchEvent(
-        new CustomEvent("join-call", {
-          detail: { roomId, isVideoCall },
-        })
+          // Dispatch custom event to trigger VideoCall component
+          window.dispatchEvent(
+            new CustomEvent("join-call", {
+              detail: { roomId, isVideoCall },
+            })
+          );
+        }
       );
-    });
 
-    // Listen for errors
-    socket.once("error", (error: { code: string; message: string }) => {
-      console.error("❌ Call initiation error:", error);
-      alert(`Failed to start call: ${error.message}`);
-    });
-  }, []);
+      // Listen for errors
+      socket.once("error", (error: { code: string; message: string }) => {
+        console.error("❌ Call initiation error:", error);
+        alert(`Failed to start call: ${error.message}`);
+      });
+    },
+    [user]
+  );
 
   const acceptCall = useCallback(() => {
     if (!incomingCall) return;
@@ -185,7 +210,9 @@ export function CallNotificationProvider({ children }: { children: React.ReactNo
 export function useCallNotification() {
   const context = useContext(CallNotificationContext);
   if (!context) {
-    throw new Error("useCallNotification must be used within CallNotificationProvider");
+    throw new Error(
+      "useCallNotification must be used within CallNotificationProvider"
+    );
   }
   return context;
 }

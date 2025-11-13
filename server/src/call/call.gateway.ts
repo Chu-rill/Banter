@@ -127,9 +127,14 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleInitiateCall(
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody()
-    data: { roomId: string; isVideoCall: boolean },
+    data: {
+      roomId: string;
+      isVideoCall: boolean;
+      callerName: string;
+      callerAvatar: string;
+    },
   ) {
-    const { roomId, isVideoCall } = data;
+    const { roomId, isVideoCall, callerName, callerAvatar } = data;
     const callerId = client.userId!;
 
     this.logger.log(
@@ -202,7 +207,10 @@ export class CallGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
 
       // Confirm to caller
-      client.emit('call-initiated', { roomId, recipientCount: recipientIds.length });
+      client.emit('call-initiated', {
+        roomId,
+        recipientCount: recipientIds.length,
+      });
     } catch (error) {
       this.logger.error('Error initiating call:', error);
       client.emit('error', {

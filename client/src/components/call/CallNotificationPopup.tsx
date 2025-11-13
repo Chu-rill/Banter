@@ -28,7 +28,7 @@ export default function CallNotificationPopup({
     const timer = setTimeout(() => {
       console.log("⏰ Call timeout - auto declining");
       onDecline();
-    }, 30000);
+    }, 180000); // 3 minutes
 
     return () => clearTimeout(timer);
   }, [isOpen, onDecline]);
@@ -55,7 +55,11 @@ export default function CallNotificationPopup({
                   : "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
               )}
             >
-              {isVideoCall ? <Video className="w-4 h-4" /> : <Phone className="w-4 h-4" />}
+              {isVideoCall ? (
+                <Video className="w-4 h-4" />
+              ) : (
+                <Phone className="w-4 h-4" />
+              )}
               Incoming {callType} call
             </div>
           </div>
@@ -108,7 +112,7 @@ export default function CallNotificationPopup({
             {/* Accept button */}
             <button
               onClick={onAccept}
-              className="flex flex-col items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-110 shadow-lg group animate-pulse"
+              className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200 hover:scale-110 shadow-lg group animate-pulse"
               aria-label="Accept call"
             >
               {isVideoCall ? (
