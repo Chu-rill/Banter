@@ -60,7 +60,7 @@ function ForgotPasswordPage() {
             </div>
             <h1 className="text-4xl font-bold">Reset your password</h1>
             <p className="text-lg text-white/90 max-w-md">
-              Don't worry! It happens. Enter your email and we'll send you a link to reset your password.
+              Don&apos;t worry! It happens. Enter your email and we&apos;ll send you a link to reset your password.
             </p>
           </div>
         </div>
@@ -87,7 +87,7 @@ function ForgotPasswordPage() {
               Forgot password?
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Enter your email address and we'll send you a link to reset your password.
+              Enter your email address and we&apos;ll send you a link to reset your password.
             </p>
           </div>
 
@@ -106,7 +106,7 @@ function ForgotPasswordPage() {
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
                 <div className="text-sm text-green-700 dark:text-green-300">
                   <p className="font-medium">Check your email!</p>
-                  <p className="mt-1">We've sent you a password reset link.</p>
+                  <p className="mt-1">We&apos;ve sent you a password reset link.</p>
                 </div>
               </div>
             )}
