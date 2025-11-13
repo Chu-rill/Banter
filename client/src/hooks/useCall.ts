@@ -252,9 +252,19 @@ export function useCall(roomId: string, isVideoCall: boolean = true) {
     });
 
     // Handle new participant - ONLY the existing users should create offers
-    socket.on("participant-joined", async ({ userId, mediaState: peerMediaState }) => {
+    socket.on("participant-joined", async ({ userId, username, mediaState: peerMediaState }) => {
       console.log("New participant joined:", userId);
-      setParticipants((prev) => [...prev, { userId, mediaState: peerMediaState }]);
+
+      // Check if participant already exists before adding
+      setParticipants((prev) => {
+        const exists = prev.some((p) => p.userId === userId);
+        if (exists) {
+          console.log("⚠️ Participant already exists, skipping:", userId);
+          return prev;
+        }
+        console.log("✅ Adding new participant:", userId);
+        return [...prev, { userId, username, mediaState: peerMediaState }];
+      });
 
       // Create offer to the new participant
       const stream = localStreamRef.current;

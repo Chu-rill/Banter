@@ -30,12 +30,15 @@ function OAuthCallbackPage() {
       // Get token from URL
       const token = searchParams.get("token");
       const refreshToken = searchParams.get("refreshToken");
-      const error = searchParams.get("error");
+      const status = searchParams.get("status");
 
       // Check for OAuth error from backend
-      if (error) {
+      if (status === "error") {
+        console.error("OAuth authentication failed");
         setStatus("error");
-        setErrorMessage(decodeURIComponent(error));
+        setErrorMessage(
+          "Authentication failed. Please try again or contact support if the issue persists."
+        );
         return;
       }
 

@@ -55,24 +55,21 @@ export class OauthController {
       // Redirect to frontend with tokens
       return res.redirect(redirectUrl);
     } catch (error) {
-      this.logger.error('Google OAuth callback error:', error);
+      // Log the error details for system monitoring and debugging
+      this.logger.error('Google OAuth callback error:', {
+        message: error.message,
+        stack: error.stack,
+        type: error instanceof HttpException ? 'HttpException' : 'Error',
+      });
 
       // Get frontend URL for error redirect
       const frontendUrl =
-        this.configService.get<string>('FRONTEND_URL_REDIRECT') ||
-        'http://localhost:3000/oauth/callback';
+        this.configService.get<string>('FRONTEND_URL') ||
+        'http://localhost:3000';
 
-      // Determine error message
-      let errorMessage = 'Authentication failed';
-
-      if (error instanceof HttpException) {
-        errorMessage = error.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      // Redirect with error
-      const errorRedirectUrl = `${frontendUrl}?error=${encodeURIComponent(errorMessage)}`;
+      // Redirect without exposing error details in URL
+      // The frontend will show a generic error message
+      const errorRedirectUrl = `${frontendUrl}/oauth-redirect?status=error`;
 
       return res.redirect(errorRedirectUrl);
     }

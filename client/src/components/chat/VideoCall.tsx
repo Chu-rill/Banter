@@ -89,17 +89,36 @@ export default function VideoCall({
     setShowAudioSettings(false);
   };
 
+  // Track if we've already joined to prevent duplicate joins
+  const hasJoinedRef = useRef(false);
+  const currentRoomRef = useRef<string>("");
+
   // Join call when component opens
   useEffect(() => {
-    if (isOpen && roomId) {
+    // Only join if:
+    // 1. Component is open
+    // 2. We have a valid roomId
+    // 3. We haven't already joined OR the room changed
+    const shouldJoin = isOpen && roomId && (!hasJoinedRef.current || currentRoomRef.current !== roomId);
+
+    if (shouldJoin) {
+      console.log("📞 VideoCall: Joining call for roomId:", roomId);
+      hasJoinedRef.current = true;
+      currentRoomRef.current = roomId;
       joinCall();
     }
 
+    // Cleanup function
     return () => {
-      if (isConnected) {
+      // Only leave if we actually joined and are closing
+      if (!isOpen && hasJoinedRef.current) {
+        console.log("📞 VideoCall: Leaving call for roomId:", currentRoomRef.current);
         leaveCall();
+        hasJoinedRef.current = false;
+        currentRoomRef.current = "";
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, roomId]);
 
   // Update local video when stream changes

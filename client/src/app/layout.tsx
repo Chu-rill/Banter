@@ -8,6 +8,9 @@ import "./globals.css";
 import "./accessibility.css";
 import { RoomsProvider } from "@/contexts/RoomsContext";
 import { FriendProvider } from "@/contexts/FriendContext";
+import { CallNotificationProvider } from "@/contexts/CallNotificationContext";
+import GlobalCallNotification from "@/components/call/GlobalCallNotification";
+import GlobalCallHandler from "@/components/call/GlobalCallHandler";
 import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
@@ -68,7 +71,13 @@ export default function RootLayout({
           <LoadingProvider>
             <FriendProvider>
               <RoomsProvider>
-                <AuthProvider>{children}</AuthProvider>
+                <AuthProvider>
+                  <CallNotificationProvider>
+                    {children}
+                    <GlobalCallNotification />
+                    <GlobalCallHandler />
+                  </CallNotificationProvider>
+                </AuthProvider>
               </RoomsProvider>
             </FriendProvider>
             <Toaster position="top-right" reverseOrder={false} />
