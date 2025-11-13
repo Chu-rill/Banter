@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import Loader from "@/components/ui/Loader";
 
 interface VideoCallProps {
-  room?: Room;
+  room?: Partial<Room>;
   friend?: User;
   isOpen: boolean;
   onClose: () => void;
