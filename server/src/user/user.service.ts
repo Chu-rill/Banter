@@ -2,20 +2,34 @@ import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateUserDto } from './validation';
 import { UserRepository } from './user.repository';
 import { SupabaseService } from 'src/file/file.service';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class UserService {
+  private readonly USER_CACHE_TTL = 3600; // 1 hour
+  private readonly USER_CACHE_PREFIX = 'user:';
+
   constructor(
     private userRepository: UserRepository,
     private readonly supabaseService: SupabaseService,
+    private readonly cacheService: CacheService,
   ) {}
 
   async getUserById(id: string) {
-    const user = await this.userRepository.getUserById(id);
+    const cacheKey = `${this.USER_CACHE_PREFIX}id:${id}`;
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    // Try to get from cache
+    const user = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const userData = await this.userRepository.getUserById(id);
+        if (!userData) {
+          throw new NotFoundException('User not found');
+        }
+        return userData;
+      },
+      this.USER_CACHE_TTL,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -26,11 +40,20 @@ export class UserService {
   }
 
   async getUserByEmail(email: string) {
-    const user = await this.userRepository.getUserByEmail(email);
+    const cacheKey = `${this.USER_CACHE_PREFIX}email:${email}`;
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    // Try to get from cache
+    const user = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const userData = await this.userRepository.getUserByEmail(email);
+        if (!userData) {
+          throw new NotFoundException('User not found');
+        }
+        return userData;
+      },
+      this.USER_CACHE_TTL,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -41,11 +64,20 @@ export class UserService {
   }
 
   async getUserByUsername(username: string) {
-    const user = await this.userRepository.getUserByUsername(username);
+    const cacheKey = `${this.USER_CACHE_PREFIX}username:${username}`;
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+    // Try to get from cache
+    const user = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const userData = await this.userRepository.getUserByUsername(username);
+        if (!userData) {
+          throw new NotFoundException('User not found');
+        }
+        return userData;
+      },
+      this.USER_CACHE_TTL,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -70,6 +102,9 @@ export class UserService {
     try {
       const user = await this.userRepository.updateUser(id, updateData);
 
+      // Invalidate all caches for this user
+      this.invalidateUserCache(user.id, user.email, user.username);
+
       return {
         statusCode: HttpStatus.OK,
         success: true,
@@ -88,6 +123,9 @@ export class UserService {
 
     // Step 2: update user record in DB
     const user = await this.userRepository.updateAvatar(userId, avatarUrl);
+
+    // Invalidate all caches for this user
+    this.invalidateUserCache(user.id, user.email, user.username);
 
     return {
       statusCode: HttpStatus.OK,
@@ -132,6 +170,25 @@ export class UserService {
   }
 
   async updateOnlineStatus(id: string, isOnline: boolean) {
-    return this.userRepository.updateUser(id, { isOnline });
+    const user = await this.userRepository.updateUser(id, { isOnline });
+
+    // Invalidate all caches for this user
+    if (user) {
+      this.invalidateUserCache(user.id, user.email, user.username);
+    }
+
+    return user;
+  }
+
+  /**
+   * Helper method to invalidate all cache entries for a user
+   */
+  private invalidateUserCache(id: string, email: string, username: string): void {
+    const keysToDelete = [
+      `${this.USER_CACHE_PREFIX}id:${id}`,
+      `${this.USER_CACHE_PREFIX}email:${email}`,
+      `${this.USER_CACHE_PREFIX}username:${username}`,
+    ];
+    this.cacheService.del(keysToDelete);
   }
 }

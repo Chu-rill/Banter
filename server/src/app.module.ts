@@ -16,6 +16,7 @@ import { DirectMessageModule } from './direct-message/direct-message.module';
 import { RedisModule } from './redis/redis.module';
 import { OauthModule } from './auth/oauth/oauth.module';
 import { FileModule } from './file/file.module';
+import { CacheModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { FileModule } from './file/file.module';
     RedisModule,
     OauthModule,
     FileModule,
+    CacheModule,
   ],
   controllers: [AppController],
   providers: [AppService],

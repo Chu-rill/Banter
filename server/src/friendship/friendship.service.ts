@@ -9,15 +9,20 @@ import { FriendStatus } from '../../generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserRepository } from 'src/user/user.repository';
 import { AppGateway } from 'src/gateway/app.gateway';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class FriendshipService {
   private readonly logger = new Logger(FriendshipService.name);
+  private readonly FRIENDSHIP_CACHE_TTL = 1800; // 30 minutes
+  private readonly FRIENDSHIP_CACHE_PREFIX = 'friendship:';
+
   constructor(
     private readonly friendshipRepository: FriendshipRepository,
     private prisma: PrismaService,
     private userRepository: UserRepository,
     private gateway: AppGateway,
+    private readonly cacheService: CacheService,
   ) {}
 
   async addFriend(requesterId: string, receiverId: string) {
@@ -50,6 +55,10 @@ export class FriendshipService {
     this.gateway.server
       // .to(receiverId)
       .emit('notification:friend', notification);
+
+    // Invalidate friendship cache for both users
+    this.invalidateFriendshipCache(requesterId);
+    this.invalidateFriendshipCache(receiverId);
 
     return {
       statusCode: HttpStatus.OK,
@@ -119,6 +128,10 @@ export class FriendshipService {
         // .to(receiverId)
         .emit('notification:friend', notification);
 
+      // Invalidate friendship cache for both users
+      this.invalidateFriendshipCache(requesterId);
+      this.invalidateFriendshipCache(receiverId);
+
       return {
         statusCode: HttpStatus.OK,
         success: true,
@@ -135,21 +148,30 @@ export class FriendshipService {
   }
 
   async listFriends(userId: string) {
-    let friendships = await this.friendshipRepository.getFriendshipsByStatus(
-      userId,
-      FriendStatus.ACCEPTED,
-    );
+    const cacheKey = `${this.FRIENDSHIP_CACHE_PREFIX}${userId}:accepted`;
 
-    const friends = friendships.map((f) => {
-      const otherUser = f.requesterId === userId ? f.receiver : f.requester;
-      return {
-        friendshipId: f.id,
-        status: f.status,
-        friend: otherUser,
-        senderId: f.requesterId,
-        receiverId: f.receiverId,
-      };
-    });
+    // Try to get from cache
+    const friends = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const friendships = await this.friendshipRepository.getFriendshipsByStatus(
+          userId,
+          FriendStatus.ACCEPTED,
+        );
+
+        return friendships.map((f) => {
+          const otherUser = f.requesterId === userId ? f.receiver : f.requester;
+          return {
+            friendshipId: f.id,
+            status: f.status,
+            friend: otherUser,
+            senderId: f.requesterId,
+            receiverId: f.receiverId,
+          };
+        });
+      },
+      this.FRIENDSHIP_CACHE_TTL,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -159,10 +181,20 @@ export class FriendshipService {
     };
   }
   async listRequests(userId: string) {
-    let list = await this.friendshipRepository.getFriendshipsByStatus(
-      userId,
-      FriendStatus.PENDING,
+    const cacheKey = `${this.FRIENDSHIP_CACHE_PREFIX}${userId}:pending`;
+
+    // Try to get from cache
+    const list = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        return await this.friendshipRepository.getFriendshipsByStatus(
+          userId,
+          FriendStatus.PENDING,
+        );
+      },
+      this.FRIENDSHIP_CACHE_TTL,
     );
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -172,10 +204,20 @@ export class FriendshipService {
   }
 
   async listBlocked(userId: string) {
-    let list = await this.friendshipRepository.getFriendshipsByStatus(
-      userId,
-      FriendStatus.BLOCKED,
+    const cacheKey = `${this.FRIENDSHIP_CACHE_PREFIX}${userId}:blocked`;
+
+    // Try to get from cache
+    const list = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        return await this.friendshipRepository.getFriendshipsByStatus(
+          userId,
+          FriendStatus.BLOCKED,
+        );
+      },
+      this.FRIENDSHIP_CACHE_TTL,
     );
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -186,5 +228,17 @@ export class FriendshipService {
 
   async canSendMessage(senderId: string, receiverId: string): Promise<boolean> {
     return this.friendshipRepository.areFriends(senderId, receiverId);
+  }
+
+  /**
+   * Helper method to invalidate all friendship caches for a user
+   */
+  private invalidateFriendshipCache(userId: string): void {
+    const keysToDelete = [
+      `${this.FRIENDSHIP_CACHE_PREFIX}${userId}:accepted`,
+      `${this.FRIENDSHIP_CACHE_PREFIX}${userId}:pending`,
+      `${this.FRIENDSHIP_CACHE_PREFIX}${userId}:blocked`,
+    ];
+    this.cacheService.del(keysToDelete);
   }
 }

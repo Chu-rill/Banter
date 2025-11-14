@@ -19,10 +19,14 @@ import { AppGateway } from 'src/gateway/app.gateway';
 import { RoomRedisService } from 'src/redis/room.redis';
 import { UserRedisService } from 'src/redis/user.redis';
 import { SupabaseService } from 'src/file/file.service';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class RoomService {
   private readonly logger = new Logger(RoomService.name);
+  private readonly ROOM_CACHE_TTL = 1800; // 30 minutes
+  private readonly ROOM_CACHE_PREFIX = 'room:';
+
   constructor(
     private roomRepository: RoomRepository,
     private userRepository: UserRepository,
@@ -31,6 +35,7 @@ export class RoomService {
     private roomRedis: RoomRedisService,
     private userRedis: UserRedisService,
     private supabaseService: SupabaseService,
+    private readonly cacheService: CacheService,
   ) {}
 
   async createRoom(createRoomDto: CreateRoomDto, creatorId: string) {
@@ -59,6 +64,10 @@ export class RoomService {
       throw new NotFoundException('Room not found');
     }
     const room = await this.roomRepository.updateRoom(id, updateData);
+
+    // Invalidate room cache
+    this.invalidateRoomCache(id);
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -89,11 +98,20 @@ export class RoomService {
 
   async getRoomById(dto: GetRoomDto) {
     const { id } = dto;
-    const room = await this.roomRepository.getRoomById(id);
+    const cacheKey = `${this.ROOM_CACHE_PREFIX}${id}`;
 
-    if (!room) {
-      throw new NotFoundException('Room not found');
-    }
+    // Try to get from cache
+    const room = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const roomData = await this.roomRepository.getRoomById(id);
+        if (!roomData) {
+          throw new NotFoundException('Room not found');
+        }
+        return roomData;
+      },
+      this.ROOM_CACHE_TTL,
+    );
 
     return {
       statusCode: HttpStatus.OK,
@@ -179,6 +197,9 @@ export class RoomService {
       );
     }
 
+    // Invalidate room cache (participants list changed)
+    this.invalidateRoomCache(roomId);
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -213,6 +234,9 @@ export class RoomService {
       userId,
     );
 
+    // Invalidate room cache (participants list changed)
+    this.invalidateRoomCache(roomId);
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
@@ -226,10 +250,21 @@ export class RoomService {
   }
 
   async findById(id: string) {
-    const room = await this.roomRepository.getRoomById(id);
-    if (!room) {
-      throw new NotFoundException('Room not found');
-    }
+    const cacheKey = `${this.ROOM_CACHE_PREFIX}${id}`;
+
+    // Try to get from cache
+    const room = await this.cacheService.getOrSet(
+      cacheKey,
+      async () => {
+        const roomData = await this.roomRepository.getRoomById(id);
+        if (!roomData) {
+          throw new NotFoundException('Room not found');
+        }
+        return roomData;
+      },
+      this.ROOM_CACHE_TTL,
+    );
+
     return room;
   }
 
@@ -239,6 +274,9 @@ export class RoomService {
       throw new NotFoundException('Room not found');
     }
     const room = await this.roomRepository.deleteRoom(id, userId);
+
+    // Invalidate room cache
+    this.invalidateRoomCache(id);
 
     return {
       statusCode: HttpStatus.OK,
@@ -276,6 +314,9 @@ export class RoomService {
         .to(roomId)
         .emit('user-removed-from-room', systemMessage);
     }
+
+    // Invalidate room cache (participants list changed)
+    this.invalidateRoomCache(roomId);
 
     return {
       statusCode: HttpStatus.OK,
@@ -499,11 +540,22 @@ export class RoomService {
       profilePicture: profilePictureUrl,
     });
 
+    // Invalidate room cache
+    this.invalidateRoomCache(roomId);
+
     return {
       statusCode: HttpStatus.OK,
       success: true,
       message: 'Profile picture updated successfully',
       data: updatedRoom,
     };
+  }
+
+  /**
+   * Helper method to invalidate cache for a room
+   */
+  private invalidateRoomCache(roomId: string): void {
+    const cacheKey = `${this.ROOM_CACHE_PREFIX}${roomId}`;
+    this.cacheService.del(cacheKey);
   }
 }

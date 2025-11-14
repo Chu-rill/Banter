@@ -2,10 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { MessageType, MediaType } from '../../generated/prisma';
 import { RoomMessageRepository } from './room-message.repository';
 import { time } from 'console';
+import { CacheService } from 'src/cache/cache.service';
 
 @Injectable()
 export class RoomMessageService {
-  constructor(private readonly roomMessageRepository: RoomMessageRepository) {}
+  private readonly MESSAGE_CACHE_TTL = 300; // 5 minutes
+  private readonly MESSAGE_CACHE_PREFIX = 'messages:room:';
+
+  constructor(
+    private readonly roomMessageRepository: RoomMessageRepository,
+    private readonly cacheService: CacheService,
+  ) {}
 
   async sendMessage(
     roomId: string,
@@ -20,7 +27,7 @@ export class RoomMessageService {
       throw new Error('Message must have content or media');
     }
 
-    return await this.roomMessageRepository.createMessage(
+    const message = await this.roomMessageRepository.createMessage(
       roomId,
       userId,
       content,
@@ -28,6 +35,11 @@ export class RoomMessageService {
       mediaUrl,
       mediaType,
     );
+
+    // Invalidate room messages cache
+    this.invalidateRoomMessagesCache(roomId);
+
+    return message;
   }
 
   async getRoomMessages(
@@ -36,6 +48,24 @@ export class RoomMessageService {
     limit = 50,
     cursor?: string,
   ) {
+    // Only cache the first page (no cursor) for simplicity
+    if (!cursor) {
+      const cacheKey = `${this.MESSAGE_CACHE_PREFIX}${roomId}:${limit}`;
+      return await this.cacheService.getOrSet(
+        cacheKey,
+        async () => {
+          return await this.roomMessageRepository.getMessages(
+            roomId,
+            userId,
+            limit,
+            cursor,
+          );
+        },
+        this.MESSAGE_CACHE_TTL,
+      );
+    }
+
+    // For paginated requests (with cursor), fetch directly
     return await this.roomMessageRepository.getMessages(
       roomId,
       userId,
@@ -51,6 +81,9 @@ export class RoomMessageService {
       content,
       MessageType.SYSTEM,
     );
+
+    // Invalidate room messages cache
+    this.invalidateRoomMessagesCache(roomId);
 
     return {
       id: data.id,
@@ -73,5 +106,13 @@ export class RoomMessageService {
       lastMessageId,
     );
     return data;
+  }
+
+  /**
+   * Helper method to invalidate all message caches for a room
+   */
+  private invalidateRoomMessagesCache(roomId: string): void {
+    // Delete all cache keys for this room (handles different limits)
+    this.cacheService.delPattern(`${this.MESSAGE_CACHE_PREFIX}${roomId}:`);
   }
 }
